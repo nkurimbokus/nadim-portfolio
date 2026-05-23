@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+/* ─── Design tokens ──────────────────────────────────────────────────────────
+   Tailwind v4 uses @theme — no tailwind.config.ts needed.
+   All custom classes (bg-bg-default, text-fg-default, etc.) derive from these.
+
+   Palette drawn from the Mauritius flag and recurring colours in the work.
+   Background: warm off-white paper (#F0EBE1). No dark mode — the paper
+   surface is the identity.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* ── Surface & text ────────────────────────────────────────────────────── */
+  --color-bg-default:      #FFFFFF;   /* white surface */
+  --color-fg-default:      #1A1A1A;   /* near-black body text */
+  --color-fg-muted:        #999999;   /* inactive states */
+  --color-fg-subtle:       #BBBBBB;   /* metadata, timestamps */
+
+  /* ── Accent colours (Mauritius flag + work palette) ────────────────────── */
+  --color-accent:          #C8432A;   /* red  — primary, Live category */
+  --color-accent-green:    #2E7D32;   /* green — Editorial category */
+  --color-accent-blue:     #1565C0;   /* blue  — Brand category */
+  --color-accent-yellow:   #F2B800;   /* yellow — Cultural category */
+
+  /* ── Fonts — CSS variables injected by next/font on <html> ─────────────── */
+  --font-display: var(--font-barlow), 'Arial Narrow', Arial, sans-serif;
+  --font-body:    var(--font-space), system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+
+body {
+  font-family: var(--font-body);
+}
