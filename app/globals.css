@@ -143,4 +143,14 @@ body {
   cursor: grab;
 }
 
+/* Mobile (<768px): touch devices have no :hover to expand the strip, and an
+   18px dot is below the 44px minimum touch target. Keep the slider permanently
+   expanded and give it a 44px-tall hit area. Desktop is untouched. */
+@media (max-width: 767px) {
+  .cpicker { width: 249px; height: 44px; }
+  .cpicker-dot { top: 13px !important; }          /* recentre 18px dot in 44px box */
+  .cpicker-strip { width: 240px; top: 13px; }
+  .cpicker-input { height: 44px; }                /* tall hit area; thumb auto-centres */
+}
+
 
