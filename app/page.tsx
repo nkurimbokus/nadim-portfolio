@@ -507,6 +507,18 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
 }
 
 export default function HomePage() {
+  // Mobile flag — drives how many tiles render and their size. Starts false so the
+  // first client render matches the server (no hydration mismatch), then the effect
+  // flips it on small screens. Kept in sync with the physics-side window.innerWidth
+  // checks in getDims / buildInitialState.
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   // Background colour picker — slider sweeps from black → vibrant rainbow → white.
   // The same stops table drives both the CSS gradient track and the applied bg,
   // so the colour under the thumb is exactly the colour the page becomes.
@@ -953,18 +965,6 @@ export default function HomePage() {
     }
   }, [])
 
-  // Prevent browser scroll hijack when a touch starts on a floating element.
-  // Must be non-passive so preventDefault() is honoured.
-  useEffect(() => {
-    const section = sectionRef.current; if (!section) return
-    const onTouchStart = (e: TouchEvent) => {
-      const floatingEls = Object.values(elRefs.current).filter(Boolean) as HTMLElement[]
-      if (floatingEls.some(el => el.contains(e.target as Node))) e.preventDefault()
-    }
-    section.addEventListener('touchstart', onTouchStart, { passive: false })
-    return () => section.removeEventListener('touchstart', onTouchStart)
-  }, [])
-
   const onPointerDown = useCallback((e: React.PointerEvent, id: string) => {
     e.stopPropagation()
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
@@ -1111,12 +1111,15 @@ export default function HomePage() {
           transformOrigin: 'center center',
           transition: 'transform 0.40s cubic-bezier(0.16,1,0.3,1)',
         }}>
-          {PROJECTS.map(proj => {
+          {PROJECTS.filter((_, i) => !isMobile || i < 3).map(proj => {
             const cfg = PHOTO_CFG[proj.id]; if (!cfg) return null
             // Both width AND height follow the current image's orientation, keeping the long dim
             // constant so landscape tiles aren't smaller than portrait ones from the same project.
             const currentSrc = tileSrc[proj.id] ?? proj.src
-            const { w: tileW, h: tileH } = getTileDims(proj.id, currentSrc)
+            const dims = getTileDims(proj.id, currentSrc)
+            // Match the 0.65 mobile scale applied in getDims so rendered size and physics agree.
+            const tileW = isMobile ? Math.round(dims.w * 0.65) : dims.w
+            const tileH = isMobile ? Math.round(dims.h * 0.65) : dims.h
             const isPickedUp = activePhoto?.id === proj.id
             return (
               <div
