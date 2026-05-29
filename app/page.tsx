@@ -417,12 +417,14 @@ function parseAspect(a: string): number {
 const TILE_SIZE_SCALE = 1
 
 function getDims(id: string): { w: number; h: number } {
-  if (id === 'logo') return { w: LOGO_SIZE, h: LOGO_SIZE }
-  if (id.startsWith('lt')) return { w: LETTER_SIZE, h: LETTER_SIZE }
+  const mobile = typeof window !== 'undefined' && window.innerWidth < 768
+  const s = mobile ? 0.65 : 1
+  if (id === 'logo') return { w: Math.round(LOGO_SIZE * s), h: Math.round(LOGO_SIZE * s) }
+  if (id.startsWith('lt')) return { w: Math.round(LETTER_SIZE * s), h: Math.round(LETTER_SIZE * s) }
   const cfg = PHOTO_CFG[id]
-  if (!cfg) return { w: 200, h: 200 }
-  const w = cfg.w * TILE_SIZE_SCALE
-  return { w, h: Math.round(w / parseAspect(cfg.aspect)) }
+  if (!cfg) return { w: Math.round(200 * s), h: Math.round(200 * s) }
+  const w = cfg.w * TILE_SIZE_SCALE * s
+  return { w: Math.round(w), h: Math.round(w / parseAspect(cfg.aspect)) }
 }
 // Single dial for how fast everything drifts at steady state. Lower = slower.
 // Velocity ramps from 0 to (base * VELOCITY_SCALE) over the first second via physics damping.
@@ -466,26 +468,29 @@ function interpolateBgStops(v: number): string {
 
 function buildInitialState(vw: number, vh: number): Record<string, PhysicsState> {
   const s: Record<string, PhysicsState> = {}
-  // Logo starts at top-centre (its old "header" position). Everything starts at rest,
-  // and the damping (0.985/frame toward baseV) accelerates each item gently from 0.
+  const isMobile = vw < 768
+  const vScale = isMobile ? VELOCITY_SCALE * 0.5 : VELOCITY_SCALE
   s['logo'] = {
     x: (vw - LOGO_SIZE) / 2,
     y: -LOGO_SIZE * 0.30,
     rot: 0,
     vx: 0, vy: 0, vrot: 0,
-    baseVx: LOGO_INIT.baseVx * VELOCITY_SCALE,
-    baseVy: LOGO_INIT.baseVy * VELOCITY_SCALE,
-    baseVrot: LOGO_INIT.baseVrot * VELOCITY_SCALE,
+    baseVx: LOGO_INIT.baseVx * vScale,
+    baseVy: LOGO_INIT.baseVy * vScale,
+    baseVrot: LOGO_INIT.baseVrot * vScale,
   }
+  let photoCount = 0
   PROJECTS.forEach(({ id }) => {
     const cfg = PHOTO_CFG[id]; if (!cfg) return
+    if (isMobile && photoCount >= 3) return
+    photoCount++
     const { w, h } = getDims(id)
     s[id] = {
       x: cfg.xPct*(vw-w), y: cfg.yPct*(vh-h), rot: cfg.rot,
       vx: 0, vy: 0, vrot: 0,
-      baseVx: cfg.baseVx * VELOCITY_SCALE,
-      baseVy: cfg.baseVy * VELOCITY_SCALE,
-      baseVrot: cfg.baseVrot * VELOCITY_SCALE,
+      baseVx: cfg.baseVx * vScale,
+      baseVy: cfg.baseVy * vScale,
+      baseVrot: cfg.baseVrot * vScale,
     }
   })
   LETTER_GRID.forEach((g, i) => {
@@ -493,9 +498,9 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     s[id] = {
       x: g.xPct*(vw-LETTER_SIZE), y: g.yPct*(vh-LETTER_SIZE), rot: g.rot,
       vx: 0, vy: 0, vrot: 0,
-      baseVx: g.baseVx * VELOCITY_SCALE,
-      baseVy: g.baseVy * VELOCITY_SCALE,
-      baseVrot: g.baseVrot * VELOCITY_SCALE,
+      baseVx: g.baseVx * vScale,
+      baseVy: g.baseVy * vScale,
+      baseVrot: g.baseVrot * vScale,
     }
   })
   return s
@@ -887,6 +892,7 @@ export default function HomePage() {
         pos.vx   = pos.baseVx   + (pos.vx   - pos.baseVx)   * 0.985
         pos.vy   = pos.baseVy   + (pos.vy   - pos.baseVy)   * 0.985
         pos.vrot = pos.baseVrot + (pos.vrot - pos.baseVrot) * 0.985
+        if (vw < 768) { pos.vx *= 0.5; pos.vy *= 0.5; pos.vrot *= 0.5 }
         pos.x += pos.vx * dt; pos.y += pos.vy * dt; pos.rot += pos.vrot * dt
         // Tight rotation clamp — applies to everything (photos, letters, logo).
         // ±15° keeps the scrapbook feel without letting any element spin loose.
@@ -947,6 +953,18 @@ export default function HomePage() {
     }
   }, [])
 
+  // Prevent browser scroll hijack when a touch starts on a floating element.
+  // Must be non-passive so preventDefault() is honoured.
+  useEffect(() => {
+    const section = sectionRef.current; if (!section) return
+    const onTouchStart = (e: TouchEvent) => {
+      const floatingEls = Object.values(elRefs.current).filter(Boolean) as HTMLElement[]
+      if (floatingEls.some(el => el.contains(e.target as Node))) e.preventDefault()
+    }
+    section.addEventListener('touchstart', onTouchStart, { passive: false })
+    return () => section.removeEventListener('touchstart', onTouchStart)
+  }, [])
+
   const onPointerDown = useCallback((e: React.PointerEvent, id: string) => {
     e.stopPropagation()
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
@@ -983,8 +1001,13 @@ export default function HomePage() {
       const dvx = (d.nx - d.px) * 60; const dvy = (d.ny - d.py) * 60
       pos.vx = dvx; pos.vy = dvy
     }
+    const capturedId = d.id
     dragRef.current = null
-  }, [])
+    if (!didDragRef.current && window.innerWidth < 768 && !activePhoto) {
+      const proj = PROJECTS.find(p => p.id === capturedId)
+      if (proj) openLightbox(proj)
+    }
+  }, [activePhoto, openLightbox])
 
   // Lightbox pan — direct DOM, no React state, 1:1 with pointer
   const onLbImageDown = useCallback((e: React.PointerEvent) => {
@@ -1049,7 +1072,7 @@ export default function HomePage() {
         {/* Nav fades out when an overlay (work / about / photo viewer) is open so its
             buttons never sit visually under the overlay's Close button. */}
         <nav
-          className="flex gap-6"
+          className="flex flex-col min-[380px]:flex-row gap-1 min-[380px]:gap-4 md:gap-6"
           aria-label="Primary navigation"
           style={{
             opacity: (workMounted || aboutOpen || !!activePhoto) ? 0 : 1,
@@ -1059,11 +1082,11 @@ export default function HomePage() {
         >
           <button
             onClick={openWork}
-            className="text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline"
+            className="text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] flex items-center justify-end"
           >Work</button>
           <button
             onClick={openAbout}
-            className="text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline"
+            className="text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] flex items-center justify-end"
           >About</button>
         </nav>
       </header>
