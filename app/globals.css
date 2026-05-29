@@ -22,14 +22,125 @@
   --color-accent-blue:     #1565C0;   /* blue  — Brand category */
   --color-accent-yellow:   #F2B800;   /* yellow — Cultural category */
 
-  /* ── Fonts — CSS variables injected by next/font on <html> ─────────────── */
-  --font-display: var(--font-barlow), 'Arial Narrow', Arial, sans-serif;
-  --font-body:    var(--font-space), system-ui, -apple-system, sans-serif;
+  /* Font is applied to <html> via geist.className in layout.tsx — no font-family
+     tokens here, so nothing overrides the inherited Geist. */
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
 
 body {
-  font-family: var(--font-body);
+  /* font-family intentionally omitted — inherits Geist from <html> (geist.className) */
+  background-color: var(--color-bg-default);
 }
+
+/* ─── Background colour picker ────────────────────────────────────────────
+   Collapsed: a tiny round black dot in the top-left corner. On hover, a
+   gradient strip emerges from BEHIND the dot and extends to the right; the
+   dot itself never moves or changes shape. --cpicker-dot is JS-driven and
+   flips white when the chosen bg is dark. The strip's gradient mirrors
+   BG_HUE_STOPS in app/page.tsx so the colour under the thumb is exactly the
+   colour applied to --color-bg-default. */
+.cpicker {
+  /* `position: fixed` and offsets are set inline on the element. Width snaps
+     from 18px (collapsed) to 249px (hovered) INSTANTLY — no transition —
+     so the wrapper's hover-bounds don't shift mid-animation and trap the cursor.
+     The visual expand animation lives on .cpicker-strip instead. */
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+.cpicker:hover,
+.cpicker:focus-within {
+  width: 249px;     /* 9px (half-dot under strip) + 240px visible strip */
+}
+
+/* The dot — always a perfect 18px circle, positioned at left:0, never changes.
+   pointer-events:none so clicks pass through to the slider input below it. */
+.cpicker-dot {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  /* Background colour is set inline from the React component (the RGB inverse
+     of the page bg). No !important here so the inline style wins. */
+  background: #0a0a0a;
+  z-index: 2 !important;
+  display: block !important;
+  pointer-events: none !important;
+}
+
+/* Gradient strip — sits BEHIND the dot, starts hidden, grows out to the right.
+   left:9 puts its leftmost 9px under the centre of the dot, so it appears to
+   emerge from the dot rather than sitting in a separate spot. */
+.cpicker-strip {
+  position: absolute;
+  left: 9px;
+  top: 0;
+  width: 0;
+  height: 18px;
+  border-radius: 0 9px 9px 0;
+  z-index: 1;
+  overflow: hidden;
+  transition: width 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  background: linear-gradient(to right,
+    rgb(  0,   0,   0)   0%,
+    rgb( 42,   0,  80)   8%,
+    rgb(  0,  25, 168)  16%,
+    rgb(  0, 153, 255)  25%,
+    rgb(  0, 255, 204)  35%,
+    rgb(102, 255,   0)  45%,
+    rgb(255, 255,   0)  52%,
+    rgb(255, 170,   0)  60%,
+    rgb(255,  51,   0)  68%,
+    rgb(255,   0, 153)  76%,
+    rgb(255, 102, 204)  84%,
+    rgb(255, 204, 238)  92%,
+    rgb(255, 255, 255) 100%
+  );
+}
+.cpicker:hover .cpicker-strip,
+.cpicker:focus-within .cpicker-strip {
+  width: 240px;
+}
+
+/* The actual <input type="range"> overlays the strip; fixed width so the thumb
+   stays at its value-relative position regardless of the strip's current width. */
+.cpicker-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 18px;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  outline: none;
+  cursor: pointer;
+}
+/* Slider thumb — a small solid dot. No white border, no shadow — clean and tiny. */
+.cpicker-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0a0a0a;
+  border: 0;
+  box-shadow: none;
+  cursor: grab;
+}
+.cpicker-input::-webkit-slider-thumb:active { cursor: grabbing; }
+.cpicker-input::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0a0a0a;
+  border: 0;
+  box-shadow: none;
+  cursor: grab;
+}
+
 

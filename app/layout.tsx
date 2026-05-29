@@ -1,26 +1,14 @@
 import type { Metadata } from 'next'
-import { Barlow_Condensed, Space_Grotesk } from 'next/font/google'
+import { Geist } from 'next/font/google'
 import './globals.css'
 
-// ─── Fonts ────────────────────────────────────────────────────────────────────
-// CSS variables picked up by @theme in globals.css:
-//   --font-display: var(--font-barlow) — Barlow Condensed, nav/headings/labels
-//   --font-body:    var(--font-space)  — Space Grotesk, bio/captions/meta
-//
-// These are starting points per the brand brief. Typography is decided once
-// tested against real images — swap here and in globals.css to try alternatives.
-
-const barlow = Barlow_Condensed({
+// ─── Font ─────────────────────────────────────────────────────────────────────
+// Geist, regular weight (400) only — applied to <html> via geist.className so it
+// sets font-family directly and every element inherits it. No Geist Mono, no
+// bold/semibold weights loaded → the whole site renders at 400.
+const geist = Geist({
   subsets: ['latin'],
-  weight: ['500', '600'],
-  variable: '--font-barlow',
-  display: 'swap',
-})
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['300', '400'],
-  variable: '--font-space',
+  weight: ['400'],
   display: 'swap',
 })
 
@@ -78,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${barlow.variable} ${spaceGrotesk.variable}`}
+      className={geist.className}
     >
       <body className="bg-bg-default text-fg-default antialiased">
         {children}

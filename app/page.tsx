@@ -117,8 +117,10 @@ function getTileDims(id: string, src: string | null | undefined): { w: number; h
   if (!cfg) return { w: 200, h: 200 }
   const cfgAspectNum  = parseAspect(cfg.aspect)
   const currAspectNum = parseAspect(getSrcAspect(src, cfg.aspect))
-  // Long dimension of the configured tile (height for portrait, width for landscape)
-  const longDim = cfgAspectNum >= 1 ? cfg.w : Math.round(cfg.w / cfgAspectNum)
+  // Long dimension of the configured tile (height for portrait, width for landscape),
+  // scaled by TILE_SIZE_SCALE so this stays in lockstep with getDims.
+  const baseLong = cfgAspectNum >= 1 ? cfg.w : Math.round(cfg.w / cfgAspectNum)
+  const longDim = baseLong * TILE_SIZE_SCALE
   if (currAspectNum >= 1) {
     // Landscape — long dim is width
     return { w: longDim, h: Math.round(longDim / currAspectNum) }
@@ -242,44 +244,138 @@ const PROJECTS: Project[] = [
 function parseAspect(a: string): number {
   const [w, h] = a.split('/').map(Number); return w / h
 }
+// Single multiplier for the photo tile sizes on the homepage canvas. Set to 1
+// for the original layout, 2 to double everything, etc. Position config (xPct/yPct)
+// is unchanged — only the tile dimensions are scaled.
+const TILE_SIZE_SCALE = 1
+
 function getDims(id: string): { w: number; h: number } {
   if (id === 'logo') return { w: LOGO_SIZE, h: LOGO_SIZE }
   if (id.startsWith('lt')) return { w: LETTER_SIZE, h: LETTER_SIZE }
   const cfg = PHOTO_CFG[id]
   if (!cfg) return { w: 200, h: 200 }
-  return { w: cfg.w, h: Math.round(cfg.w / parseAspect(cfg.aspect)) }
+  const w = cfg.w * TILE_SIZE_SCALE
+  return { w, h: Math.round(w / parseAspect(cfg.aspect)) }
 }
-function getRadius(id: string): number {
-  const { w, h } = getDims(id); return Math.max(w, h) * 0.46
+// Single dial for how fast everything drifts at steady state. Lower = slower.
+// Velocity ramps from 0 to (base * VELOCITY_SCALE) over the first second via physics damping.
+const VELOCITY_SCALE = 0.5
+
+// Colour stops shared by the bg-hue slider's CSS gradient AND the applied background.
+// Sweeps black → deep violet → blue → teal → lime → yellow → orange → red → pink → white.
+const BG_HUE_STOPS: { pct: number; rgb: [number, number, number] }[] = [
+  { pct:   0, rgb: [  0,   0,   0] },   // black
+  { pct:   8, rgb: [ 42,   0,  80] },   // deep violet
+  { pct:  16, rgb: [  0,  25, 168] },   // indigo
+  { pct:  25, rgb: [  0, 153, 255] },   // bright blue
+  { pct:  35, rgb: [  0, 255, 204] },   // teal
+  { pct:  45, rgb: [102, 255,   0] },   // lime
+  { pct:  52, rgb: [255, 255,   0] },   // yellow
+  { pct:  60, rgb: [255, 170,   0] },   // orange
+  { pct:  68, rgb: [255,  51,   0] },   // red
+  { pct:  76, rgb: [255,   0, 153] },   // magenta
+  { pct:  84, rgb: [255, 102, 204] },   // pink
+  { pct:  92, rgb: [255, 204, 238] },   // light pink
+  { pct: 100, rgb: [255, 255, 255] },   // white
+]
+
+// Linear RGB interpolation between adjacent stops — matches what the CSS gradient
+// renders, so the colour the user sees under the thumb is the colour the page gets.
+function interpolateBgStops(v: number): string {
+  if (v <= 0) return `rgb(${BG_HUE_STOPS[0].rgb.join(',')})`
+  if (v >= 100) return `rgb(${BG_HUE_STOPS[BG_HUE_STOPS.length - 1].rgb.join(',')})`
+  for (let i = 0; i < BG_HUE_STOPS.length - 1; i++) {
+    const a = BG_HUE_STOPS[i], b = BG_HUE_STOPS[i + 1]
+    if (v <= b.pct) {
+      const t = (v - a.pct) / (b.pct - a.pct)
+      const r = Math.round(a.rgb[0] + (b.rgb[0] - a.rgb[0]) * t)
+      const g = Math.round(a.rgb[1] + (b.rgb[1] - a.rgb[1]) * t)
+      const bl = Math.round(a.rgb[2] + (b.rgb[2] - a.rgb[2]) * t)
+      return `rgb(${r}, ${g}, ${bl})`
+    }
+  }
+  return `rgb(${BG_HUE_STOPS[BG_HUE_STOPS.length - 1].rgb.join(',')})`
 }
+
 function buildInitialState(vw: number, vh: number): Record<string, PhysicsState> {
   const s: Record<string, PhysicsState> = {}
+  // Logo starts at top-centre (its old "header" position). Everything starts at rest,
+  // and the damping (0.985/frame toward baseV) accelerates each item gently from 0.
   s['logo'] = {
-    x: LOGO_INIT.xPct*(vw-LOGO_SIZE), y: LOGO_INIT.yPct*(vh-LOGO_SIZE), rot: LOGO_INIT.rot,
-    vx: LOGO_INIT.baseVx, vy: LOGO_INIT.baseVy, vrot: LOGO_INIT.baseVrot,
-    baseVx: LOGO_INIT.baseVx, baseVy: LOGO_INIT.baseVy, baseVrot: LOGO_INIT.baseVrot,
+    x: (vw - LOGO_SIZE) / 2,
+    y: -LOGO_SIZE * 0.30,
+    rot: 0,
+    vx: 0, vy: 0, vrot: 0,
+    baseVx: LOGO_INIT.baseVx * VELOCITY_SCALE,
+    baseVy: LOGO_INIT.baseVy * VELOCITY_SCALE,
+    baseVrot: LOGO_INIT.baseVrot * VELOCITY_SCALE,
   }
   PROJECTS.forEach(({ id }) => {
     const cfg = PHOTO_CFG[id]; if (!cfg) return
     const { w, h } = getDims(id)
     s[id] = {
       x: cfg.xPct*(vw-w), y: cfg.yPct*(vh-h), rot: cfg.rot,
-      vx: cfg.baseVx, vy: cfg.baseVy, vrot: cfg.baseVrot,
-      baseVx: cfg.baseVx, baseVy: cfg.baseVy, baseVrot: cfg.baseVrot,
+      vx: 0, vy: 0, vrot: 0,
+      baseVx: cfg.baseVx * VELOCITY_SCALE,
+      baseVy: cfg.baseVy * VELOCITY_SCALE,
+      baseVrot: cfg.baseVrot * VELOCITY_SCALE,
     }
   })
   LETTER_GRID.forEach((g, i) => {
     const id = `lt${i}`
     s[id] = {
       x: g.xPct*(vw-LETTER_SIZE), y: g.yPct*(vh-LETTER_SIZE), rot: g.rot,
-      vx: g.baseVx, vy: g.baseVy, vrot: g.baseVrot,
-      baseVx: g.baseVx, baseVy: g.baseVy, baseVrot: g.baseVrot,
+      vx: 0, vy: 0, vrot: 0,
+      baseVx: g.baseVx * VELOCITY_SCALE,
+      baseVy: g.baseVy * VELOCITY_SCALE,
+      baseVrot: g.baseVrot * VELOCITY_SCALE,
     }
   })
   return s
 }
 
 export default function HomePage() {
+  // Background colour picker — slider sweeps from black → vibrant rainbow → white.
+  // The same stops table drives both the CSS gradient track and the applied bg,
+  // so the colour under the thumb is exactly the colour the page becomes.
+  // Default value = 100 (right end = white), matching the original cream/white bg.
+  const [bgHue, setBgHue] = useState(100)
+
+  // Compute the bg colour and its inverse for the dot in one pass — used both
+  // for the page background variable AND inline-set on the dot element itself
+  // (inline wins specificity so the dot is always the inverse colour).
+  const bgColour = interpolateBgStops(bgHue)
+  const dotColour = (() => {
+    const m = bgColour.match(/\d+/g)
+    if (!m || m.length < 3) return '#0a0a0a'
+    const [r, g, b] = m.map(Number)
+    return `rgb(${255 - r}, ${255 - g}, ${255 - b})`
+  })()
+
+  // Text colour = exact RGB inversion of the background (255 − each channel).
+  // Applied as --color-text-inverted on <main> so every descendant inherits it,
+  // and also pushed onto :root so it is available on any future page.
+  // Recomputed on every render (i.e. every slider move) — real-time update.
+  const textColour = (() => {
+    const m = bgColour.match(/\d+/g)
+    if (!m || m.length < 3) return 'rgb(245,245,245)'
+    const [r, g, b] = m.map(Number)
+    return `rgb(${255 - r},${255 - g},${255 - b})`
+  })()
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--color-bg-default',      bgColour)
+    document.documentElement.style.setProperty('--color-text-inverted',   textColour)
+  }, [bgColour, textColour])
+
+  // Work overlay — bottom sheet, slides up to open, down to close. Clicking a project
+  // closes the sheet and hands off to the existing photo lightbox (FLIP from canvas tile).
+  const [workMounted, setWorkMounted] = useState(false)   // in the DOM
+  const [workVisible, setWorkVisible] = useState(false)   // animation state — true = at translateY(0)
+  // Tracks whether the currently-open lightbox was launched from the work index.
+  // If yes, closing the lightbox returns to work instead of back to the canvas.
+  const cameFromWorkRef = useRef(false)
+
   // About panel — same FLIP pick-up/put-down system as photo viewer
   const [aboutOpen,    setAboutOpen]    = useState(false)   // mounted
   const [aboutVisible, setAboutVisible] = useState(false)   // animation state
@@ -407,13 +503,19 @@ export default function HomePage() {
     })
   }, [activePhoto, galleryIndex])
 
-  // ── About open / close — same FLIP pattern as photo viewer ──────────────
+  // ── About open / close — same FLIP pattern as photo viewer, including canvas zoom-out ──
+  // viewerSize MUST match the rendered overlay logo's CSS dimensions exactly.
+  // The overlay logo uses `min(calc(100vw - 48px), 60vh)`; the same calc here keeps
+  // the FLIP scale honest so the logo lands on its canvas tile without snapping.
+  const computeAboutViewerSize = () =>
+    Math.min(window.innerWidth - 48, window.innerHeight * 0.6)
+
   const openAbout = useCallback(() => {
     const el = elRefs.current['logo']
     if (el) {
       const rect = el.getBoundingClientRect()
       const vw = window.innerWidth; const vh = window.innerHeight
-      const viewerSize = Math.min(280, vw * 0.6)
+      const viewerSize = computeAboutViewerSize()
       setLogoSource({
         x: (rect.left + rect.width  / 2) - vw / 2,
         y: (rect.top  + rect.height / 2) - vh / 2,
@@ -421,6 +523,8 @@ export default function HomePage() {
         rot: posRef.current['logo']?.rot ?? 0,
       })
     }
+    setCanvasScaled(true)   // pull the canvas back behind the about panel, same as photo viewer
+    setFloatsHidden(true)
     setAboutOpen(true)
   }, [])
 
@@ -428,7 +532,7 @@ export default function HomePage() {
     const pos = posRef.current['logo']
     if (pos) {
       const vw = window.innerWidth; const vh = window.innerHeight
-      const viewerSize = Math.min(280, vw * 0.6)
+      const viewerSize = computeAboutViewerSize()
       frozenLogoRef.current = { x: pos.x, y: pos.y, rot: pos.rot }
       setLogoSource({
         x: pos.x + LOGO_SIZE / 2 - vw / 2,
@@ -437,10 +541,12 @@ export default function HomePage() {
         rot: pos.rot,
       })
     }
+    setCanvasScaled(false)  // canvas zooms back in lockstep with the logo landing
     setAboutVisible(false)
     setTimeout(() => {
       setAboutOpen(false)
       frozenLogoRef.current = null
+      setFloatsHidden(false)
     }, 340)
   }, [])
 
@@ -474,6 +580,34 @@ export default function HomePage() {
     setCanvasScaled(true)   // canvas starts zooming out
     setActivePhoto(proj)
   }, [])
+
+  // ── Work overlay — floats above the canvas, no opaque background ─────────
+  // Behaves like the photo viewer: canvas scales back, the work content
+  // floats above. Slides up to enter, down to exit. Clicking a project hands
+  // off to the existing lightbox (FLIP from canvas tile), the slide-down and
+  // FLIP-up overlap so the photo appears to rise out of the canvas as the
+  // sheet uncovers it.
+  const openWork = useCallback(() => {
+    setCanvasScaled(true)         // pull the canvas back, same as photo viewer
+    setWorkMounted(true)
+    requestAnimationFrame(() => setWorkVisible(true))
+  }, [])
+
+  const closeWork = useCallback(() => {
+    setWorkVisible(false)
+    setCanvasScaled(false)        // canvas zooms back as the sheet slides away
+    setTimeout(() => setWorkMounted(false), 320)
+  }, [])
+
+  // Click a project from inside the work sheet → close sheet + open lightbox.
+  // Don't unscale the canvas — openLightbox keeps it scaled so the FLIP lands cleanly.
+  // Mark the launch source so closing the lightbox returns to the work index, not the canvas.
+  const openFromWork = useCallback((proj: Project) => {
+    cameFromWorkRef.current = true
+    setWorkVisible(false)
+    setTimeout(() => openLightbox(proj), 160)   // start lightbox while sheet is halfway off
+    setTimeout(() => setWorkMounted(false), 320)
+  }, [openLightbox])
 
   const closeLightbox = useCallback(() => {
     // Remember the image the user last saw so the canvas tile reflects it.
@@ -517,29 +651,38 @@ export default function HomePage() {
         })
       }
     }
-    setCanvasScaled(false)           // canvas starts zooming back immediately
+    // If the lightbox was launched from the work index, KEEP the canvas scaled —
+    // we're about to re-open the work sheet right on top of it. Otherwise zoom back.
+    if (!cameFromWorkRef.current) setCanvasScaled(false)
     lbIsClosingRef.current = true
     setLbVisible(false)
     setTimeout(() => {
       setActivePhoto(null)
       lbIsClosingRef.current = false
       frozenPhotoRef.current = null  // unfreeze — physics resumes
+      // Hand back to the work index if that's where this lightbox came from
+      if (cameFromWorkRef.current) {
+        cameFromWorkRef.current = false
+        setWorkMounted(true)
+        requestAnimationFrame(() => setWorkVisible(true))
+      }
     }, 340)
   }, [activePhoto])
 
-  // Keyboard: arrow keys to navigate gallery, Escape to close viewer or about panel
-  // Placed after navigate + closeLightbox + closeAbout so all are in scope
+  // Keyboard: arrow keys to navigate gallery, Escape to close any open overlay
+  // Placed after the close handlers so they're all in scope
   useEffect(() => {
-    if (!activePhoto && !aboutOpen) return
+    if (!activePhoto && !aboutOpen && !workMounted) return
     const onKey = (e: KeyboardEvent) => {
-      if (aboutOpen) { if (e.key === 'Escape') closeAbout(); return }
+      if (workMounted) { if (e.key === 'Escape') closeWork(); return }
+      if (aboutOpen)   { if (e.key === 'Escape') closeAbout(); return }
       if (e.key === 'ArrowRight') navigate(1)
       if (e.key === 'ArrowLeft')  navigate(-1)
       if (e.key === 'Escape')     closeLightbox()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [activePhoto, aboutOpen, navigate, closeLightbox, closeAbout])
+  }, [activePhoto, aboutOpen, workMounted, navigate, closeLightbox, closeAbout, closeWork])
 
   // EFFECT 1 — write initial transforms synchronously before first paint
   useClientLayoutEffect(() => {
@@ -578,10 +721,10 @@ export default function HomePage() {
         pos.vy   = pos.baseVy   + (pos.vy   - pos.baseVy)   * 0.985
         pos.vrot = pos.baseVrot + (pos.vrot - pos.baseVrot) * 0.985
         pos.x += pos.vx * dt; pos.y += pos.vy * dt; pos.rot += pos.vrot * dt
-        if (id !== 'logo' && !id.startsWith('lt')) {
-          if (pos.rot >  35) { pos.rot =  35; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
-          if (pos.rot < -35) { pos.rot = -35; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
-        }
+        // Tight rotation clamp — applies to everything (photos, letters, logo).
+        // ±15° keeps the scrapbook feel without letting any element spin loose.
+        if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
+        if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
         if (pos.x >  vw + 60) pos.x = -w
         if (pos.x < -w)       pos.x =  vw + 60
@@ -648,23 +791,10 @@ export default function HomePage() {
     const d = dragRef.current; if (!d) return
     const pos = posRef.current[d.id]
     if (pos) {
+      // Carry the pointer's last velocity into the dragged item — that's it.
+      // (Collision/bump against nearby items was removed: items now drift independently.)
       const dvx = (d.nx - d.px) * 60; const dvy = (d.ny - d.py) * 60
       pos.vx = dvx; pos.vy = dvy
-      const { w: dw, h: dh } = getDims(d.id)
-      const cx = pos.x + dw * 0.5; const cy = pos.y + dh * 0.5
-      const dragR = getRadius(d.id)
-      for (const otherId of Object.keys(posRef.current)) {
-        if (otherId === d.id) continue
-        const other = posRef.current[otherId]; if (!other) continue
-        const { w: ow, h: oh } = getDims(otherId)
-        const ocx = other.x + ow * 0.5; const ocy = other.y + oh * 0.5
-        const dist = Math.hypot(ocx - cx, ocy - cy)
-        if (dist < dragR + getRadius(otherId) + 40 && dist > 0.5) {
-          const ux = (ocx - cx) / dist; const uy = (ocy - cy) / dist
-          other.vx += ux * Math.hypot(dvx, dvy) * 0.6
-          other.vy += uy * Math.hypot(dvx, dvy) * 0.6
-        }
-      }
     }
     dragRef.current = null
   }, [])
@@ -717,24 +847,37 @@ export default function HomePage() {
   const lbRatio  = lbAW / lbAH
 
   return (
-    <main>
+    <main
+      // Root surface for text colour: --color-text-inverted is the RGB inverse of the
+      // background, and color:var(--color-text-inverted) makes every
+      // descendant inherit it automatically. Updates in real time as the slider moves.
+      style={{ ['--color-text-inverted' as string]: textColour, color: 'var(--color-text-inverted)' }}
+    >
       <a href="#canvas"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-accent focus:text-white focus:rounded">
         Skip to content
       </a>
 
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-end px-6 md:px-10 h-16 pointer-events-none">
-        <nav className="flex gap-6 pointer-events-auto" aria-label="Primary navigation">
-          {([
-            { href: '/live',    label: 'Work'    },
-            { href: '/about',   label: 'About'   },
-            { href: '/contact', label: 'Contact' },
-          ] as { href: string; label: string }[]).map(({ href, label }) => (
-            <a key={href} href={href}
-              className="text-sm tracking-widest uppercase text-fg-muted hover:text-fg-default transition-colors duration-200 focus:outline-none focus:text-accent">
-              {label}
-            </a>
-          ))}
+        {/* Nav fades out when an overlay (work / about / photo viewer) is open so its
+            buttons never sit visually under the overlay's Close button. */}
+        <nav
+          className="flex gap-6"
+          aria-label="Primary navigation"
+          style={{
+            opacity: (workMounted || aboutOpen || !!activePhoto) ? 0 : 1,
+            pointerEvents: (workMounted || aboutOpen || !!activePhoto) ? 'none' : 'auto',
+            transition: 'opacity 0.18s ease',
+          }}
+        >
+          <button
+            onClick={openWork}
+            className="text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline"
+          >Work</button>
+          <button
+            onClick={openAbout}
+            className="text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline"
+          >About</button>
         </nav>
       </header>
 
@@ -873,58 +1016,193 @@ export default function HomePage() {
         })}
       </section>
 
+      {/* ─── Background colour picker — top-left corner ──────────────────
+          Collapsed: a small black square. On hover it expands into a vibrant rainbow
+          slider; the actual <input type="range"> sits inside, hidden when collapsed. */}
+      <div
+        className="cpicker"
+        style={{
+          position: 'fixed',
+          top: 24,
+          left: 24,
+          zIndex: 30,
+          opacity: (workMounted || aboutOpen || !!activePhoto) ? 0 : 1,
+          pointerEvents: (workMounted || aboutOpen || !!activePhoto) ? 'none' : 'auto',
+          transition: 'opacity 0.2s ease',
+        }}
+        title={`Background colour ${bgHue}%`}
+      >
+        <div className="cpicker-strip">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={bgHue}
+            onChange={e => setBgHue(Number(e.target.value))}
+            className="cpicker-input"
+            aria-label="Background colour"
+          />
+        </div>
+        <div className="cpicker-dot" aria-hidden style={{ background: dotColour }} />
+      </div>
+
+      {/* ─── Work overlay — floats above the scaled canvas ───────────────
+          Same pattern as the photo viewer: transparent click-to-close backdrop
+          underneath, content layer above with pointer-events handled per-element.
+          Content slides up to enter, down to exit. */}
+      {workMounted && (
+        <>
+          {/* Click-to-close backdrop — absorbs taps + light blur so the canvas behind
+              reads as out-of-focus while the work list is foregrounded. */}
+          <div
+            className="fixed inset-0 z-[55]"
+            style={{
+              cursor: 'zoom-out',
+              backdropFilter: 'blur(3px)',
+              WebkitBackdropFilter: 'blur(3px)',
+              opacity: workVisible ? 1 : 0,
+              transition: 'opacity 0.2s ease',
+            }}
+            onClick={closeWork}
+          />
+          {/* Content — slides, no background. Outer is pointer-events:none so clicks
+              fall through to the backdrop; the inner panel turns events back on. */}
+          <div
+            className="fixed inset-0 z-[60] overflow-y-auto pointer-events-none"
+            style={{
+              transform: workVisible ? 'translateY(0)' : 'translateY(100%)',
+              transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+              willChange: 'transform',
+            }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Work index"
+          >
+            {/* Top bar — minimal, just a Close affordance */}
+            <div className="flex items-center justify-between px-6 md:px-12 py-6 pointer-events-auto">
+              <span className="text-sm tracking-widest lowercase opacity-45">Work</span>
+              <button
+                onClick={closeWork}
+                className="text-sm tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
+              >Close</button>
+            </div>
+
+            {/* Two-column aligned index: number column (fixed width) | title (flex) | year (far right).
+                Sorted newest-first by year (stable sort keeps same-year order). Sentence/title
+                case (no all-caps). Tight row padding for an editorial index feel. */}
+            <ol className="px-6 md:px-12 py-12 md:py-20 divide-y divide-current/15">
+              {[...PROJECTS]
+                .sort((a, b) => Number(b.year) - Number(a.year))
+                .map((p, i) => {
+                return (
+                  <li key={p.id}>
+                    <button
+                      onClick={() => openFromWork(p)}
+                      className="group w-full flex items-baseline gap-4 md:gap-8 py-1 md:py-1.5 text-left focus:outline-none pointer-events-auto"
+                    >
+                      {/* Number — fixed-width left column so all titles line up */}
+                      <span className="text-xl md:text-3xl tabular-nums w-9 md:w-16 shrink-0 opacity-45">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      {/* Title — Geist 400, inherits --color-text-inverted from <main> */}
+                      <span
+                        className="tracking-tight leading-none text-4xl md:text-6xl lg:text-7xl flex-1 group-hover:opacity-70 transition-opacity duration-200"
+                      >
+                        {p.title}
+                      </span>
+                      {/* Year — far right, always visible */}
+                      <span className="text-xs tracking-widest uppercase shrink-0 self-center opacity-45">
+                        {p.year}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ol>
+          </div>
+        </>
+      )}
+
       {/* ─── About panel — logo FLIP pick-up/put-down ──────────────────── */}
       {aboutOpen && (
         <>
-          {/* Click-to-close backdrop */}
+          {/* Click-to-close backdrop with a light blur so the canvas behind softens */}
           <div
             className="fixed inset-0 z-[8]"
-            style={{ cursor: 'zoom-out' }}
+            style={{
+              cursor: 'zoom-out',
+              backdropFilter: 'blur(3px)',
+              WebkitBackdropFilter: 'blur(3px)',
+              opacity: aboutVisible ? 1 : 0,
+              transition: 'opacity 0.2s ease',
+            }}
             onClick={closeAbout}
           />
 
+          {/* Logo — pinned to exact viewport centre so FLIP math is correct.
+              At rest: translate(-50%,-50%) keeps its centre on the left:50% top:50% anchor.
+              logoSource.x/y is canvas-element-centre minus viewport-centre — correct offset. */}
           <div
-            className="fixed inset-0 z-[9] flex flex-col items-center justify-center p-8 gap-8 pointer-events-none"
+            className="fixed z-[9]"
+            style={{
+              left: '50%', top: '50%',
+              width: 'min(calc(100vw - 48px), 60vh)',
+              height: 'min(calc(100vw - 48px), 60vh)',
+              maxHeight: '60vh',
+              pointerEvents: 'none',
+              opacity: aboutVisible ? 1 : 0,
+              transform: aboutVisible
+                ? 'translate(-50%, -50%) scale(1) rotate(0deg)'
+                : `translate(calc(-50% + ${logoSource.x}px), calc(-50% + ${logoSource.y}px)) scale(${logoSource.scale}) rotate(${logoSource.rot}deg)`,
+              transition: aboutVisible
+                ? 'transform 0.36s cubic-bezier(0.16,1,0.3,1), opacity 0s'
+                : 'transform 0.26s cubic-bezier(0.55,0,1,0.45), opacity 0s ease 0.22s',
+            }}
             role="dialog" aria-modal="true" aria-label="About Nadim Kurimbokus"
           >
-            {/* Logo — FLIP from canvas position, same mechanics as photo viewer */}
-            <div
-              className="relative pointer-events-auto"
-              style={{
-                width: 'min(280px, 60vw)',
-                height: 'min(280px, 60vw)',
-                opacity: aboutVisible ? 1 : 0,
-                transform: aboutVisible
-                  ? 'translate(0px,0px) scale(1) rotate(0deg)'
-                  : `translate(${logoSource.x}px,${logoSource.y}px) scale(${logoSource.scale}) rotate(${logoSource.rot}deg)`,
-                transition: aboutVisible
-                  ? 'transform 0.36s cubic-bezier(0.16,1,0.3,1), opacity 0s'
-                  : 'transform 0.26s cubic-bezier(0.55,0,1,0.45), opacity 0s ease 0.22s',
-              }}
-              onClick={e => e.stopPropagation()}
-            >
-              <Image src="/logo.png" fill alt="Nadim Kurimbokus" style={{ objectFit: 'contain' }} unoptimized />
+            <Image src="/logo.png" fill alt="Nadim Kurimbokus" style={{ objectFit: 'contain', pointerEvents: 'none' }} unoptimized />
+          </div>
+
+          {/* Info row — sits below the centred logo. calc(50% + half-logo + gap). */}
+          <div
+            className="fixed z-[9] flex items-start justify-between w-full max-w-2xl pointer-events-auto gap-6 px-6"
+            style={{
+              top: 'calc(50% + min(calc((100vw - 48px) / 2), 30vh) + 16px)',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              opacity: aboutVisible ? 1 : 0,
+              transition: aboutVisible ? 'opacity 0.20s ease 0.28s' : 'opacity 0.08s ease',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex flex-col gap-3">
+              <div>
+                <p className="text-sm">Nadim Kurimbokus</p>
+                <p className="text-xs mt-0.5 opacity-60 leading-relaxed max-w-md">
+                  British-Mauritian photographer based in London. Shooting music, performance,
+                  and the spaces in between — from headline stages to rehearsal rooms.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 mt-1">
+                <a
+                  href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
+                  className="px-4 py-2 border border-current text-sm tracking-widest lowercase rounded-sm hover:bg-[color:var(--color-text-inverted)] hover:text-[color:var(--color-bg-default)] transition-colors focus:outline-none focus:bg-[color:var(--color-text-inverted)] focus:text-[color:var(--color-bg-default)]"
+                >Email me</a>
+                <a
+                  href="https://www.instagram.com/nadim_kurimbokus/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 border border-current text-sm tracking-widest lowercase rounded-sm hover:bg-[color:var(--color-text-inverted)] hover:text-[color:var(--color-bg-default)] transition-colors focus:outline-none focus:bg-[color:var(--color-text-inverted)] focus:text-[color:var(--color-bg-default)]"
+                >Instagram</a>
+              </div>
             </div>
 
-            {/* About text — paper card so the copy is readable over the busy canvas */}
-            <div
-              className="text-center pointer-events-auto bg-bg-default px-8 py-7 rounded-sm shadow-xl max-w-md"
-              style={{
-                opacity: aboutVisible ? 1 : 0,
-                transition: aboutVisible ? 'opacity 0.20s ease 0.28s' : 'opacity 0.08s ease',
-              }}
-              onClick={e => e.stopPropagation()}
-            >
-              <h1 className="text-fg-default text-2xl mb-3 font-display">Nadim Kurimbokus</h1>
-              <p className="text-fg-muted leading-relaxed mb-6">
-                British-Mauritian photographer based in London. Shooting music, performance,
-                and the spaces in between — from headline stages to rehearsal rooms.
-              </p>
-              <button
-                className="text-fg-muted text-xs tracking-widest uppercase hover:text-fg-default transition-colors focus:outline-none focus:text-accent"
-                onClick={closeAbout}
-              >Close</button>
-            </div>
+            <button
+              className="text-sm tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline self-start whitespace-nowrap"
+              onClick={closeAbout}
+            >Close</button>
           </div>
         </>
       )}
@@ -932,10 +1210,16 @@ export default function HomePage() {
       {/* ─── Photo viewer ───────────────────────────────────────────────── */}
       {activePhoto && (
         <>
-          {/* Click-to-close backdrop */}
+          {/* Click-to-close backdrop + light blur on the canvas behind */}
           <div
             className="fixed inset-0 z-[8]"
-            style={{ cursor: 'zoom-out' }}
+            style={{
+              cursor: 'zoom-out',
+              backdropFilter: 'blur(3px)',
+              WebkitBackdropFilter: 'blur(3px)',
+              opacity: lbVisible ? 1 : 0,
+              transition: 'opacity 0.2s ease',
+            }}
             onClick={closeLightbox}
           />
 
@@ -1050,11 +1334,18 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Gallery nav arrows — only shown when job has multiple images */}
+              {/* Gallery nav arrows — only shown when there's more than one image,
+                  AND when not zoomed (so users can't tap them by accident while panning). */}
               {activePhoto.gallery.length > 1 && (
-                <>
+                <div
+                  style={{
+                    opacity: lbZoom === 1 ? 1 : 0,
+                    pointerEvents: lbZoom === 1 ? 'auto' : 'none',
+                    transition: 'opacity 0.18s ease',
+                  }}
+                >
                   <button
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-4 pl-1 py-6 text-fg-muted hover:text-fg-default transition-colors focus:outline-none focus:text-accent"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-4 pl-1 py-6 opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
                     onClick={e => { e.stopPropagation(); navigate(-1) }}
                     aria-label="Previous image"
                   >
@@ -1063,7 +1354,7 @@ export default function HomePage() {
                     </svg>
                   </button>
                   <button
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-4 pr-1 py-6 text-fg-muted hover:text-fg-default transition-colors focus:outline-none focus:text-accent"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-4 pr-1 py-6 opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
                     onClick={e => { e.stopPropagation(); navigate(1) }}
                     aria-label="Next image"
                   >
@@ -1071,7 +1362,7 @@ export default function HomePage() {
                       <polyline points="7 4 13 10 7 16" />
                     </svg>
                   </button>
-                </>
+                </div>
               )}
             </div>
 
@@ -1088,18 +1379,18 @@ export default function HomePage() {
               onClick={e => e.stopPropagation()}
             >
               <div>
-                <p className="text-fg-default text-sm font-medium">{activePhoto.title}</p>
-                <p className="text-fg-default text-xs mt-0.5 opacity-50">{activePhoto.category} &bull; {activePhoto.year}</p>
+                <p className="text-sm">{activePhoto.title}</p>
+                <p className="text-xs mt-0.5 opacity-50">{activePhoto.category} &bull; {activePhoto.year}</p>
               </div>
               <div className="flex items-center gap-4">
                 {activePhoto.gallery.length > 1 && (
-                  <span className="text-fg-default text-xs opacity-30 tabular-nums">
+                  <span className="text-xs opacity-30 tabular-nums">
                     {galleryIndex + 1} / {activePhoto.gallery.length}
                   </span>
                 )}
-                <span className="text-fg-default text-xs opacity-40">{lbZoom === 1 ? 'tap to zoom' : 'tap to fit'}</span>
+                <span className="text-xs opacity-40">{lbZoom === 1 ? 'tap to zoom' : 'tap to fit'}</span>
                 <button
-                  className="text-fg-default text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus:text-accent"
+                  className="text-sm tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
                   onClick={closeLightbox}
                 >Close</button>
               </div>
