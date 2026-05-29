@@ -44,6 +44,13 @@ const PHOTO_CFG: Record<string, {
   l1: { w: 360, aspect: '1600/1067', rot: -1.5, xPct: 0.82, yPct: 0.72, baseVx:  -8, baseVy:  -9, baseVrot:  0.22 },
   l2: { w: 340, aspect: '1600/1113', rot:  2,   xPct: 0.05, yPct: 0.42, baseVx: -10, baseVy:  11, baseVrot: -0.24 },
   l3: { w: 240, aspect: '1067/1600', rot: -2.5, xPct: 0.92, yPct: 0.20, baseVx:  12, baseVy:  -8, baseVrot:  0.25 },
+  // New live 2025 shoots
+  l4: { w: 240, aspect: '1078/1600', rot:  2.0, xPct: 0.18, yPct: 0.08, baseVx:  -9, baseVy:   7, baseVrot: -0.22 },
+  l5: { w: 240, aspect: '1076/1600', rot: -1.5, xPct: 0.58, yPct: 0.15, baseVx:  10, baseVy:  -8, baseVrot:  0.26 },
+  l6: { w: 240, aspect: '1077/1600', rot:  2.5, xPct: 0.72, yPct: 0.60, baseVx:  -8, baseVy:   9, baseVrot: -0.20 },
+  l7: { w: 340, aspect: '1600/1080', rot: -2.0, xPct: 0.30, yPct: 0.55, baseVx:  11, baseVy:  10, baseVrot:  0.18 },
+  l8: { w: 240, aspect: '1076/1600', rot:  1.5, xPct: 0.50, yPct: 0.35, baseVx:  -7, baseVy:  -9, baseVrot: -0.24 },
+  l9: { w: 250, aspect: '1078/1600', rot: -3.0, xPct: 0.08, yPct: 0.78, baseVx:   9, baseVy:  -7, baseVrot:  0.23 },
 }
 
 // Per-image aspect ratios for brand galleries — used so the tile and the lightbox container
@@ -102,6 +109,71 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_005_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_006_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_007_standard.jpg': '1067/1600',
+  // Live — Southfacing Festival · Hiphop Back in the Day (2025)
+  '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg': '1078/1600',
+  '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_002_standard.jpg': '1076/1600',
+  '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_003_standard.jpg': '1069/1600',
+  '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_004_standard.jpg': '1074/1600',
+  '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_005_standard.jpg': '1600/1079',
+  '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_006_standard.jpg': '1073/1600',
+  '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_007_standard.jpg': '1073/1600',
+  '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_008_standard.jpg': '1600/1077',
+  '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_009_standard.jpg': '1073/1600',
+  '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_010_standard.jpg': '1078/1600',
+  // Live — Sonnyjim (2025)
+  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_001_standard.jpg': '1076/1600',
+  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_002_standard.jpg': '1074/1600',
+  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_003_standard.jpg': '1078/1600',
+  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_004_standard.jpg': '1600/1065',
+  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_005_standard.jpg': '1075/1600',
+  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_006_standard.jpg': '1600/1073',
+  // Live — Schoolboy Q · Roundhouse (2025)
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_001_standard.jpg': '1077/1600',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_002_standard.jpg': '1075/1600',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_003_standard.jpg': '1600/1076',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_004_standard.jpg': '1600/1072',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_005_standard.jpg': '1600/1079',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_006_standard.jpg': '1600/1081',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_007_standard.jpg': '1600/1079',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_008_standard.jpg': '1600/1078',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_009_standard.jpg': '1080/1600',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_010_standard.jpg': '1600/1079',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_011_standard.jpg': '1600/1078',
+  '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_012_standard.jpg': '1078/1600',
+  // Live — The Pharcyde · Spread Love (2025)
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_001_standard.jpg': '1600/1080',
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_002_standard.jpg': '1064/1600',
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_003_standard.jpg': '1600/1062',
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_004_standard.jpg': '1600/1076',
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_005_standard.jpg': '1600/1071',
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_006_standard.jpg': '1600/1064',
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_007_standard.jpg': '1090/1600',
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_008_standard.jpg': '1600/1065',
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_009_standard.jpg': '1600/1072',
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_010_standard.jpg': '1600/1066',
+  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_011_standard.jpg': '1056/1600',
+  // Live — WSG · Jazz Cafe Festival (2025)
+  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_001_standard.jpg': '1076/1600',
+  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_002_standard.jpg': '1583/1600',
+  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_003_standard.jpg': '1600/1075',
+  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_004_standard.jpg': '1600/1083',
+  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_005_standard.jpg': '1600/1068',
+  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_006_standard.jpg': '1600/1074',
+  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_007_standard.jpg': '1078/1600',
+  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_008_standard.jpg': '1081/1600',
+  // Live — Freddie Gibbs · QB NYC (2025)
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_001_standard.jpg': '1078/1600',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_002_standard.jpg': '1079/1600',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_003_standard.jpg': '1600/1074',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_004_standard.jpg': '1600/1077',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_005_standard.jpg': '1600/1080',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_006_standard.jpg': '1600/1081',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_007_standard.jpg': '1600/1075',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_008_standard.jpg': '1073/1600',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_009_standard.jpg': '1600/1074',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_010_standard.jpg': '1077/1600',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_011_standard.jpg': '1600/1076',
+  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_012_standard.jpg': '1600/1075',
 }
 
 function getSrcAspect(src: string | null | undefined, fallback: string): string {
@@ -237,6 +309,101 @@ const PROJECTS: Project[] = [
       '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_005_standard.jpg',
       '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_006_standard.jpg',
       '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_007_standard.jpg',
+    ],
+  },
+  {
+    id: 'l4', kind: 'photo', title: 'Hiphop Back in the Day · Southfacing', category: 'Live', year: '2025', color: '#C8432A',
+    src: '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
+    gallery: [
+      '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
+      '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_002_standard.jpg',
+      '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_003_standard.jpg',
+      '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_004_standard.jpg',
+      '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_005_standard.jpg',
+      '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_006_standard.jpg',
+      '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_007_standard.jpg',
+      '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_008_standard.jpg',
+      '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_009_standard.jpg',
+      '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_010_standard.jpg',
+    ],
+  },
+  {
+    id: 'l5', kind: 'photo', title: 'Sonnyjim', category: 'Live', year: '2025', color: '#C8432A',
+    src: '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_001_standard.jpg',
+    gallery: [
+      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_001_standard.jpg',
+      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_002_standard.jpg',
+      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_003_standard.jpg',
+      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_004_standard.jpg',
+      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_005_standard.jpg',
+      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_006_standard.jpg',
+    ],
+  },
+  {
+    id: 'l6', kind: 'photo', title: 'Schoolboy Q · Roundhouse', category: 'Live', year: '2025', color: '#C8432A',
+    src: '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_001_standard.jpg',
+    gallery: [
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_001_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_002_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_003_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_004_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_005_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_006_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_007_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_008_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_009_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_010_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_011_standard.jpg',
+      '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_012_standard.jpg',
+    ],
+  },
+  {
+    id: 'l7', kind: 'photo', title: 'The Pharcyde · Spread Love', category: 'Live', year: '2025', color: '#C8432A',
+    src: '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_001_standard.jpg',
+    gallery: [
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_001_standard.jpg',
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_002_standard.jpg',
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_003_standard.jpg',
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_004_standard.jpg',
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_005_standard.jpg',
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_006_standard.jpg',
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_007_standard.jpg',
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_008_standard.jpg',
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_009_standard.jpg',
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_010_standard.jpg',
+      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_011_standard.jpg',
+    ],
+  },
+  {
+    id: 'l8', kind: 'photo', title: 'WSG · Jazz Cafe Festival', category: 'Live', year: '2025', color: '#C8432A',
+    src: '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_001_standard.jpg',
+    gallery: [
+      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_001_standard.jpg',
+      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_002_standard.jpg',
+      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_003_standard.jpg',
+      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_004_standard.jpg',
+      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_005_standard.jpg',
+      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_006_standard.jpg',
+      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_007_standard.jpg',
+      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_008_standard.jpg',
+    ],
+  },
+  {
+    id: 'l9', kind: 'photo', title: 'Freddie Gibbs · QB NYC', category: 'Live', year: '2025', color: '#C8432A',
+    src: '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_001_standard.jpg',
+    gallery: [
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_001_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_002_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_003_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_004_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_005_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_006_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_007_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_008_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_009_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_010_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_011_standard.jpg',
+      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_012_standard.jpg',
     ],
   },
 ]
@@ -726,10 +893,30 @@ export default function HomePage() {
         if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
         if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
-        if (pos.x >  vw + 60) pos.x = -w
-        if (pos.x < -w)       pos.x =  vw + 60
-        if (pos.y >  vh + 60) pos.y = -h
-        if (pos.y < -h)       pos.y =  vh + 60
+        if (id === 'logo') {
+          // Magnet snap — pull toward viewport centre when within 120px and not being dragged.
+          // No wrap-around for the logo; it stays on-screen and gets drawn back to centre.
+          const snapX = (vw - LOGO_SIZE) / 2
+          const snapY = (vh - LOGO_SIZE) / 2
+          const dist = Math.hypot(pos.x - snapX, pos.y - snapY)
+          if (dist < 120 && dragRef.current?.id !== 'logo') {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+              // Instant snap for reduced-motion users
+              pos.x = snapX; pos.y = snapY; pos.vx = 0; pos.vy = 0
+            } else {
+              // Smooth magnetic pull — lerp position, dampen velocity
+              pos.x += (snapX - pos.x) * 0.08
+              pos.y += (snapY - pos.y) * 0.08
+              pos.vx *= 0.85
+              pos.vy *= 0.85
+            }
+          }
+        } else {
+          if (pos.x >  vw + 60) pos.x = -w
+          if (pos.x < -w)       pos.x =  vw + 60
+          if (pos.y >  vh + 60) pos.y = -h
+          if (pos.y < -h)       pos.y =  vh + 60
+        }
         const el = elRefs.current[id]
         if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
       }
