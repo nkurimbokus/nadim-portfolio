@@ -25,7 +25,6 @@ interface Project {
 }
 
 const LOGO_SIZE      = 360
-const LETTER_SIZE    = 80
 const DRAG_THRESHOLD = 8
 const LOGO_INIT = { xPct: 0.4, yPct: 0.3, rot: -2, baseVx: 6, baseVy: 4, baseVrot: 0.2 }
 
@@ -201,19 +200,9 @@ function getTileDims(id: string, src: string | null | undefined): { w: number; h
   return { w: Math.round(longDim * currAspectNum), h: longDim }
 }
 
-const LETTER_GRID = [
-  { xPct: 0.15, yPct: 0.20, rot: -12, baseVx:  14, baseVy:   8, baseVrot:  0.70 },
-  { xPct: 0.70, yPct: 0.25, rot:   9, baseVx: -12, baseVy:  13, baseVrot: -0.60 },
-  { xPct: 0.42, yPct: 0.70, rot:  -8, baseVx:  13, baseVy: -11, baseVrot:  0.75 },
-]
-const LETTER_CHARS = ['A', 'B', 'C']
-
 // Each float drifts toward a different edge so they feel like they physically leave the frame
 const FLOAT_DRIFT = {
   logo: 'translate(-100px, -80px) scale(0.6)',
-  lt0:  'translate(-90px, -65px) scale(0.55)',   // upper-left
-  lt1:  'translate(90px,  -60px) scale(0.55)',   // upper-right
-  lt2:  'translate(12px,   90px) scale(0.55)',   // downward
 }
 
 const PROJECTS: Project[] = [
@@ -420,7 +409,6 @@ function getDims(id: string): { w: number; h: number } {
   const mobile = typeof window !== 'undefined' && window.innerWidth < 768
   const s = mobile ? 0.65 : 1
   if (id === 'logo') return { w: Math.round(LOGO_SIZE * s), h: Math.round(LOGO_SIZE * s) }
-  if (id.startsWith('lt')) return { w: Math.round(LETTER_SIZE * s), h: Math.round(LETTER_SIZE * s) }
   const cfg = PHOTO_CFG[id]
   if (!cfg) return { w: Math.round(200 * s), h: Math.round(200 * s) }
   const w = cfg.w * TILE_SIZE_SCALE * s
@@ -491,16 +479,6 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
       baseVx: cfg.baseVx * vScale,
       baseVy: cfg.baseVy * vScale,
       baseVrot: cfg.baseVrot * vScale,
-    }
-  })
-  LETTER_GRID.forEach((g, i) => {
-    const id = `lt${i}`
-    s[id] = {
-      x: g.xPct*(vw-LETTER_SIZE), y: g.yPct*(vh-LETTER_SIZE), rot: g.rot,
-      vx: 0, vy: 0, vrot: 0,
-      baseVx: g.baseVx * vScale,
-      baseVy: g.baseVy * vScale,
-      baseVrot: g.baseVrot * vScale,
     }
   })
   return s
@@ -1242,34 +1220,6 @@ export default function HomePage() {
           />
         </div>
 
-        {/* ── Letters ─────────────────────────────────────────────────────
-            Each one drifts in a unique direction — upper-left, upper-right, down.
-            Staggered so they leave in a cascade, not all at once. */}
-        {LETTER_CHARS.map((char, i) => {
-          const driftKey = `lt${i}` as keyof typeof FLOAT_DRIFT
-          const outDelay = i * 0.045
-          const inDelay  = 0.10 + i * 0.08
-          return (
-            <div
-              key={`lt${i}`}
-              ref={el => { elRefs.current[`lt${i}`] = el }}
-              className="absolute top-0 left-0 touch-none select-none"
-              style={{ width: LETTER_SIZE, height: LETTER_SIZE, willChange: 'transform', cursor: 'grab', zIndex: 5 }}
-              onPointerDown={e => onPointerDown(e, `lt${i}`)}
-            >
-              <div style={{
-                width: '100%', height: '100%',
-                opacity: floatsHidden ? 0 : 1,
-                transform: floatsHidden ? (FLOAT_DRIFT[driftKey] ?? FLOAT_DRIFT.lt0) : 'translate(0px,0px) scale(1)',
-                transition: floatsHidden
-                  ? `opacity ${0.16 + i * 0.04}s ease ${outDelay}s, transform ${0.22 + i * 0.04}s cubic-bezier(0.55,0,1,0.45) ${outDelay}s`
-                  : `opacity 0.50s ease ${inDelay}s, transform 0.56s cubic-bezier(0.16,1,0.3,1) ${inDelay}s`,
-              }}>
-                <Image src={`/letters/${char}.png`} width={LETTER_SIZE} height={LETTER_SIZE} alt={char} draggable={false} unoptimized />
-              </div>
-            </div>
-          )
-        })}
       </section>
 
       {/* ─── Background colour picker — top-left corner ──────────────────
