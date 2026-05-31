@@ -147,10 +147,12 @@ body {
    18px dot is below the 44px minimum touch target. Keep the slider permanently
    expanded and give it a 44px-tall hit area. Desktop is untouched. */
 @media (max-width: 767px) {
-  .cpicker { width: 249px; height: 44px; }
+  .cpicker { width: 249px; height: 44px; transform: scale(0.7); transform-origin: top left; }
   .cpicker-dot { top: 13px !important; }          /* recentre 18px dot in 44px box */
   .cpicker-strip { width: 240px; top: 13px; }
   .cpicker-input { height: 44px; }                /* tall hit area; thumb auto-centres */
 }
+
+.canvas-section { height: 100vh; height: calc(var(--vh, 1vh) * 100); }
 
 

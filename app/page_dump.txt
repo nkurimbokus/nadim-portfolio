@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import Image from 'next/image'
@@ -21,7 +21,7 @@ interface Project {
   title: string; category: string; year: string
   color: string
   src: string | null        // cover shown on canvas tile
-  gallery: string[]         // all images for this job — flip through in viewer
+  gallery: string[]         // all images for this job â€” flip through in viewer
 }
 
 const LOGO_SIZE      = 360
@@ -34,13 +34,13 @@ const PHOTO_CFG: Record<string, {
   xPct: number; yPct: number
   baseVx: number; baseVy: number; baseVrot: number
 }> = {
-  // Brand 2025 — featured images are portrait (~1080x1600); galleries mix portrait + landscape
+  // Brand 2025 â€” featured images are portrait (~1080x1600); galleries mix portrait + landscape
   b1: { w: 240, aspect: '1060/1600', rot:  1.5, xPct: 0.38, yPct: 0.22, baseVx:  -7, baseVy:   8, baseVrot:  0.22 },
   b2: { w: 240, aspect: '1082/1600', rot: -2,   xPct: 0.62, yPct: 0.45, baseVx:   8, baseVy:  -7, baseVrot: -0.28 },
   b3: { w: 240, aspect: '1079/1600', rot:  2.5, xPct: 0.22, yPct: 0.38, baseVx:  -9, baseVy:   6, baseVrot:  0.20 },
-  // Cultural 2025 — Voice of Mauritius, mixed portrait + landscape gallery (8 images)
+  // Cultural 2025 â€” Voice of Mauritius, mixed portrait + landscape gallery (8 images)
   c1: { w: 250, aspect: '1083/1600', rot: -2.5, xPct: 0.45, yPct: 0.85, baseVx:  11, baseVy:  -7, baseVrot: -0.24 },
-  // Live — Julies Top 5 (landscape feature), Jazz Cafe Festival (landscape), Reyven Lenae @ Roundhouse (portrait)
+  // Live â€” Julies Top 5 (landscape feature), Jazz Cafe Festival (landscape), Reyven Lenae @ Roundhouse (portrait)
   l1: { w: 360, aspect: '1600/1067', rot: -1.5, xPct: 0.82, yPct: 0.72, baseVx:  -8, baseVy:  -9, baseVrot:  0.22 },
   l2: { w: 340, aspect: '1600/1113', rot:  2,   xPct: 0.05, yPct: 0.42, baseVx: -10, baseVy:  11, baseVrot: -0.24 },
   l3: { w: 240, aspect: '1067/1600', rot: -2.5, xPct: 0.92, yPct: 0.20, baseVx:  12, baseVy:  -8, baseVrot:  0.25 },
@@ -53,7 +53,7 @@ const PHOTO_CFG: Record<string, {
   l9: { w: 250, aspect: '1078/1600', rot: -3.0, xPct: 0.08, yPct: 0.78, baseVx:   9, baseVy:  -7, baseVrot:  0.23 },
 }
 
-// Per-image aspect ratios for brand galleries — used so the tile and the lightbox container
+// Per-image aspect ratios for brand galleries â€” used so the tile and the lightbox container
 // can match whichever image is currently showing (galleries have mixed portrait + landscape)
 const IMAGE_ASPECTS: Record<string, string> = {
   '/images/brand/sum-ldn/brand_2025_sum-ldn_fashion-shoot_001_standard.jpg': '1060/1600',
@@ -70,7 +70,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/brand/22impact/brand_2025_22impact_003_standard.jpg': '1084/1600',
   '/images/brand/22impact/brand_2025_22impact_004_standard.jpg': '1081/1600',
   '/images/brand/22impact/brand_2025_22impact_005_standard.jpg': '1600/1070',
-  // Cultural — Voice of Mauritius
+  // Cultural â€” Voice of Mauritius
   '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_001_standard.jpg': '1083/1600',
   '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_002_standard.jpg': '1600/1083',
   '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_003_standard.jpg': '1077/1600',
@@ -79,7 +79,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_006_standard.jpg': '1082/1600',
   '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_007_standard.jpg': '1600/1063',
   '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_008_standard.jpg': '1078/1600',
-  // Live — Julies Top 5 (2026): mostly landscape, 003 + 008 are portrait
+  // Live â€” Julies Top 5 (2026): mostly landscape, 003 + 008 are portrait
   '/images/live/julies-top-5/live_2026_julies-top-5_001_standard.jpg': '1600/1067',
   '/images/live/julies-top-5/live_2026_julies-top-5_002_standard.jpg': '1600/1067',
   '/images/live/julies-top-5/live_2026_julies-top-5_003_standard.jpg': '1067/1600',
@@ -90,7 +90,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/julies-top-5/live_2026_julies-top-5_008_standard.jpg': '1067/1600',
   '/images/live/julies-top-5/live_2026_julies-top-5_009_standard.jpg': '1600/1067',
   '/images/live/julies-top-5/live_2026_julies-top-5_010_standard.jpg': '1600/1067',
-  // Live — Jazz Cafe Festival (2024): mixed; 005, 007, 009 are portrait
+  // Live â€” Jazz Cafe Festival (2024): mixed; 005, 007, 009 are portrait
   '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_001_standard.jpg': '1600/1113',
   '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_002_standard.jpg': '1600/1105',
   '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_003_standard.jpg': '1600/1116',
@@ -101,7 +101,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_008_standard.jpg': '1600/1127',
   '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_009_standard.jpg': '1110/1600',
   '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_010_standard.jpg': '1600/1117',
-  // Live — Reyven Lenae @ Roundhouse (2025): mostly portrait; 003, 004 are landscape
+  // Live â€” Reyven Lenae @ Roundhouse (2025): mostly portrait; 003, 004 are landscape
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_001_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_002_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_003_standard.jpg': '1600/1067',
@@ -109,7 +109,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_005_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_006_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_007_standard.jpg': '1067/1600',
-  // Live — Southfacing Festival · Hiphop Back in the Day (2025)
+  // Live â€” Southfacing Festival Â· Hiphop Back in the Day (2025)
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg': '1078/1600',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_002_standard.jpg': '1076/1600',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_003_standard.jpg': '1069/1600',
@@ -120,14 +120,14 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_008_standard.jpg': '1600/1077',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_009_standard.jpg': '1073/1600',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_010_standard.jpg': '1078/1600',
-  // Live — Sonnyjim (2025)
+  // Live â€” Sonnyjim (2025)
   '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_001_standard.jpg': '1076/1600',
   '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_002_standard.jpg': '1074/1600',
   '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_003_standard.jpg': '1078/1600',
   '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_004_standard.jpg': '1600/1065',
   '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_005_standard.jpg': '1075/1600',
   '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_006_standard.jpg': '1600/1073',
-  // Live — Schoolboy Q · Roundhouse (2025)
+  // Live â€” Schoolboy Q Â· Roundhouse (2025)
   '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_001_standard.jpg': '1077/1600',
   '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_002_standard.jpg': '1075/1600',
   '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_003_standard.jpg': '1600/1076',
@@ -140,7 +140,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_010_standard.jpg': '1600/1079',
   '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_011_standard.jpg': '1600/1078',
   '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_012_standard.jpg': '1078/1600',
-  // Live — The Pharcyde · Spread Love (2025)
+  // Live â€” The Pharcyde Â· Spread Love (2025)
   '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_001_standard.jpg': '1600/1080',
   '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_002_standard.jpg': '1064/1600',
   '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_003_standard.jpg': '1600/1062',
@@ -152,7 +152,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_009_standard.jpg': '1600/1072',
   '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_010_standard.jpg': '1600/1066',
   '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_011_standard.jpg': '1056/1600',
-  // Live — WSG · Jazz Cafe Festival (2025)
+  // Live â€” WSG Â· Jazz Cafe Festival (2025)
   '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_001_standard.jpg': '1076/1600',
   '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_002_standard.jpg': '1583/1600',
   '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_003_standard.jpg': '1600/1075',
@@ -161,7 +161,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_006_standard.jpg': '1600/1074',
   '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_007_standard.jpg': '1078/1600',
   '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_008_standard.jpg': '1081/1600',
-  // Live — Freddie Gibbs · QB NYC (2025)
+  // Live â€” Freddie Gibbs Â· QB NYC (2025)
   '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_001_standard.jpg': '1078/1600',
   '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_002_standard.jpg': '1079/1600',
   '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_003_standard.jpg': '1600/1074',
@@ -194,10 +194,10 @@ function getTileDims(id: string, src: string | null | undefined): { w: number; h
   const baseLong = cfgAspectNum >= 1 ? cfg.w : Math.round(cfg.w / cfgAspectNum)
   const longDim = baseLong * TILE_SIZE_SCALE
   if (currAspectNum >= 1) {
-    // Landscape — long dim is width
+    // Landscape â€” long dim is width
     return { w: longDim, h: Math.round(longDim / currAspectNum) }
   }
-  // Portrait — long dim is height
+  // Portrait â€” long dim is height
   return { w: Math.round(longDim * currAspectNum), h: longDim }
 }
 
@@ -265,9 +265,9 @@ const PROJECTS: Project[] = [
       '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_008_standard.jpg',
     ],
   },
-  // Live 2024–2026
+  // Live 2024â€“2026
   {
-    id: 'l1', kind: 'photo', title: 'Julies Top 5 · Roundhouse', category: 'Live', year: '2026', color: '#C8432A',
+    id: 'l1', kind: 'photo', title: 'Julies Top 5 Â· Roundhouse', category: 'Live', year: '2026', color: '#C8432A',
     src: '/images/live/julies-top-5/live_2026_julies-top-5_001_standard.jpg',
     gallery: [
       '/images/live/julies-top-5/live_2026_julies-top-5_001_standard.jpg',
@@ -299,7 +299,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l3', kind: 'photo', title: 'Reyven Lenae · Roundhouse', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l3', kind: 'photo', title: 'Reyven Lenae Â· Roundhouse', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_001_standard.jpg',
     gallery: [
       '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_001_standard.jpg',
@@ -312,7 +312,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l4', kind: 'photo', title: 'Hiphop Back in the Day · Southfacing', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l4', kind: 'photo', title: 'Hiphop Back in the Day Â· Southfacing', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
     gallery: [
       '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
@@ -340,7 +340,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l6', kind: 'photo', title: 'Schoolboy Q · Roundhouse', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l6', kind: 'photo', title: 'Schoolboy Q Â· Roundhouse', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_001_standard.jpg',
     gallery: [
       '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_001_standard.jpg',
@@ -358,7 +358,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l7', kind: 'photo', title: 'The Pharcyde · Spread Love', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l7', kind: 'photo', title: 'The Pharcyde Â· Spread Love', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_001_standard.jpg',
     gallery: [
       '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_001_standard.jpg',
@@ -375,7 +375,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l8', kind: 'photo', title: 'WSG · Jazz Cafe Festival', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l8', kind: 'photo', title: 'WSG Â· Jazz Cafe Festival', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_001_standard.jpg',
     gallery: [
       '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_001_standard.jpg',
@@ -389,7 +389,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l9', kind: 'photo', title: 'Freddie Gibbs · QB NYC', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l9', kind: 'photo', title: 'Freddie Gibbs Â· QB NYC', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_001_standard.jpg',
     gallery: [
       '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_001_standard.jpg',
@@ -413,7 +413,7 @@ function parseAspect(a: string): number {
 }
 // Single multiplier for the photo tile sizes on the homepage canvas. Set to 1
 // for the original layout, 2 to double everything, etc. Position config (xPct/yPct)
-// is unchanged — only the tile dimensions are scaled.
+// is unchanged â€” only the tile dimensions are scaled.
 const TILE_SIZE_SCALE = 1
 
 function getDims(id: string): { w: number; h: number } {
@@ -431,7 +431,7 @@ function getDims(id: string): { w: number; h: number } {
 const VELOCITY_SCALE = 0.5
 
 // Colour stops shared by the bg-hue slider's CSS gradient AND the applied background.
-// Sweeps black → deep violet → blue → teal → lime → yellow → orange → red → pink → white.
+// Sweeps black â†’ deep violet â†’ blue â†’ teal â†’ lime â†’ yellow â†’ orange â†’ red â†’ pink â†’ white.
 const BG_HUE_STOPS: { pct: number; rgb: [number, number, number] }[] = [
   { pct:   0, rgb: [  0,   0,   0] },   // black
   { pct:   8, rgb: [ 42,   0,  80] },   // deep violet
@@ -448,7 +448,7 @@ const BG_HUE_STOPS: { pct: number; rgb: [number, number, number] }[] = [
   { pct: 100, rgb: [255, 255, 255] },   // white
 ]
 
-// Linear RGB interpolation between adjacent stops — matches what the CSS gradient
+// Linear RGB interpolation between adjacent stops â€” matches what the CSS gradient
 // renders, so the colour the user sees under the thumb is the colour the page gets.
 function interpolateBgStops(v: number): string {
   if (v <= 0) return `rgb(${BG_HUE_STOPS[0].rgb.join(',')})`
@@ -469,7 +469,7 @@ function interpolateBgStops(v: number): string {
 function buildInitialState(vw: number, vh: number): Record<string, PhysicsState> {
   const s: Record<string, PhysicsState> = {}
   const isMobile = vw < 768
-  const vScale = isMobile ? VELOCITY_SCALE * 2.5 : VELOCITY_SCALE
+  const vScale = isMobile ? VELOCITY_SCALE * 0.5 : VELOCITY_SCALE
   s['logo'] = {
     x: (vw - LOGO_SIZE) / 2,
     y: -LOGO_SIZE * 0.30,
@@ -507,31 +507,25 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
 }
 
 export default function HomePage() {
-  // Mobile flag — drives how many tiles render and their size. Starts false so the
+  // Mobile flag â€” drives how many tiles render and their size. Starts false so the
   // first client render matches the server (no hydration mismatch), then the effect
   // flips it on small screens. Kept in sync with the physics-side window.innerWidth
   // checks in getDims / buildInitialState.
   const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
-    const setVh = () => document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`)
     check()
-    setVh()
     window.addEventListener('resize', check)
-    window.addEventListener('resize', setVh)
-    return () => {
-      window.removeEventListener('resize', check)
-      window.removeEventListener('resize', setVh)
-    }
+    return () => window.removeEventListener('resize', check)
   }, [])
 
-  // Background colour picker — slider sweeps from black → vibrant rainbow → white.
+  // Background colour picker â€” slider sweeps from black â†’ vibrant rainbow â†’ white.
   // The same stops table drives both the CSS gradient track and the applied bg,
   // so the colour under the thumb is exactly the colour the page becomes.
   // Default value = 100 (right end = white), matching the original cream/white bg.
   const [bgHue, setBgHue] = useState(100)
 
-  // Compute the bg colour and its inverse for the dot in one pass — used both
+  // Compute the bg colour and its inverse for the dot in one pass â€” used both
   // for the page background variable AND inline-set on the dot element itself
   // (inline wins specificity so the dot is always the inverse colour).
   const bgColour = interpolateBgStops(bgHue)
@@ -542,10 +536,10 @@ export default function HomePage() {
     return `rgb(${255 - r}, ${255 - g}, ${255 - b})`
   })()
 
-  // Text colour = exact RGB inversion of the background (255 − each channel).
+  // Text colour = exact RGB inversion of the background (255 âˆ’ each channel).
   // Applied as --color-text-inverted on <main> so every descendant inherits it,
   // and also pushed onto :root so it is available on any future page.
-  // Recomputed on every render (i.e. every slider move) — real-time update.
+  // Recomputed on every render (i.e. every slider move) â€” real-time update.
   const textColour = (() => {
     const m = bgColour.match(/\d+/g)
     if (!m || m.length < 3) return 'rgb(245,245,245)'
@@ -558,24 +552,24 @@ export default function HomePage() {
     document.documentElement.style.setProperty('--color-text-inverted',   textColour)
   }, [bgColour, textColour])
 
-  // Work overlay — bottom sheet, slides up to open, down to close. Clicking a project
+  // Work overlay â€” bottom sheet, slides up to open, down to close. Clicking a project
   // closes the sheet and hands off to the existing photo lightbox (FLIP from canvas tile).
   const [workMounted, setWorkMounted] = useState(false)   // in the DOM
-  const [workVisible, setWorkVisible] = useState(false)   // animation state — true = at translateY(0)
+  const [workVisible, setWorkVisible] = useState(false)   // animation state â€” true = at translateY(0)
   // Tracks whether the currently-open lightbox was launched from the work index.
   // If yes, closing the lightbox returns to work instead of back to the canvas.
   const cameFromWorkRef = useRef(false)
 
-  // About panel — same FLIP pick-up/put-down system as photo viewer
+  // About panel â€” same FLIP pick-up/put-down system as photo viewer
   const [aboutOpen,    setAboutOpen]    = useState(false)   // mounted
   const [aboutVisible, setAboutVisible] = useState(false)   // animation state
   const [logoSource,   setLogoSource]   = useState({ x: 0, y: 0, scale: 1, rot: 0 })
   const [activePhoto,  setActivePhoto]  = useState<Project | null>(null)
   const [lbZoom,       setLbZoom]       = useState(1)
   const [lbVisible,    setLbVisible]    = useState(false)
-  // Letters/logo only sling away on zoom-in, not on viewer open — they float in background
+  // Letters/logo only sling away on zoom-in, not on viewer open â€” they float in background
   const [floatsHidden,  setFloatsHidden]  = useState(false)
-  // FLIP source — where the photo starts (canvas position) and ends (canvas position on close)
+  // FLIP source â€” where the photo starts (canvas position) and ends (canvas position on close)
   const [lbSource,      setLbSource]      = useState({ x: 0, y: 0, scale: 0.15, rot: 0 })
   // Controls the canvas zoom-out independently of activePhoto so we can start
   // the scale-back at the same moment the viewer exit animation begins
@@ -585,12 +579,12 @@ export default function HomePage() {
   const [galleryIndex, setGalleryIndex] = useState(0)
   // Two-layer slide: the outgoing index sticks around for the duration of the animation
   const [galleryPrev,  setGalleryPrev]  = useState<number | null>(null)
-  // Direction of the last navigation — drives which way the slide animates (1 = forward, -1 = back)
+  // Direction of the last navigation â€” drives which way the slide animates (1 = forward, -1 = back)
   const [galleryDir,   setGalleryDir]   = useState<1 | -1>(1)
-  // Animation phase — 'start' = layers at initial offsets (no transition), 'end' = transitioned to final positions
+  // Animation phase â€” 'start' = layers at initial offsets (no transition), 'end' = transitioned to final positions
   const [galleryPhase, setGalleryPhase] = useState<'idle' | 'start' | 'end'>('idle')
   const galleryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  // Tile image per project — defaults to proj.src, updates to whatever was last viewed in the lightbox
+  // Tile image per project â€” defaults to proj.src, updates to whatever was last viewed in the lightbox
   const [tileSrc, setTileSrc] = useState<Record<string, string | null>>(
     () => Object.fromEntries(PROJECTS.map(p => [p.id, p.src]))
   )
@@ -613,7 +607,7 @@ export default function HomePage() {
   const dragRef    = useRef<DragState | null>(null)
   const didDragRef = useRef(false)
 
-  // Pan: entirely direct DOM — no React state during drag, zero latency
+  // Pan: entirely direct DOM â€” no React state during drag, zero latency
   const lbZoomLayerRef  = useRef<HTMLDivElement | null>(null)
   const lbPanRef        = useRef({ x: 0, y: 0 })
   const lbPanBaseRef    = useRef({ x: 0, y: 0 })
@@ -622,7 +616,7 @@ export default function HomePage() {
   const lbDidPanRef     = useRef(false)
   const lbZoomRef       = useRef(1)
 
-  // Smooth ease — no bounce/overshoot on zoom
+  // Smooth ease â€” no bounce/overshoot on zoom
   const ZOOM_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)'
 
   const applyLbTransform = useCallback((z: number, px: number, py: number, animated: boolean) => {
@@ -631,7 +625,7 @@ export default function HomePage() {
     el.style.transform  = `scale(${z}) translate(${px / z}px, ${py / z}px)`
   }, [ZOOM_EASE])
 
-  // When photo changes: reset zoom/pan/gallery. Letters keep floating — only sling on zoom.
+  // When photo changes: reset zoom/pan/gallery. Letters keep floating â€” only sling on zoom.
   useEffect(() => {
     setLbZoom(1)
     lbZoomRef.current = 1
@@ -640,7 +634,7 @@ export default function HomePage() {
     applyLbTransform(1, 0, 0, false)
     lbIsClosingRef.current = false
     // Seed gallery index from the tile's current image so the lightbox opens on whatever the user last saw.
-    // Read tileSrc via ref — we only want this effect firing on activePhoto changes, not tileSrc updates.
+    // Read tileSrc via ref â€” we only want this effect firing on activePhoto changes, not tileSrc updates.
     if (activePhoto) {
       const current = tileSrcRef.current[activePhoto.id] ?? activePhoto.src
       const idx = current ? activePhoto.gallery.indexOf(current) : 0
@@ -648,17 +642,17 @@ export default function HomePage() {
     } else {
       setGalleryIndex(0)
     }
-    // Reset crossfade state — no outgoing image when (re)opening or closing
+    // Reset crossfade state â€” no outgoing image when (re)opening or closing
     if (galleryTimerRef.current) { clearTimeout(galleryTimerRef.current); galleryTimerRef.current = null }
     setGalleryPrev(null)
     if (!activePhoto) setFloatsHidden(false)
     if (activePhoto) requestAnimationFrame(() => setLbVisible(true))
   }, [activePhoto, applyLbTransform])
 
-  // Navigate within the job's gallery — directional two-layer slide.
+  // Navigate within the job's gallery â€” directional two-layer slide.
   // Outgoing image slides off opposite to direction, incoming slides in from direction.
   // Implementation: paint the layers at their START offsets (no transition), then on the
-  // next frame flip to END (with transition enabled). Pure state — no CSS keyframes needed.
+  // next frame flip to END (with transition enabled). Pure state â€” no CSS keyframes needed.
   const navigate = useCallback((dir: 1 | -1) => {
     const photo = activePhoto
     if (!photo || photo.gallery.length <= 1) return
@@ -668,7 +662,7 @@ export default function HomePage() {
     setGalleryPrev(oldIdx)
     setGalleryIndex((oldIdx + dir + photo.gallery.length) % photo.gallery.length)
     setGalleryPhase('start')
-    // Two rAFs — first one ensures the browser paints the 'start' frame, the second flips to 'end'
+    // Two rAFs â€” first one ensures the browser paints the 'start' frame, the second flips to 'end'
     requestAnimationFrame(() => {
       requestAnimationFrame(() => setGalleryPhase('end'))
     })
@@ -693,7 +687,7 @@ export default function HomePage() {
     })
   }, [activePhoto, galleryIndex])
 
-  // ── About open / close — same FLIP pattern as photo viewer, including canvas zoom-out ──
+  // â”€â”€ About open / close â€” same FLIP pattern as photo viewer, including canvas zoom-out â”€â”€
   // viewerSize MUST match the rendered overlay logo's CSS dimensions exactly.
   // The overlay logo uses `min(calc(100vw - 48px), 60vh)`; the same calc here keeps
   // the FLIP scale honest so the logo lands on its canvas tile without snapping.
@@ -747,14 +741,14 @@ export default function HomePage() {
   }, [aboutOpen])
 
   const openLightbox = useCallback((proj: Project) => {
-    // FLIP source — capture canvas tile rect at scale(1) (viewer not yet open)
+    // FLIP source â€” capture canvas tile rect at scale(1) (viewer not yet open)
     const el = elRefs.current[proj.id]
     if (el) {
       const rect = el.getBoundingClientRect()
       const vw   = window.innerWidth; const vh = window.innerHeight
       const cfg  = PHOTO_CFG[proj.id]
       if (cfg) {
-        // Use the currently displayed tile image's aspect — matches whichever shape lightbox is about to open as
+        // Use the currently displayed tile image's aspect â€” matches whichever shape lightbox is about to open as
         const currentSrc = tileSrcRef.current[proj.id] ?? proj.src
         const aspect = getSrcAspect(currentSrc, cfg.aspect)
         const [aw, ah] = aspect.split('/').map(Number)
@@ -763,7 +757,7 @@ export default function HomePage() {
           x: (rect.left + rect.width  / 2) - vw / 2,
           y: (rect.top  + rect.height / 2) - vh / 2,
           scale: Math.max(0.08, rect.width / viewerW),
-          rot: posRef.current[proj.id]?.rot ?? cfg.rot,  // current tilt — straightens as it rises
+          rot: posRef.current[proj.id]?.rot ?? cfg.rot,  // current tilt â€” straightens as it rises
         })
       }
     }
@@ -771,7 +765,7 @@ export default function HomePage() {
     setActivePhoto(proj)
   }, [])
 
-  // ── Work overlay — floats above the canvas, no opaque background ─────────
+  // â”€â”€ Work overlay â€” floats above the canvas, no opaque background â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Behaves like the photo viewer: canvas scales back, the work content
   // floats above. Slides up to enter, down to exit. Clicking a project hands
   // off to the existing lightbox (FLIP from canvas tile), the slide-down and
@@ -789,8 +783,8 @@ export default function HomePage() {
     setTimeout(() => setWorkMounted(false), 320)
   }, [])
 
-  // Click a project from inside the work sheet → close sheet + open lightbox.
-  // Don't unscale the canvas — openLightbox keeps it scaled so the FLIP lands cleanly.
+  // Click a project from inside the work sheet â†’ close sheet + open lightbox.
+  // Don't unscale the canvas â€” openLightbox keeps it scaled so the FLIP lands cleanly.
   // Mark the launch source so closing the lightbox returns to the work index, not the canvas.
   const openFromWork = useCallback((proj: Project) => {
     cameFromWorkRef.current = true
@@ -801,7 +795,7 @@ export default function HomePage() {
 
   const closeLightbox = useCallback(() => {
     // Remember the image the user last saw so the canvas tile reflects it.
-    // Also re-centre the tile's position so reshaping (portrait→landscape or back) doesn't make it jump.
+    // Also re-centre the tile's position so reshaping (portraitâ†’landscape or back) doesn't make it jump.
     if (activePhoto) {
       const lastSrc = activePhoto.gallery[galleryIndexRef.current] ?? activePhoto.src
       const cfg = PHOTO_CFG[activePhoto.id]
@@ -816,7 +810,7 @@ export default function HomePage() {
       }
       if (lastSrc) setTileSrc(prev => ({ ...prev, [activePhoto.id]: lastSrc }))
     }
-    // FLIP target — use the raw physics position (scale(1) equivalent),
+    // FLIP target â€” use the raw physics position (scale(1) equivalent),
     // because we're zooming the canvas back to scale(1) at the same moment.
     // The viewer photo and the canvas tile arrive at the same spot simultaneously.
     if (activePhoto) {
@@ -824,14 +818,14 @@ export default function HomePage() {
       const cfg = PHOTO_CFG[activePhoto.id]
       if (pos && cfg) {
         const vw = window.innerWidth; const vh = window.innerHeight
-        // Use the gallery image the user just had open — both the tile (now resized to match) and the lightbox use this aspect
+        // Use the gallery image the user just had open â€” both the tile (now resized to match) and the lightbox use this aspect
         const lastSrc2 = activePhoto.gallery[galleryIndexRef.current] ?? activePhoto.src
         const aspect = getSrcAspect(lastSrc2, cfg.aspect)
         const [aw, ah] = aspect.split('/').map(Number)
         const { w, h } = getTileDims(activePhoto.id, lastSrc2)
         const viewerW  = Math.min(vw - 48, vh * 0.8 * (aw / ah))
         // Freeze the tile at this exact position so it can't drift while the
-        // viewer photo is in flight — they'll land at exactly the same spot
+        // viewer photo is in flight â€” they'll land at exactly the same spot
         frozenPhotoRef.current = { id: activePhoto.id, x: pos.x, y: pos.y, rot: pos.rot }
         setLbSource({
           x: pos.x + w / 2 - vw / 2,
@@ -841,7 +835,7 @@ export default function HomePage() {
         })
       }
     }
-    // If the lightbox was launched from the work index, KEEP the canvas scaled —
+    // If the lightbox was launched from the work index, KEEP the canvas scaled â€”
     // we're about to re-open the work sheet right on top of it. Otherwise zoom back.
     if (!cameFromWorkRef.current) setCanvasScaled(false)
     lbIsClosingRef.current = true
@@ -849,7 +843,7 @@ export default function HomePage() {
     setTimeout(() => {
       setActivePhoto(null)
       lbIsClosingRef.current = false
-      frozenPhotoRef.current = null  // unfreeze — physics resumes
+      frozenPhotoRef.current = null  // unfreeze â€” physics resumes
       // Hand back to the work index if that's where this lightbox came from
       if (cameFromWorkRef.current) {
         cameFromWorkRef.current = false
@@ -874,7 +868,7 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [activePhoto, aboutOpen, workMounted, navigate, closeLightbox, closeAbout, closeWork])
 
-  // EFFECT 1 — write initial transforms synchronously before first paint
+  // EFFECT 1 â€” write initial transforms synchronously before first paint
   useClientLayoutEffect(() => {
     const vw = window.innerWidth; const vh = window.innerHeight
     posRef.current = buildInitialState(vw, vh)
@@ -882,22 +876,14 @@ export default function HomePage() {
       const el = elRefs.current[id]
       if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
     }
-    // Sync isMobile state so the JSX tile filter matches the physics state built above
-    setIsMobile(vw < 768)
   }, [])
 
-  // EFFECT 2 — physics loop
+  // EFFECT 2 â€” physics loop
   useEffect(() => {
     let prev = performance.now()
     function tick(now: number) {
-      if (document.visibilityState !== 'visible') {
-        rafRef.current = requestAnimationFrame(tick)
-        return
-      }
-      const rawDt = now - prev
-      const dt = Math.min(Math.max(rawDt, 0), 100) / 1000
+      const dt = Math.min(now - prev, 100) / 1000
       prev = now
-      if (dt === 0) { rafRef.current = requestAnimationFrame(tick); return }
       const vw = window.innerWidth; const vh = window.innerHeight
       for (const id of Object.keys(posRef.current)) {
         const pos = posRef.current[id]
@@ -918,15 +904,15 @@ export default function HomePage() {
         pos.vx   = pos.baseVx   + (pos.vx   - pos.baseVx)   * 0.985
         pos.vy   = pos.baseVy   + (pos.vy   - pos.baseVy)   * 0.985
         pos.vrot = pos.baseVrot + (pos.vrot - pos.baseVrot) * 0.985
-
+        if (vw < 768) { pos.vx *= 0.5; pos.vy *= 0.5; pos.vrot *= 0.5 }
         pos.x += pos.vx * dt; pos.y += pos.vy * dt; pos.rot += pos.vrot * dt
-        // Tight rotation clamp — applies to everything (photos, letters, logo).
-        // ±15° keeps the scrapbook feel without letting any element spin loose.
+        // Tight rotation clamp â€” applies to everything (photos, letters, logo).
+        // Â±15Â° keeps the scrapbook feel without letting any element spin loose.
         if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
         if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
         if (id === 'logo') {
-          // Magnet snap — pull toward viewport centre when within 120px and not being dragged.
+          // Magnet snap â€” pull toward viewport centre when within 120px and not being dragged.
           // No wrap-around for the logo; it stays on-screen and gets drawn back to centre.
           const snapX = (vw - LOGO_SIZE) / 2
           const snapY = (vh - LOGO_SIZE) / 2
@@ -936,7 +922,7 @@ export default function HomePage() {
               // Instant snap for reduced-motion users
               pos.x = snapX; pos.y = snapY; pos.vx = 0; pos.vy = 0
             } else {
-              // Smooth magnetic pull — lerp position, dampen velocity
+              // Smooth magnetic pull â€” lerp position, dampen velocity
               pos.x += (snapX - pos.x) * 0.08
               pos.y += (snapY - pos.y) * 0.08
               pos.vx *= 0.85
@@ -961,45 +947,21 @@ export default function HomePage() {
         const el = elRefs.current[id]
         if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
       }
-      setIsMobile(window.innerWidth < 768)
-      prev = performance.now() - 16
-      rafRef.current = requestAnimationFrame(tick)
+      prev = performance.now(); rafRef.current = requestAnimationFrame(tick)
     }
-    prev = performance.now() - 16
-    const startRaf = () => { rafRef.current = requestAnimationFrame(tick) }
-    if (document.visibilityState === 'visible') {
-      startRaf()
-    } else {
-      document.addEventListener('visibilitychange', function onVis() {
-        if (document.visibilityState === 'visible') {
-          startRaf()
-          document.removeEventListener('visibilitychange', onVis)
-        }
-      })
-    }
+    prev = performance.now(); rafRef.current = requestAnimationFrame(tick)
     const onPageShow = (e: PageTransitionEvent) => { if (e.persisted) startLoop() }
     const onVisible  = () => {
       if (!document.hidden && rafRef.current === null) {
-        prev = performance.now() - 16
-      rafRef.current = requestAnimationFrame(tick)
-      }
-    }
-    const onTouch = () => {
-      if (rafRef.current === null) {
-        prev = performance.now()
-        rafRef.current = requestAnimationFrame(tick)
+        prev = performance.now(); rafRef.current = requestAnimationFrame(tick)
       }
     }
     window.addEventListener('pageshow', onPageShow)
     document.addEventListener('visibilitychange', onVisible)
-    window.addEventListener('touchstart', onTouch, { passive: true })
-    document.addEventListener('touchstart', onTouch, { passive: true })
     return () => {
       if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
       window.removeEventListener('pageshow', onPageShow)
       document.removeEventListener('visibilitychange', onVisible)
-      window.removeEventListener('touchstart', onTouch)
-      document.removeEventListener('touchstart', onTouch)
     }
   }, [])
 
@@ -1034,7 +996,7 @@ export default function HomePage() {
     const d = dragRef.current; if (!d) return
     const pos = posRef.current[d.id]
     if (pos) {
-      // Carry the pointer's last velocity into the dragged item — that's it.
+      // Carry the pointer's last velocity into the dragged item â€” that's it.
       // (Collision/bump against nearby items was removed: items now drift independently.)
       const dvx = (d.nx - d.px) * 60; const dvy = (d.ny - d.py) * 60
       pos.vx = dvx; pos.vy = dvy
@@ -1047,7 +1009,7 @@ export default function HomePage() {
     }
   }, [activePhoto, openLightbox])
 
-  // Lightbox pan — direct DOM, no React state, 1:1 with pointer
+  // Lightbox pan â€” direct DOM, no React state, 1:1 with pointer
   const onLbImageDown = useCallback((e: React.PointerEvent) => {
     e.stopPropagation(); lbDidPanRef.current = false
     if (lbZoomRef.current <= 1) return
@@ -1099,8 +1061,7 @@ export default function HomePage() {
       // Root surface for text colour: --color-text-inverted is the RGB inverse of the
       // background, and color:var(--color-text-inverted) makes every
       // descendant inherit it automatically. Updates in real time as the slider moves.
-      suppressHydrationWarning
-      style={{ ['--color-text-inverted' as string]: textColour, color: 'var(--color-text-inverted)', maxWidth: '100vw', overflowX: 'hidden' }}
+      style={{ ['--color-text-inverted' as string]: textColour, color: 'var(--color-text-inverted)' }}
     >
       <a href="#canvas"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-accent focus:text-white focus:rounded">
@@ -1122,29 +1083,27 @@ export default function HomePage() {
           <button
             onClick={openWork}
             className="text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] flex items-center justify-end"
-            style={{ pointerEvents: 'auto' }}
           >Work</button>
           <button
             onClick={openAbout}
             className="text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] flex items-center justify-end"
-            style={{ pointerEvents: 'auto' }}
           >About</button>
         </nav>
       </header>
 
-      {/* ─── Canvas ─────────────────────────────────────────────────────── */}
+      {/* â”€â”€â”€ Canvas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section
         id="canvas"
         ref={(el) => { sectionRef.current = el }}
-        className="relative canvas-section bg-bg-default overflow-hidden isolate"
+        className="relative h-screen bg-bg-default overflow-hidden isolate"
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerLeave={onPointerUp}
         aria-label="Work scrapbook"
       >
-        {/* ── Photo cards ─────────────────────────────────────────────────
+        {/* â”€â”€ Photo cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Wrapped in a scale container that zooms out when the viewer opens.
-            This gives the "pulled back to a higher view" feel — all photos
+            This gives the "pulled back to a higher view" feel â€” all photos
             appear smaller and floating in the background behind the overlay. */}
         <div style={{
           position: 'absolute', inset: 0,
@@ -1175,15 +1134,14 @@ export default function HomePage() {
                   opacity: isPickedUp && canvasScaled ? 0 : 1,
                   transition: isPickedUp
                     ? (canvasScaled
-                        ? 'opacity 0s'              // instant hide — photo lifts off from this spot
+                        ? 'opacity 0s'              // instant hide â€” photo lifts off from this spot
                         : 'opacity 0s ease 0.22s')  // snap in as viewer photo arrives (no fade)
                     : 'none',
                 }}
                 onPointerDown={e => { if (!activePhoto) onPointerDown(e, proj.id) }}
-                onPointerUp={onPointerUp}
                 onContextMenu={e => e.preventDefault()}
                 onClick={() => { if (!didDragRef.current && !activePhoto) openLightbox(proj) }}
-                role="button" tabIndex={0} aria-label={`${proj.title} — ${proj.category}`}
+                role="button" tabIndex={0} aria-label={`${proj.title} â€” ${proj.category}`}
                 onKeyDown={e => { if (e.key === 'Enter' && !activePhoto) openLightbox(proj) }}
               >
                 {(tileSrc[proj.id] ?? proj.src)
@@ -1196,11 +1154,11 @@ export default function HomePage() {
           })}
         </div>
 
-        {/* ── Logo ────────────────────────────────────────────────────────
+        {/* â”€â”€ Logo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Sits OUTSIDE the scale wrapper so it's unaffected by the zoom-out.
             When the viewer opens (floatsHidden=true) its inner div drifts off-frame.
             The logo PNG is ~2.8:1, so in this square box only the middle band is visible.
-            Events live on a centred hit pad that matches the visible bounds — clicks in
+            Events live on a centred hit pad that matches the visible bounds â€” clicks in
             the empty corners pass through. */}
         <div
           ref={el => { elRefs.current['logo'] = el }}
@@ -1208,7 +1166,7 @@ export default function HomePage() {
           style={{ width: LOGO_SIZE, height: LOGO_SIZE, willChange: 'transform', zIndex: 5, pointerEvents: 'none' }}
         >
           <div style={{
-            position: 'relative', width: '100%', height: '100%',
+            width: '100%', height: '100%',
             // Snap invisible when picked up, snap back when placed down
             opacity: floatsHidden ? 0 : (aboutOpen && aboutVisible ? 0 : 1),
             transform: floatsHidden ? FLOAT_DRIFT.logo : 'translate(0px,0px) scale(1)',
@@ -1222,7 +1180,7 @@ export default function HomePage() {
           }}>
             <Image src="/logo.png" fill alt="Nadim Kurimbokus" style={{ objectFit: 'contain' }} draggable={false} unoptimized />
           </div>
-          {/* Hit pad — sits over just the visible logo strip (~36% of the square's height) */}
+          {/* Hit pad â€” sits over just the visible logo strip (~36% of the square's height) */}
           <div
             className="absolute left-0 touch-none"
             style={{
@@ -1234,7 +1192,6 @@ export default function HomePage() {
               pointerEvents: 'auto',
             }}
             onPointerDown={e => onPointerDown(e, 'logo')}
-            onPointerUp={onPointerUp}
             onClick={() => { if (!didDragRef.current) openAbout() }}
             onContextMenu={e => e.preventDefault()}
             role="button" tabIndex={0} aria-label="About Nadim Kurimbokus"
@@ -1242,8 +1199,8 @@ export default function HomePage() {
           />
         </div>
 
-        {/* ── Letters ─────────────────────────────────────────────────────
-            Each one drifts in a unique direction — upper-left, upper-right, down.
+        {/* â”€â”€ Letters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            Each one drifts in a unique direction â€” upper-left, upper-right, down.
             Staggered so they leave in a cascade, not all at once. */}
         {LETTER_CHARS.map((char, i) => {
           const driftKey = `lt${i}` as keyof typeof FLOAT_DRIFT
@@ -1272,7 +1229,7 @@ export default function HomePage() {
         })}
       </section>
 
-      {/* ─── Background colour picker — top-left corner ──────────────────
+      {/* â”€â”€â”€ Background colour picker â€” top-left corner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Collapsed: a small black square. On hover it expands into a vibrant rainbow
           slider; the actual <input type="range"> sits inside, hidden when collapsed. */}
       <div
@@ -1303,13 +1260,13 @@ export default function HomePage() {
         <div className="cpicker-dot" aria-hidden style={{ background: dotColour }} />
       </div>
 
-      {/* ─── Work overlay — floats above the scaled canvas ───────────────
+      {/* â”€â”€â”€ Work overlay â€” floats above the scaled canvas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Same pattern as the photo viewer: transparent click-to-close backdrop
           underneath, content layer above with pointer-events handled per-element.
           Content slides up to enter, down to exit. */}
       {workMounted && (
         <>
-          {/* Click-to-close backdrop — absorbs taps + light blur so the canvas behind
+          {/* Click-to-close backdrop â€” absorbs taps + light blur so the canvas behind
               reads as out-of-focus while the work list is foregrounded. */}
           <div
             className="fixed inset-0 z-[55]"
@@ -1322,7 +1279,7 @@ export default function HomePage() {
             }}
             onClick={closeWork}
           />
-          {/* Content — slides, no background. Outer is pointer-events:none so clicks
+          {/* Content â€” slides, no background. Outer is pointer-events:none so clicks
               fall through to the backdrop; the inner panel turns events back on. */}
           <div
             className="fixed inset-0 z-[60] overflow-y-auto pointer-events-none"
@@ -1335,7 +1292,7 @@ export default function HomePage() {
             aria-modal="true"
             aria-label="Work index"
           >
-            {/* Top bar — minimal, just a Close affordance */}
+            {/* Top bar â€” minimal, just a Close affordance */}
             <div className="flex items-center justify-between px-6 md:px-12 py-6 pointer-events-auto">
               <span className="text-sm tracking-widest lowercase opacity-45">Work</span>
               <button
@@ -1357,17 +1314,17 @@ export default function HomePage() {
                       onClick={() => openFromWork(p)}
                       className="group w-full flex items-baseline gap-4 md:gap-8 py-1 md:py-1.5 text-left focus:outline-none pointer-events-auto"
                     >
-                      {/* Number — fixed-width left column so all titles line up */}
+                      {/* Number â€” fixed-width left column so all titles line up */}
                       <span className="text-xl md:text-3xl tabular-nums w-9 md:w-16 shrink-0 opacity-45">
                         {String(i + 1).padStart(2, '0')}
                       </span>
-                      {/* Title — Geist 400, inherits --color-text-inverted from <main> */}
+                      {/* Title â€” Geist 400, inherits --color-text-inverted from <main> */}
                       <span
                         className="tracking-tight leading-none text-4xl md:text-6xl lg:text-7xl flex-1 group-hover:opacity-70 transition-opacity duration-200"
                       >
                         {p.title}
                       </span>
-                      {/* Year — far right, always visible */}
+                      {/* Year â€” far right, always visible */}
                       <span className="text-xs tracking-widest uppercase shrink-0 self-center opacity-45">
                         {p.year}
                       </span>
@@ -1380,7 +1337,7 @@ export default function HomePage() {
         </>
       )}
 
-      {/* ─── About panel — logo FLIP pick-up/put-down ──────────────────── */}
+      {/* â”€â”€â”€ About panel â€” logo FLIP pick-up/put-down â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {aboutOpen && (
         <>
           {/* Click-to-close backdrop with a light blur so the canvas behind softens */}
@@ -1396,9 +1353,9 @@ export default function HomePage() {
             onClick={closeAbout}
           />
 
-          {/* Logo — pinned to exact viewport centre so FLIP math is correct.
+          {/* Logo â€” pinned to exact viewport centre so FLIP math is correct.
               At rest: translate(-50%,-50%) keeps its centre on the left:50% top:50% anchor.
-              logoSource.x/y is canvas-element-centre minus viewport-centre — correct offset. */}
+              logoSource.x/y is canvas-element-centre minus viewport-centre â€” correct offset. */}
           <div
             className="fixed z-[9]"
             style={{
@@ -1420,7 +1377,7 @@ export default function HomePage() {
             <Image src="/logo.png" fill alt="Nadim Kurimbokus" style={{ objectFit: 'contain', pointerEvents: 'none' }} unoptimized />
           </div>
 
-          {/* Info row — sits below the centred logo. calc(50% + half-logo + gap). */}
+          {/* Info row â€” sits below the centred logo. calc(50% + half-logo + gap). */}
           <div
             className="fixed z-[9] flex items-start justify-between w-full max-w-2xl pointer-events-auto gap-6 px-6"
             style={{
@@ -1437,7 +1394,7 @@ export default function HomePage() {
                 <p className="text-sm">Nadim Kurimbokus</p>
                 <p className="text-xs mt-0.5 opacity-60 leading-relaxed max-w-md">
                   British-Mauritian photographer based in London. Shooting music, performance,
-                  and the spaces in between — from headline stages to rehearsal rooms.
+                  and the spaces in between â€” from headline stages to rehearsal rooms.
                 </p>
               </div>
 
@@ -1463,7 +1420,7 @@ export default function HomePage() {
         </>
       )}
 
-      {/* ─── Photo viewer ───────────────────────────────────────────────── */}
+      {/* â”€â”€â”€ Photo viewer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {activePhoto && (
         <>
           {/* Click-to-close backdrop + light blur on the canvas behind */}
@@ -1479,15 +1436,15 @@ export default function HomePage() {
             onClick={closeLightbox}
           />
 
-          {/* No overlay — the photo just floats above the live canvas.
+          {/* No overlay â€” the photo just floats above the live canvas.
               Shadow on the photo card gives the sense of elevation. */}
           <div
             className="fixed inset-0 z-[9] flex flex-col items-center justify-center p-6 gap-4 pointer-events-none"
             style={{ backgroundColor: 'transparent' }}
             role="dialog" aria-modal="true"
-            aria-label={`${activePhoto.title} — ${activePhoto.category}`}
+            aria-label={`${activePhoto.title} â€” ${activePhoto.category}`}
           >
-            {/* Selected photo — rises from below on open, drifts upward on close */}
+            {/* Selected photo â€” rises from below on open, drifts upward on close */}
             <div
               className="relative pointer-events-auto"
               style={{
@@ -1495,22 +1452,22 @@ export default function HomePage() {
                 width: `min(calc(100vw - 48px), calc(80vh * ${lbRatio.toFixed(6)}))`,
                 maxHeight: '80vh',
                 opacity: lbVisible ? 1 : 0,
-                // FLIP — photo snaps from the canvas tile into the viewer and back.
+                // FLIP â€” photo snaps from the canvas tile into the viewer and back.
                 // Rotation: straightens as it lifts, tilts back as it lands.
-                // No opacity dissolves — snaps on pickup, snaps off on landing.
+                // No opacity dissolves â€” snaps on pickup, snaps off on landing.
                 transform: lbVisible
                   ? 'translate(0px, 0px) scale(1) rotate(0deg)'
                   : `translate(${lbSource.x}px, ${lbSource.y}px) scale(${lbSource.scale}) rotate(${lbSource.rot}deg)`,
                 transition: lbVisible
-                  // Pickup: quick spring to viewer — snaps visible instantly, no fade-in.
+                  // Pickup: quick spring to viewer â€” snaps visible instantly, no fade-in.
                   // aspect-ratio + width also transition so navigating between portrait/landscape gallery images is smooth.
                   ? 'transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0s, aspect-ratio 0.34s cubic-bezier(0.16, 1, 0.3, 1), width 0.34s cubic-bezier(0.16, 1, 0.3, 1)'
-                  // Putdown: dashes back home — opacity snaps off just as it arrives
+                  // Putdown: dashes back home â€” opacity snaps off just as it arrives
                   : 'transform 0.26s cubic-bezier(0.55, 0, 1, 0.45), opacity 0s ease 0.22s',
               }}
               onClick={e => e.stopPropagation()}
             >
-              {/* Zoom / pan layer — transform managed entirely via direct DOM */}
+              {/* Zoom / pan layer â€” transform managed entirely via direct DOM */}
               <div
                 ref={(el) => { lbZoomLayerRef.current = el }}
                 style={{
@@ -1523,8 +1480,8 @@ export default function HomePage() {
                 onClick={onLbImageClick}
                 onContextMenu={e => e.preventDefault()}
               >
-                {/* Gallery — directional two-layer slide via state-driven CSS transitions.
-                    No overflow:hidden — we want the images to be visible as they travel across the
+                {/* Gallery â€” directional two-layer slide via state-driven CSS transitions.
+                    No overflow:hidden â€” we want the images to be visible as they travel across the
                     screen between the viewport edge and the lightbox centre. */}
                 <div className="relative w-full h-full">
                   {(() => {
@@ -1532,7 +1489,7 @@ export default function HomePage() {
                     const dirSign = galleryDir > 0 ? 1 : -1
                     // The offset that puts an image entirely off the viewport edge in `dir`'s direction.
                     // 50% (of the image's own width) takes its near edge to the lightbox edge;
-                    // an additional 50vw carries it the rest of the way to the viewport edge — exact regardless of image aspect.
+                    // an additional 50vw carries it the rest of the way to the viewport edge â€” exact regardless of image aspect.
                     const offScreen = (sign: number) => `translateX(calc(${sign * 50}% + ${sign * 50}vw))`
                     const onScreen  = 'translateX(0)'
                     // Curr layer: starts off-screen in dir, ends on-screen (transition kicks in at 'end')
@@ -1590,7 +1547,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Gallery nav arrows — only shown when there's more than one image,
+              {/* Gallery nav arrows â€” only shown when there's more than one image,
                   AND when not zoomed (so users can't tap them by accident while panning). */}
               {activePhoto.gallery.length > 1 && (
                 <div
@@ -1657,3 +1614,4 @@ export default function HomePage() {
     </main>
   )
 }
+
