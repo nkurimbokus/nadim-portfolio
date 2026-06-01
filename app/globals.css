@@ -151,29 +151,33 @@ body {
 }
 
 /* ── Mobile (<768px) ─────────────────────────────────────────────────────────
-   Touch has no :hover, so the strip never expands via CSS alone. Instead React
-   toggles a .cpicker--open class: tap the dot area → open; tap outside → close.
+   Touch has no :hover, so the strip never expands via CSS alone. React toggles
+   a .cpicker--open class: tap the dot → open; 2s after last drag, or tap
+   outside → close.
 
    Collapsed (default):
-     36×44px tap zone — wide enough to centre the 18px dot, tall enough for touch.
-     Strip stays at width:0 (invisible). Input pointer-events:none so taps fall
-     through to the wrapper div, which opens the picker via onClick.
+     36×44px tap zone — centres the 18px dot and meets the 44px touch minimum.
+     Strip stays at width:0. Input is opacity:0 + pointer-events:none so:
+       • the slider thumb is fully invisible (prevents the "rogue dot" artifact
+         where the thumb renders outside the 36px wrapper at its value position)
+       • taps fall through to the wrapper div, which opens the picker onClick.
 
    Open (.cpicker--open):
-     Expands to the full 249px, scaled to 0.7 to not crowd the small screen.
-     Strip and input are re-enabled just like the desktop hover state.           */
+     Expands to 249px with no transform — the scale(0.7) was removed because
+     snapping the transform away on close masked the strip's closing animation.
+     The strip's width transition handles all the motion.                        */
 @media (max-width: 767px) {
   /* ── Collapsed ── */
   .cpicker        { width: 36px; height: 44px; }
   .cpicker-dot    { left: 9px !important; top: 13px !important; }  /* centred in 36×44 */
-  .cpicker-strip  { top: 13px; }        /* will animate to 240px when open */
-  .cpicker-input  { top: 0; height: 44px; pointer-events: none; }  /* no drag when closed */
+  .cpicker-strip  { top: 13px; }
+  .cpicker-input  { top: 0; height: 44px; pointer-events: none; opacity: 0; }
 
   /* ── Open ── */
-  .cpicker--open                { width: 249px; transform: scale(0.7); transform-origin: top left; }
-  .cpicker--open .cpicker-dot   { left: 0 !important; }            /* back to left edge */
+  .cpicker--open                { width: 249px; }        /* no transform — avoids scale-snap */
+  .cpicker--open .cpicker-dot   { left: 0 !important; }
   .cpicker--open .cpicker-strip { width: 240px; }
-  .cpicker--open .cpicker-input { pointer-events: auto; }          /* drag re-enabled */
+  .cpicker--open .cpicker-input { pointer-events: auto; opacity: 1; }
 }
 
 .canvas-section { height: 100vh; height: calc(var(--vh, 1vh) * 100); }

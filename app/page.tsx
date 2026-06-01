@@ -544,8 +544,10 @@ export default function HomePage() {
   const [menuVisible, setMenuVisible] = useState(false)
   // Hue picker — on desktop :hover opens/closes (pure CSS). On mobile there's
   // no hover, so we track open state in React and toggle on tap.
+  // pickerTimerRef: auto-closes the picker 2s after the last drag gesture.
   const [pickerOpen, setPickerOpen] = useState(false)
-  const pickerRef = useRef<HTMLDivElement | null>(null)
+  const pickerRef      = useRef<HTMLDivElement | null>(null)
+  const pickerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Tracks whether the currently-open lightbox was launched from the work index.
   // If yes, closing the lightbox returns to work instead of back to the canvas.
   const cameFromWorkRef = useRef(false)
@@ -697,16 +699,22 @@ export default function HomePage() {
   // Hue picker — close when the user taps outside on mobile.
   // We use `capture: true` so the pointerdown is caught before any other handler
   // (e.g. canvas drag) can swallow it. The check is quick and bails immediately
-  // when the tap is inside the picker element.
+  // when the tap is inside the picker element. Clears the auto-close timer too,
+  // since an explicit outside-tap is itself a close event.
   useEffect(() => {
     if (!pickerOpen || !isMobile) return
     const handleOutside = (e: PointerEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        if (pickerTimerRef.current) { clearTimeout(pickerTimerRef.current); pickerTimerRef.current = null }
         setPickerOpen(false)
       }
     }
     window.addEventListener('pointerdown', handleOutside, { capture: true })
-    return () => window.removeEventListener('pointerdown', handleOutside, { capture: true })
+    return () => {
+      window.removeEventListener('pointerdown', handleOutside, { capture: true })
+      // Also clear the auto-close timer if this effect re-runs (pickerOpen flipped)
+      if (pickerTimerRef.current) { clearTimeout(pickerTimerRef.current); pickerTimerRef.current = null }
+    }
   }, [pickerOpen, isMobile])
 
   // Mount/unmount lifecycle for about panel (mirrors activePhoto useEffect)
@@ -1268,7 +1276,18 @@ export default function HomePage() {
           max={100}
           step={1}
           value={bgHue}
-          onChange={e => setBgHue(Number(e.target.value))}
+          onChange={e => {
+            setBgHue(Number(e.target.value))
+            // Auto-close 2s after the last drag on mobile — mirrors desktop
+            // hover-leave behaviour so the picker doesn't stay open forever.
+            if (isMobile && pickerOpen) {
+              if (pickerTimerRef.current) clearTimeout(pickerTimerRef.current)
+              pickerTimerRef.current = setTimeout(() => {
+                setPickerOpen(false)
+                pickerTimerRef.current = null
+              }, 2000)
+            }
+          }}
           className="cpicker-input"
           aria-label="Background colour"
         />
