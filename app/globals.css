@@ -22,14 +22,12 @@
   --color-accent-blue:     #1565C0;   /* blue  — Brand category */
   --color-accent-yellow:   #F2B800;   /* yellow — Cultural category */
 
-  /* Font is applied to <html> via geist.className in layout.tsx — no font-family
-     tokens here, so nothing overrides the inherited Geist. */
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
 
 body {
-  /* font-family intentionally omitted — inherits Geist from <html> (geist.className) */
+  font-family: var(--font-archivo-black), sans-serif;
   background-color: var(--color-bg-default);
 }
 
@@ -105,8 +103,10 @@ body {
   width: 240px;
 }
 
-/* The actual <input type="range"> overlays the strip; fixed width so the thumb
-   stays at its value-relative position regardless of the strip's current width. */
+/* The actual <input type="range"> overlays the strip. It is a SIBLING of the
+   strip (not nested inside it) so overflow:hidden on the strip never clips its
+   touch/pointer hit area. z-index:3 puts it above the strip (z:1) and dot (z:2);
+   the dot has pointer-events:none so it never blocks the input anyway. */
 .cpicker-input {
   position: absolute;
   top: 0;
@@ -119,6 +119,7 @@ body {
   margin: 0;
   outline: none;
   cursor: pointer;
+  z-index: 3;
 }
 /* Slider thumb — a small solid dot. No white border, no shadow — clean and tiny. */
 .cpicker-input::-webkit-slider-thumb {
@@ -145,14 +146,33 @@ body {
 
 /* Mobile (<768px): touch devices have no :hover to expand the strip, and an
    18px dot is below the 44px minimum touch target. Keep the slider permanently
-   expanded and give it a 44px-tall hit area. Desktop is untouched. */
+   expanded. The input (now a sibling of the strip, not nested inside it) can
+   safely be 44px tall — no overflow:hidden clips it any more. The strip stays
+   18px tall and centred; the input covers the full 44px cpicker tap zone. */
 @media (max-width: 767px) {
   .cpicker { width: 249px; height: 44px; transform: scale(0.7); transform-origin: top left; }
-  .cpicker-dot { top: 13px !important; }          /* recentre 18px dot in 44px box */
-  .cpicker-strip { width: 240px; top: 13px; }
-  .cpicker-input { height: 44px; }                /* tall hit area; thumb auto-centres */
+  .cpicker-dot  { top: 13px !important; }         /* recentre 18px dot in 44px box */
+  .cpicker-strip { width: 240px; top: 13px; }     /* strip centred visually */
+  .cpicker-input { top: 0; height: 44px; }        /* full-height hit area, unclipped */
 }
 
 .canvas-section { height: 100vh; height: calc(var(--vh, 1vh) * 100); }
+
+/* ─── About panel floating animations ───────────────────────────────────── */
+@keyframes aboutPortraitFloat {
+  0%   { transform: translate(0px,  0px)  rotate(0deg);   }
+  25%  { transform: translate(6px,  -8px) rotate(0.6deg); }
+  50%  { transform: translate(-4px, 6px)  rotate(-0.4deg);}
+  75%  { transform: translate(5px,  4px)  rotate(0.3deg); }
+  100% { transform: translate(0px,  0px)  rotate(0deg);   }
+}
+/* Logo keyframes include the base translate(-50%, 50%) so Tailwind transforms
+   can be removed — the animation owns the full transform. */
+@keyframes aboutLogoFloat {
+  0%   { transform: translate(-50%, 50%) rotate(0deg);                                       }
+  30%  { transform: translate(calc(-50% + 10px), calc(50% - 8px))  rotate(-1.2deg);          }
+  65%  { transform: translate(calc(-50% -  7px), calc(50% + 10px)) rotate( 0.9deg);          }
+  100% { transform: translate(-50%, 50%) rotate(0deg);                                       }
+}
 
 

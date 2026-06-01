@@ -404,8 +404,10 @@ function getDims(id: string): { w: number; h: number } {
   const mobile = typeof window !== 'undefined' && window.innerWidth < 768
   const s = mobile ? 0.65 : 1
   if (id === 'logo') return { w: Math.round(LOGO_SIZE * s), h: Math.round(LOGO_SIZE * s) }
-  if (id === 'aboutPortrait') { const w = Math.round(340 * s); return { w, h: Math.round(w * 4 / 3) } }
-  if (id === 'aboutLogo')     { const w = Math.round(280 * s); return { w, h: w } }
+  // About portrait/logo get their own mobile targets (not shared `s`) so we can
+  // tune them independently of the general 0.65 photo scale.
+  if (id === 'aboutPortrait') { const w = mobile ? 200 : 340; return { w, h: Math.round(w * 4 / 3) } }
+  if (id === 'aboutLogo')     { const w = mobile ? 155 : 280; return { w, h: w } }
   const cfg = PHOTO_CFG[id]
   if (!cfg) return { w: Math.round(200 * s), h: Math.round(200 * s) }
   const w = cfg.w * TILE_SIZE_SCALE * s
@@ -1231,18 +1233,21 @@ export default function HomePage() {
         }}
         title={`Background colour ${bgHue}%`}
       >
-        <div className="cpicker-strip">
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={1}
-            value={bgHue}
-            onChange={e => setBgHue(Number(e.target.value))}
-            className="cpicker-input"
-            aria-label="Background colour"
-          />
-        </div>
+        {/* Strip — visual gradient background only; input is a sibling so
+            overflow:hidden here never clips the touch/pointer hit area. */}
+        <div className="cpicker-strip" />
+        {/* Input sits above the strip (z:3) and dot (z:2, pointer-events:none).
+            On mobile it fills the full 44px cpicker height for a generous tap zone. */}
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={bgHue}
+          onChange={e => setBgHue(Number(e.target.value))}
+          className="cpicker-input"
+          aria-label="Background colour"
+        />
         <div className="cpicker-dot" aria-hidden style={{ background: dotColour }} />
       </div>
 
@@ -1425,8 +1430,8 @@ export default function HomePage() {
               ref={el => { elRefs.current['aboutPortrait'] = el }}
               className="absolute top-0 left-0 touch-none"
               style={{
-                width:        getDims('aboutPortrait').w,
-                height:       getDims('aboutPortrait').h,
+                width:        isMobile ? 200 : 340,
+                height:       isMobile ? Math.round(200 * 4 / 3) : Math.round(340 * 4 / 3),
                 willChange:   'transform',
                 borderRadius: 2,
                 overflow:     'hidden',
@@ -1456,8 +1461,8 @@ export default function HomePage() {
               ref={el => { elRefs.current['aboutLogo'] = el }}
               className="absolute top-0 left-0 touch-none"
               style={{
-                width:      getDims('aboutLogo').w,
-                height:     getDims('aboutLogo').h,
+                width:      isMobile ? 155 : 280,
+                height:     isMobile ? 155 : 280,
                 willChange: 'transform',
                 cursor:     'grab',
                 zIndex:     3,
