@@ -542,6 +542,10 @@ export default function HomePage() {
   // Mobile burger menu — fades in/out. Only shown on small screens.
   const [menuOpen,    setMenuOpen]    = useState(false)
   const [menuVisible, setMenuVisible] = useState(false)
+  // Hue picker — on desktop :hover opens/closes (pure CSS). On mobile there's
+  // no hover, so we track open state in React and toggle on tap.
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const pickerRef = useRef<HTMLDivElement | null>(null)
   // Tracks whether the currently-open lightbox was launched from the work index.
   // If yes, closing the lightbox returns to work instead of back to the canvas.
   const cameFromWorkRef = useRef(false)
@@ -689,6 +693,21 @@ export default function HomePage() {
     setMenuVisible(false)
     setTimeout(() => setMenuOpen(false), 220)
   }, [])
+
+  // Hue picker — close when the user taps outside on mobile.
+  // We use `capture: true` so the pointerdown is caught before any other handler
+  // (e.g. canvas drag) can swallow it. The check is quick and bails immediately
+  // when the tap is inside the picker element.
+  useEffect(() => {
+    if (!pickerOpen || !isMobile) return
+    const handleOutside = (e: PointerEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerOpen(false)
+      }
+    }
+    window.addEventListener('pointerdown', handleOutside, { capture: true })
+    return () => window.removeEventListener('pointerdown', handleOutside, { capture: true })
+  }, [pickerOpen, isMobile])
 
   // Mount/unmount lifecycle for about panel (mirrors activePhoto useEffect)
   useEffect(() => {
@@ -1218,10 +1237,14 @@ export default function HomePage() {
       </section>
 
       {/* ─── Background colour picker — top-left corner ──────────────────
-          Collapsed: a small black square. On hover it expands into a vibrant rainbow
-          slider; the actual <input type="range"> sits inside, hidden when collapsed. */}
+          Desktop: :hover expands the strip (pure CSS), mouse-leave collapses it.
+          Mobile:  no :hover, so pickerOpen state drives a .cpicker--open class.
+                   Tapping the dot area opens it; tapping outside closes it via the
+                   pointerdown listener added in the effect above. */}
       <div
-        className="cpicker"
+        ref={pickerRef}
+        className={`cpicker${isMobile && pickerOpen ? ' cpicker--open' : ''}`}
+        onClick={() => { if (isMobile && !pickerOpen) setPickerOpen(true) }}
         style={{
           position: 'fixed',
           top: 24,
@@ -1233,11 +1256,12 @@ export default function HomePage() {
         }}
         title={`Background colour ${bgHue}%`}
       >
-        {/* Strip — visual gradient background only; input is a sibling so
-            overflow:hidden here never clips the touch/pointer hit area. */}
+        {/* Strip — visual gradient background only. */}
         <div className="cpicker-strip" />
-        {/* Input sits above the strip (z:3) and dot (z:2, pointer-events:none).
-            On mobile it fills the full 44px cpicker height for a generous tap zone. */}
+        {/* Input: z:3 sits above strip and dot.
+            On mobile/collapsed: pointer-events:none so taps fall through to the
+            cpicker wrapper which opens it. On mobile/open: pointer-events:auto
+            (via .cpicker--open .cpicker-input) so dragging works normally. */}
         <input
           type="range"
           min={0}
