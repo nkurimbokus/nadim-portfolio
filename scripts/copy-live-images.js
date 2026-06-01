@@ -21,7 +21,7 @@ const SHOOTS = [
   {
     srcFolder:   'southfacing festival for hiphop backin the day 2025',
     baseSlug:    'live_2025_southfacing-festival_hiphop-back-in-the-day',
-    title:       'Busta Rhymes · South Facing Festival',
+    title:       'Hiphop Back in the Day · Southfacing Festival',
     client:      'Southfacing Festival',
     year:        '2025',
   },

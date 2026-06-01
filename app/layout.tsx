@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist, Archivo_Black } from 'next/font/google'
+import { Geist } from 'next/font/google'
 import './globals.css'
 
 // ─── Font ─────────────────────────────────────────────────────────────────────
@@ -8,18 +8,8 @@ import './globals.css'
 // bold/semibold weights loaded → the whole site renders at 400.
 const geist = Geist({
   subsets: ['latin'],
-  weight: ['400', '700'],
-  display: 'swap',
-})
-
-// Archivo Black — display font for work index titles only.
-// Exposed as a CSS variable so the client-component page.tsx can reference it
-// without importing next/font directly (which is server-only).
-const archivoBlack = Archivo_Black({
-  subsets: ['latin'],
   weight: ['400'],
   display: 'swap',
-  variable: '--font-archivo-black',
 })
 
 // ─── Site-wide metadata ───────────────────────────────────────────────────────
@@ -76,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geist.className} ${archivoBlack.variable}`}
+      className={geist.className}
     >
       <body className="bg-bg-default text-fg-default antialiased">
         {children}

@@ -108,7 +108,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_005_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_006_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_007_standard.jpg': '1067/1600',
-  // Live — Busta Rhymes · South Facing Festival (2025)
+  // Live — Southfacing Festival · Hiphop Back in the Day (2025)
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg': '1078/1600',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_002_standard.jpg': '1076/1600',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_003_standard.jpg': '1069/1600',
@@ -301,7 +301,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l4', kind: 'photo', title: 'Busta Rhymes · South Facing Festival', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l4', kind: 'photo', title: 'Hiphop Back in the Day · Southfacing', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
     gallery: [
       '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
@@ -1114,7 +1114,7 @@ export default function HomePage() {
       <section
         id="canvas"
         ref={(el) => { sectionRef.current = el }}
-        className="relative canvas-section bg-bg-default overflow-hidden isolate z-0"
+        className="relative canvas-section bg-bg-default overflow-hidden isolate"
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerLeave={onPointerUp}
@@ -1311,10 +1311,9 @@ export default function HomePage() {
                       <span className="text-xl md:text-3xl tabular-nums w-9 md:w-16 shrink-0 opacity-45">
                         {String(i + 1).padStart(2, '0')}
                       </span>
-                      {/* Title — Archivo Black display font, work index only */}
+                      {/* Title — Geist 400, inherits --color-text-inverted from <main> */}
                       <span
-                        className="tracking-tight leading-none text-5xl md:text-5xl lg:text-[3.8rem] flex-1 group-hover:opacity-70 transition-opacity duration-200"
-                        style={{ fontFamily: 'var(--font-archivo-black)', mixBlendMode: 'difference' }}
+                        className="tracking-tight leading-none text-4xl md:text-6xl lg:text-7xl flex-1 group-hover:opacity-70 transition-opacity duration-200"
                       >
                         {p.title}
                       </span>
