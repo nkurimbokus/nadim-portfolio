@@ -108,7 +108,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_005_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_006_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_007_standard.jpg': '1067/1600',
-  // Live — Southfacing Festival · Hiphop Back in the Day (2025)
+  // Live — Busta Rhymes · South Facing Festival (2025)
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg': '1078/1600',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_002_standard.jpg': '1076/1600',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_003_standard.jpg': '1069/1600',
@@ -198,11 +198,6 @@ function getTileDims(id: string, src: string | null | undefined): { w: number; h
   }
   // Portrait — long dim is height
   return { w: Math.round(longDim * currAspectNum), h: longDim }
-}
-
-// Each float drifts toward a different edge so they feel like they physically leave the frame
-const FLOAT_DRIFT = {
-  logo: 'translate(-100px, -80px) scale(0.6)',
 }
 
 const PROJECTS: Project[] = [
@@ -301,7 +296,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l4', kind: 'photo', title: 'Hiphop Back in the Day · Southfacing', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l4', kind: 'photo', title: 'Busta Rhymes · South Facing Festival', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
     gallery: [
       '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
@@ -409,6 +404,8 @@ function getDims(id: string): { w: number; h: number } {
   const mobile = typeof window !== 'undefined' && window.innerWidth < 768
   const s = mobile ? 0.65 : 1
   if (id === 'logo') return { w: Math.round(LOGO_SIZE * s), h: Math.round(LOGO_SIZE * s) }
+  if (id === 'aboutPortrait') { const w = Math.round(340 * s); return { w, h: Math.round(w * 4 / 3) } }
+  if (id === 'aboutLogo')     { const w = Math.round(280 * s); return { w, h: w } }
   const cfg = PHOTO_CFG[id]
   if (!cfg) return { w: Math.round(200 * s), h: Math.round(200 * s) }
   const w = cfg.w * TILE_SIZE_SCALE * s
@@ -551,8 +548,6 @@ export default function HomePage() {
   const [activePhoto,  setActivePhoto]  = useState<Project | null>(null)
   const [lbZoom,       setLbZoom]       = useState(1)
   const [lbVisible,    setLbVisible]    = useState(false)
-  // Letters/logo only sling away on zoom-in, not on viewer open — they float in background
-  const [floatsHidden,  setFloatsHidden]  = useState(false)
   // FLIP source — where the photo starts (canvas position) and ends (canvas position on close)
   const [lbSource,      setLbSource]      = useState({ x: 0, y: 0, scale: 0.15, rot: 0 })
   // Controls the canvas zoom-out independently of activePhoto so we can start
@@ -629,7 +624,6 @@ export default function HomePage() {
     // Reset crossfade state — no outgoing image when (re)opening or closing
     if (galleryTimerRef.current) { clearTimeout(galleryTimerRef.current); galleryTimerRef.current = null }
     setGalleryPrev(null)
-    if (!activePhoto) setFloatsHidden(false)
     if (activePhoto) requestAnimationFrame(() => setLbVisible(true))
   }, [activePhoto, applyLbTransform])
 
@@ -671,57 +665,64 @@ export default function HomePage() {
     })
   }, [activePhoto, galleryIndex])
 
-  // ── About open / close — same FLIP pattern as photo viewer, including canvas zoom-out ──
-  // viewerSize MUST match the rendered overlay logo's CSS dimensions exactly.
-  // The overlay logo uses `min(calc(100vw - 48px), 60vh)`; the same calc here keeps
-  // the FLIP scale honest so the logo lands on its canvas tile without snapping.
-  const computeAboutViewerSize = () =>
-    Math.min(window.innerWidth - 48, window.innerHeight * 0.6)
-
   const openAbout = useCallback(() => {
-    const el = elRefs.current['logo']
-    if (el) {
-      const rect = el.getBoundingClientRect()
-      const vw = window.innerWidth; const vh = window.innerHeight
-      const viewerSize = computeAboutViewerSize()
-      setLogoSource({
-        x: (rect.left + rect.width  / 2) - vw / 2,
-        y: (rect.top  + rect.height / 2) - vh / 2,
-        scale: rect.width / viewerSize,
-        rot: posRef.current['logo']?.rot ?? 0,
-      })
-    }
-    setCanvasScaled(true)   // pull the canvas back behind the about panel, same as photo viewer
-    setFloatsHidden(true)
+    setCanvasScaled(true)
     setAboutOpen(true)
   }, [])
 
   const closeAbout = useCallback(() => {
-    const pos = posRef.current['logo']
-    if (pos) {
-      const vw = window.innerWidth; const vh = window.innerHeight
-      const viewerSize = computeAboutViewerSize()
-      frozenLogoRef.current = { x: pos.x, y: pos.y, rot: pos.rot }
-      setLogoSource({
-        x: pos.x + LOGO_SIZE / 2 - vw / 2,
-        y: pos.y + LOGO_SIZE / 2 - vh / 2,
-        scale: LOGO_SIZE / viewerSize,
-        rot: pos.rot,
-      })
-    }
-    setCanvasScaled(false)  // canvas zooms back in lockstep with the logo landing
+    setCanvasScaled(false)
     setAboutVisible(false)
-    setTimeout(() => {
-      setAboutOpen(false)
-      frozenLogoRef.current = null
-      setFloatsHidden(false)
-    }, 340)
+    setTimeout(() => setAboutOpen(false), 340)
   }, [])
 
   // Mount/unmount lifecycle for about panel (mirrors activePhoto useEffect)
   useEffect(() => {
     if (aboutOpen) requestAnimationFrame(() => setAboutVisible(true))
     else setAboutVisible(false)
+  }, [aboutOpen])
+
+  // Physics init for about panel — portrait + logo start in a deliberate scrapbook
+  // arrangement (portrait centred near the top, logo overlapping its bottom), then
+  // drift apart very slowly so the layout feels settled, not chaotic.
+  useEffect(() => {
+    if (!aboutOpen) {
+      delete posRef.current['aboutPortrait']
+      delete posRef.current['aboutLogo']
+      return
+    }
+    const vw = window.innerWidth, vh = window.innerHeight
+    const isMob = vw < 768
+    const vScale = isMob ? VELOCITY_SCALE * 2.5 : VELOCITY_SCALE
+    const { w: pW, h: pH } = getDims('aboutPortrait')
+    const { w: lW, h: lH } = getDims('aboutLogo')
+
+    // Portrait: horizontally centred, 10 % from the top (below the "About" bar).
+    const pX = Math.round((vw - pW) / 2)
+    const pY = Math.round(vh * 0.10)
+
+    // Logo: centred under the portrait with a slight rightward nudge, overlapping
+    // the bottom ~35 % of the portrait — the classic scrapbook sticker placement.
+    const lX = Math.round(pX + (pW - lW) / 2 + pW * 0.08)
+    const lY = Math.round(pY + pH - Math.round(lH * 0.35))
+
+    posRef.current['aboutPortrait'] = {
+      x: pX, y: pY, rot: -1.5,
+      vx: 0, vy: 0, vrot: 0,
+      baseVx: -7 * vScale, baseVy:  5 * vScale, baseVrot:  0.18 * vScale,
+    }
+    posRef.current['aboutLogo'] = {
+      x: lX, y: lY, rot: 2.5,
+      vx: 0, vy: 0, vrot: 0,
+      baseVx:  6 * vScale, baseVy: -7 * vScale, baseVrot: -0.20 * vScale,
+    }
+
+    const pel = elRefs.current['aboutPortrait']
+    const lel = elRefs.current['aboutLogo']
+    const pp  = posRef.current['aboutPortrait']
+    const lp  = posRef.current['aboutLogo']
+    if (pel && pp) pel.style.transform = `translate3d(${pp.x}px,${pp.y}px,0) rotate(${pp.rot}deg)`
+    if (lel && lp) lel.style.transform = `translate3d(${lp.x}px,${lp.y}px,0) rotate(${lp.rot}deg)`
   }, [aboutOpen])
 
   const openLightbox = useCallback((proj: Project) => {
@@ -903,30 +904,10 @@ export default function HomePage() {
         if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
         if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
-        if (id === 'logo') {
-          // Magnet snap — pull toward viewport centre when within 120px and not being dragged.
-          // No wrap-around for the logo; it stays on-screen and gets drawn back to centre.
-          const snapX = (vw - LOGO_SIZE) / 2
-          const snapY = (vh - LOGO_SIZE) / 2
-          const dist = Math.hypot(pos.x - snapX, pos.y - snapY)
-          if (dist < 120 && dragRef.current?.id !== 'logo') {
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-              // Instant snap for reduced-motion users
-              pos.x = snapX; pos.y = snapY; pos.vx = 0; pos.vy = 0
-            } else {
-              // Smooth magnetic pull — lerp position, dampen velocity
-              pos.x += (snapX - pos.x) * 0.08
-              pos.y += (snapY - pos.y) * 0.08
-              pos.vx *= 0.85
-              pos.vy *= 0.85
-            }
-          }
-        } else {
-          if (pos.x >  vw + 60) pos.x = -w
-          if (pos.x < -w)       pos.x =  vw + 60
-          if (pos.y >  vh + 60) pos.y = -h
-          if (pos.y < -h)       pos.y =  vh + 60
-        }
+        if (pos.x >  vw + 60) pos.x = -w
+        if (pos.x < -w)       pos.x =  vw + 60
+        if (pos.y >  vh + 60) pos.y = -h
+        if (pos.y < -h)       pos.y =  vh + 60
         const el = elRefs.current[id]
         if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
       }
@@ -1098,12 +1079,12 @@ export default function HomePage() {
           }}
         >
           <button
-            onClick={openWork}
+            onClick={() => { console.log('[nav] Work clicked — workMounted:', workMounted, 'aboutOpen:', aboutOpen, 'activePhoto:', !!activePhoto); openWork() }}
             className="text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] flex items-center justify-end"
             style={{ pointerEvents: 'auto' }}
           >Work</button>
           <button
-            onClick={openAbout}
+            onClick={() => { console.log('[nav] About clicked — workMounted:', workMounted, 'aboutOpen:', aboutOpen, 'activePhoto:', !!activePhoto); openAbout() }}
             className="text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] flex items-center justify-end"
             style={{ pointerEvents: 'auto' }}
           >About</button>
@@ -1172,52 +1153,37 @@ export default function HomePage() {
               </div>
             )
           })}
-        </div>
 
-        {/* ── Logo ────────────────────────────────────────────────────────
-            Sits OUTSIDE the scale wrapper so it's unaffected by the zoom-out.
-            When the viewer opens (floatsHidden=true) its inner div drifts off-frame.
-            The logo PNG is ~2.8:1, so in this square box only the middle band is visible.
-            Events live on a centred hit pad that matches the visible bounds — clicks in
-            the empty corners pass through. */}
-        <div
-          ref={el => { elRefs.current['logo'] = el }}
-          className="absolute top-0 left-0 touch-none"
-          style={{ width: LOGO_SIZE, height: LOGO_SIZE, willChange: 'transform', zIndex: 5, pointerEvents: 'none' }}
-        >
-          <div style={{
-            position: 'relative', width: '100%', height: '100%',
-            // Snap invisible when picked up, snap back when placed down
-            opacity: floatsHidden ? 0 : (aboutOpen && aboutVisible ? 0 : 1),
-            transform: floatsHidden ? FLOAT_DRIFT.logo : 'translate(0px,0px) scale(1)',
-            transition: (aboutOpen && aboutVisible)
-              ? 'opacity 0s'
-              : (aboutOpen && !aboutVisible)
-                ? 'opacity 0s ease 0.22s'
-                : floatsHidden
-                  ? 'opacity 0.20s ease, transform 0.28s cubic-bezier(0.55,0,1,0.45)'
-                  : 'opacity 0.55s ease 0.08s, transform 0.62s cubic-bezier(0.16,1,0.3,1) 0.08s',
-          }}>
-            <Image src="/logo.png" fill alt="Nadim Kurimbokus" style={{ objectFit: 'contain' }} draggable={false} unoptimized />
-          </div>
-          {/* Hit pad — sits over just the visible logo strip (~36% of the square's height) */}
+          {/* ── Logo — floats with the photos, wraps at edges, draggable ── */}
           <div
-            className="absolute left-0 touch-none"
+            ref={el => { elRefs.current['logo'] = el }}
+            className="absolute top-0 left-0 touch-none"
             style={{
-              top: '50%',
-              width: '100%',
-              height: '40%',
-              transform: 'translateY(-50%)',
-              cursor: 'grab',
-              pointerEvents: 'auto',
+              width: LOGO_SIZE, height: LOGO_SIZE,
+              willChange: 'transform', zIndex: 5,
+              opacity: aboutOpen ? (aboutVisible ? 0 : 1) : 1,
+              transition: aboutOpen
+                ? (aboutVisible ? 'opacity 0s' : 'opacity 0s ease 0.22s')
+                : 'none',
             }}
-            onPointerDown={e => onPointerDown(e, 'logo')}
-            onPointerUp={onPointerUp}
-            onClick={() => { if (!didDragRef.current) openAbout() }}
-            onContextMenu={e => e.preventDefault()}
-            role="button" tabIndex={0} aria-label="About Nadim Kurimbokus"
-            onKeyDown={e => { if (e.key === 'Enter') openAbout() }}
-          />
+          >
+            <Image src="/logo.png" fill alt="Nadim Kurimbokus" style={{ objectFit: 'contain', pointerEvents: 'none' }} draggable={false} unoptimized />
+            {/* Hit pad — sits over just the visible logo strip (~36% of the square's height) */}
+            <div
+              className="absolute left-0 touch-none"
+              style={{
+                top: '50%', width: '100%', height: '40%',
+                transform: 'translateY(-50%)',
+                cursor: 'grab',
+              }}
+              onPointerDown={e => onPointerDown(e, 'logo')}
+              onPointerUp={onPointerUp}
+              onClick={() => { if (!didDragRef.current) openAbout() }}
+              onContextMenu={e => e.preventDefault()}
+              role="button" tabIndex={0} aria-label="About Nadim Kurimbokus"
+              onKeyDown={e => { if (e.key === 'Enter') openAbout() }}
+            />
+          </div>
         </div>
 
       </section>
@@ -1330,88 +1296,153 @@ export default function HomePage() {
         </>
       )}
 
-      {/* ─── About panel — logo FLIP pick-up/put-down ──────────────────── */}
-      {aboutOpen && (
-        <>
-          {/* Click-to-close backdrop with a light blur so the canvas behind softens */}
-          <div
-            className="fixed inset-0 z-[8]"
-            style={{
-              cursor: 'zoom-out',
-              backdropFilter: 'blur(3px)',
-              WebkitBackdropFilter: 'blur(3px)',
-              opacity: aboutVisible ? 1 : 0,
-              transition: 'opacity 0.2s ease',
-            }}
-            onClick={closeAbout}
-          />
+      {/* ─── About panel — always in DOM, fades in/out via opacity ─────── */}
+      {/* Never conditionally removed: opacity needs the element mounted through
+          both the fade-in and fade-out so the transition can complete. */}
+      <>
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 z-[55]"
+          style={{
+            cursor: 'zoom-out',
+            backdropFilter: 'blur(3px)',
+            WebkitBackdropFilter: 'blur(3px)',
+            opacity: aboutVisible ? 1 : 0,
+            pointerEvents: aboutVisible ? 'auto' : 'none',
+            transition: 'opacity 0.3s ease-in-out',
+          }}
+          onClick={closeAbout}
+        />
 
-          {/* Logo — pinned to exact viewport centre so FLIP math is correct.
-              At rest: translate(-50%,-50%) keeps its centre on the left:50% top:50% anchor.
-              logoSource.x/y is canvas-element-centre minus viewport-centre — correct offset. */}
-          <div
-            className="fixed z-[9]"
-            style={{
-              left: '50%', top: '50%',
-              width: 'min(calc(100vw - 48px), 60vh)',
-              height: 'min(calc(100vw - 48px), 60vh)',
-              maxHeight: '60vh',
-              pointerEvents: 'none',
-              opacity: aboutVisible ? 1 : 0,
-              transform: aboutVisible
-                ? 'translate(-50%, -50%) scale(1) rotate(0deg)'
-                : `translate(calc(-50% + ${logoSource.x}px), calc(-50% + ${logoSource.y}px)) scale(${logoSource.scale}) rotate(${logoSource.rot}deg)`,
-              transition: aboutVisible
-                ? 'transform 0.36s cubic-bezier(0.16,1,0.3,1), opacity 0s'
-                : 'transform 0.26s cubic-bezier(0.55,0,1,0.45), opacity 0s ease 0.22s',
-            }}
-            role="dialog" aria-modal="true" aria-label="About Nadim Kurimbokus"
-          >
-            <Image src="/logo.png" fill alt="Nadim Kurimbokus" style={{ objectFit: 'contain', pointerEvents: 'none' }} unoptimized />
-          </div>
+        {/* Panel — fades in/out, pointer-events disabled when invisible */}
+        <div
+          className="fixed inset-0 z-[60]"
+          style={{
+            opacity: aboutVisible ? 1 : 0,
+            pointerEvents: aboutVisible ? 'auto' : 'none',
+            transition: 'opacity 0.3s ease-in-out',
+            willChange: 'opacity',
+          }}
+          role="dialog"
+          aria-modal={aboutVisible ? 'true' : 'false'}
+          aria-label="About Nadim Kurimbokus"
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerLeave={onPointerUp}
+        >
+            {/* Click-to-close layer — z:1, sits behind physics elements */}
+            <div
+              className="absolute inset-0"
+              style={{ zIndex: 1, cursor: 'zoom-out', pointerEvents: aboutVisible ? 'auto' : 'none' }}
+              onClick={closeAbout}
+            />
 
-          {/* Info row — sits below the centred logo. calc(50% + half-logo + gap). */}
-          <div
-            className="fixed z-[9] flex items-start justify-between w-full max-w-2xl pointer-events-auto gap-6 px-6"
-            style={{
-              top: 'calc(50% + min(calc((100vw - 48px) / 2), 30vh) + 16px)',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              opacity: aboutVisible ? 1 : 0,
-              transition: aboutVisible ? 'opacity 0.20s ease 0.28s' : 'opacity 0.08s ease',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex flex-col gap-3">
-              <div>
-                <p className="text-sm">Nadim Kurimbokus</p>
-                <p className="text-xs mt-0.5 opacity-60 leading-relaxed max-w-md">
+            {/* Top bar — z:4, always readable above everything */}
+            <div
+              className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 md:px-12 py-6"
+              style={{ zIndex: 4, pointerEvents: aboutVisible ? 'auto' : 'none' }}
+            >
+              <span className="text-sm tracking-widest lowercase opacity-45">About</span>
+              <button
+                onClick={closeAbout}
+                className="text-sm tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
+              >Close</button>
+            </div>
+
+            {/* Portrait — z:2, physics-driven, draggable */}
+            <div
+              ref={el => { elRefs.current['aboutPortrait'] = el }}
+              className="absolute top-0 left-0 touch-none"
+              style={{
+                width:        getDims('aboutPortrait').w,
+                height:       getDims('aboutPortrait').h,
+                willChange:   'transform',
+                borderRadius: 2,
+                overflow:     'hidden',
+                cursor:       'grab',
+                zIndex:       2,
+              }}
+              onPointerDown={e => onPointerDown(e, 'aboutPortrait')}
+              onPointerUp={onPointerUp}
+              onContextMenu={e => e.preventDefault()}
+              role="img"
+              aria-label="Portrait of Nadim Kurimbokus"
+            >
+              <Image
+                src="/images/portrait.jpg"
+                width={1080}
+                height={1440}
+                priority
+                alt="Nadim Kurimbokus"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                unoptimized
+              />
+              <div className="absolute inset-0" style={{ zIndex: 1 }} />
+            </div>
+
+            {/* Logo — z:3, physics-driven, draggable */}
+            <div
+              ref={el => { elRefs.current['aboutLogo'] = el }}
+              className="absolute top-0 left-0 touch-none"
+              style={{
+                width:      getDims('aboutLogo').w,
+                height:     getDims('aboutLogo').h,
+                willChange: 'transform',
+                cursor:     'grab',
+                zIndex:     3,
+              }}
+              onPointerDown={e => onPointerDown(e, 'aboutLogo')}
+              onPointerUp={onPointerUp}
+              onContextMenu={e => e.preventDefault()}
+              aria-hidden="true"
+            >
+              <Image
+                src="/logo.png"
+                fill
+                alt=""
+                style={{ objectFit: 'contain', pointerEvents: 'none' }}
+                unoptimized
+              />
+              <div className="absolute inset-0" style={{ zIndex: 1 }} />
+            </div>
+
+            {/* Bio text — z:10, pinned lower, pointer-events:none except on links */}
+            <div
+              className="absolute inset-x-0"
+              style={{
+                bottom:       'clamp(56px, 9vh, 110px)',
+                paddingLeft:  'clamp(24px, 7vw, 96px)',
+                paddingRight: 'clamp(24px, 7vw, 96px)',
+                zIndex:       10,
+                pointerEvents: 'none',
+              }}
+            >
+              <div className="mx-auto text-center" style={{ maxWidth: 660, pointerEvents: 'none' }}>
+                <p className="text-2xl md:text-4xl" style={{ marginBottom: '1.5rem' }}>
+                  Nadim Kurimbokus
+                </p>
+                <p className="text-base md:text-xl opacity-60 leading-loose" style={{ marginBottom: '2.5rem' }}>
                   British-Mauritian photographer based in London. Shooting music, performance,
                   and the spaces in between — from headline stages to rehearsal rooms.
                 </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 mt-1">
-                <a
-                  href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
-                  className="px-4 py-2 border border-current text-sm tracking-widest lowercase rounded-sm hover:bg-[color:var(--color-text-inverted)] hover:text-[color:var(--color-bg-default)] transition-colors focus:outline-none focus:bg-[color:var(--color-text-inverted)] focus:text-[color:var(--color-bg-default)]"
-                >Email me</a>
-                <a
-                  href="https://www.instagram.com/nadim_kurimbokus/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 border border-current text-sm tracking-widest lowercase rounded-sm hover:bg-[color:var(--color-text-inverted)] hover:text-[color:var(--color-bg-default)] transition-colors focus:outline-none focus:bg-[color:var(--color-text-inverted)] focus:text-[color:var(--color-bg-default)]"
-                >Instagram</a>
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <a
+                    href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
+                    style={{ pointerEvents: 'auto' }}
+                    className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm hover:bg-[color:var(--color-text-inverted)] hover:text-[color:var(--color-bg-default)] transition-colors focus:outline-none focus:bg-[color:var(--color-text-inverted)] focus:text-[color:var(--color-bg-default)]"
+                  >Email me</a>
+                  <a
+                    href="https://www.instagram.com/nadim_kurimbokus/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ pointerEvents: 'auto' }}
+                    className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm hover:bg-[color:var(--color-text-inverted)] hover:text-[color:var(--color-bg-default)] transition-colors focus:outline-none focus:bg-[color:var(--color-text-inverted)] focus:text-[color:var(--color-bg-default)]"
+                  >Instagram</a>
+                </div>
               </div>
             </div>
-
-            <button
-              className="text-sm tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline self-start whitespace-nowrap"
-              onClick={closeAbout}
-            >Close</button>
           </div>
         </>
-      )}
 
       {/* ─── Photo viewer ───────────────────────────────────────────────── */}
       {activePhoto && (
