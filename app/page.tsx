@@ -467,7 +467,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
   let photoCount = 0
   PROJECTS.forEach(({ id }) => {
     const cfg = PHOTO_CFG[id]; if (!cfg) return
-    if (isMobile && photoCount >= 3) return
+    if (isMobile && photoCount >= 6) return
     photoCount++
     const { w, h } = getDims(id)
     s[id] = {
@@ -537,6 +537,9 @@ export default function HomePage() {
   // closes the sheet and hands off to the existing photo lightbox (FLIP from canvas tile).
   const [workMounted, setWorkMounted] = useState(false)   // in the DOM
   const [workVisible, setWorkVisible] = useState(false)   // animation state — true = at translateY(0)
+  // Mobile burger menu — fades in/out. Only shown on small screens.
+  const [menuOpen,    setMenuOpen]    = useState(false)
+  const [menuVisible, setMenuVisible] = useState(false)
   // Tracks whether the currently-open lightbox was launched from the work index.
   // If yes, closing the lightbox returns to work instead of back to the canvas.
   const cameFromWorkRef = useRef(false)
@@ -674,6 +677,15 @@ export default function HomePage() {
     setCanvasScaled(false)
     setAboutVisible(false)
     setTimeout(() => setAboutOpen(false), 340)
+  }, [])
+
+  const openMenu  = useCallback(() => {
+    setMenuOpen(true)
+    requestAnimationFrame(() => setMenuVisible(true))
+  }, [])
+  const closeMenu = useCallback(() => {
+    setMenuVisible(false)
+    setTimeout(() => setMenuOpen(false), 220)
   }, [])
 
   // Mount/unmount lifecycle for about panel (mirrors activePhoto useEffect)
@@ -1067,27 +1079,41 @@ export default function HomePage() {
       </a>
 
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-end px-6 md:px-10 h-16 pointer-events-none">
-        {/* Nav fades out when an overlay (work / about / photo viewer) is open so its
-            buttons never sit visually under the overlay's Close button. */}
+        {/* Nav fades out when any overlay (work / about / photo viewer / mobile menu) is open. */}
         <nav
-          className="flex flex-col min-[380px]:flex-row gap-1 min-[380px]:gap-4 md:gap-6"
+          className="flex gap-4 md:gap-6"
           aria-label="Primary navigation"
           style={{
-            opacity: (workMounted || aboutOpen || !!activePhoto) ? 0 : 1,
-            pointerEvents: (workMounted || aboutOpen || !!activePhoto) ? 'none' : 'auto',
+            opacity: (workMounted || aboutOpen || !!activePhoto || menuOpen) ? 0 : 1,
+            pointerEvents: (workMounted || aboutOpen || !!activePhoto || menuOpen) ? 'none' : 'auto',
             transition: 'opacity 0.18s ease',
           }}
         >
+          {/* Desktop: text buttons */}
           <button
-            onClick={() => { console.log('[nav] Work clicked — workMounted:', workMounted, 'aboutOpen:', aboutOpen, 'activePhoto:', !!activePhoto); openWork() }}
-            className="text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] flex items-center justify-end"
+            onClick={openWork}
+            className="hidden md:flex text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: 'auto' }}
           >Work</button>
           <button
-            onClick={() => { console.log('[nav] About clicked — workMounted:', workMounted, 'aboutOpen:', aboutOpen, 'activePhoto:', !!activePhoto); openAbout() }}
-            className="text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] flex items-center justify-end"
+            onClick={openAbout}
+            className="hidden md:flex text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: 'auto' }}
           >About</button>
+
+          {/* Mobile: hamburger */}
+          <button
+            onClick={openMenu}
+            className="flex md:hidden items-center justify-center min-h-[44px] min-w-[44px] opacity-60 hover:opacity-100 transition-opacity focus:outline-none"
+            style={{ pointerEvents: 'auto' }}
+            aria-label="Open menu"
+          >
+            <svg width="22" height="15" viewBox="0 0 22 15" fill="none" aria-hidden="true">
+              <rect width="22" height="2" rx="1" fill="currentColor" />
+              <rect y="6.5" width="22" height="2" rx="1" fill="currentColor" />
+              <rect y="13" width="22" height="2" rx="1" fill="currentColor" />
+            </svg>
+          </button>
         </nav>
       </header>
 
@@ -1111,7 +1137,7 @@ export default function HomePage() {
           transformOrigin: 'center center',
           transition: 'transform 0.40s cubic-bezier(0.16,1,0.3,1)',
         }}>
-          {PROJECTS.filter((_, i) => !isMobile || i < 3).map(proj => {
+          {PROJECTS.filter((_, i) => !isMobile || i < 6).map(proj => {
             const cfg = PHOTO_CFG[proj.id]; if (!cfg) return null
             // Both width AND height follow the current image's orientation, keeping the long dim
             // constant so landscape tiles aren't smaller than portrait ones from the same project.
@@ -1159,7 +1185,8 @@ export default function HomePage() {
             ref={el => { elRefs.current['logo'] = el }}
             className="absolute top-0 left-0 touch-none"
             style={{
-              width: LOGO_SIZE, height: LOGO_SIZE,
+              width:  isMobile ? Math.round(LOGO_SIZE * 0.65) : LOGO_SIZE,
+              height: isMobile ? Math.round(LOGO_SIZE * 0.65) : LOGO_SIZE,
               willChange: 'transform', zIndex: 5,
               opacity: aboutOpen ? (aboutVisible ? 0 : 1) : 1,
               transition: aboutOpen
@@ -1218,6 +1245,50 @@ export default function HomePage() {
         </div>
         <div className="cpicker-dot" aria-hidden style={{ background: dotColour }} />
       </div>
+
+      {/* ─── Mobile menu — hamburger overlay, md:hidden equivalent ────────
+          Fades in/out. Sits above everything (z-[70]) so it's never clipped.
+          Only rendered when menuOpen, so it has zero cost on desktop. */}
+      {menuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[68] md:hidden"
+            style={{
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              opacity: menuVisible ? 1 : 0,
+              transition: 'opacity 0.22s ease',
+            }}
+            onClick={closeMenu}
+          />
+          {/* Menu content */}
+          <div
+            className="fixed inset-0 z-[69] flex flex-col items-center justify-center gap-10 md:hidden"
+            style={{
+              opacity: menuVisible ? 1 : 0,
+              transition: 'opacity 0.22s ease',
+              pointerEvents: menuVisible ? 'auto' : 'none',
+            }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+          >
+            <button
+              onClick={() => { closeMenu(); setTimeout(openWork, 60) }}
+              className="text-4xl tracking-widest lowercase opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
+            >Work</button>
+            <button
+              onClick={() => { closeMenu(); setTimeout(openAbout, 60) }}
+              className="text-4xl tracking-widest lowercase opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
+            >About</button>
+            <button
+              onClick={closeMenu}
+              className="mt-6 text-sm tracking-widest lowercase opacity-45 hover:opacity-80 transition-opacity focus:outline-none focus-visible:underline min-h-[44px] flex items-center"
+            >Close</button>
+          </div>
+        </>
+      )}
 
       {/* ─── Work overlay — floats above the scaled canvas ───────────────
           Same pattern as the photo viewer: transparent click-to-close backdrop
