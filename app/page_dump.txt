@@ -109,7 +109,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_005_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_006_standard.jpg': '1067/1600',
   '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_007_standard.jpg': '1067/1600',
-  // Live â€” Southfacing Festival Â· Hiphop Back in the Day (2025)
+  // Live â€” Busta Rhymes Â· South Facing Festival (2025)
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg': '1078/1600',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_002_standard.jpg': '1076/1600',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_003_standard.jpg': '1069/1600',
@@ -312,7 +312,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l4', kind: 'photo', title: 'Hiphop Back in the Day Â· Southfacing', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l4', kind: 'photo', title: 'Busta Rhymes Â· South Facing Festival', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
     gallery: [
       '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
