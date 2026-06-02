@@ -568,6 +568,12 @@ export default function HomePage() {
   // About panel — same FLIP pick-up/put-down system as photo viewer
   const [aboutOpen,    setAboutOpen]    = useState(false)   // mounted
   const [aboutVisible, setAboutVisible] = useState(false)   // animation state
+  // `aboutSettled` is true only AFTER the slide-open animation completes.
+  // Used to gate the portrait + logo onPointerMove handlers so they don't
+  // fire during the 320ms slide (the function call + bail check on every
+  // pointermove adds main-thread work that compounds with the panel's
+  // mix-blend-mode repaints, causing jitter).
+  const [aboutSettled, setAboutSettled] = useState(false)
   const [logoSource,   setLogoSource]   = useState({ x: 0, y: 0, scale: 1, rot: 0 })
   const [activePhoto,  setActivePhoto]  = useState<Project | null>(null)
   const [lbZoom,       setLbZoom]       = useState(1)
@@ -722,6 +728,17 @@ export default function HomePage() {
     if (aboutOpen) requestAnimationFrame(() => setAboutVisible(true))
     else setAboutVisible(false)
   }, [aboutOpen])
+
+  // Arm `aboutSettled` ~340ms after aboutVisible flips true (slightly longer
+  // than the 320ms slide-in transition). Reset immediately on close so the
+  // pointer-move handlers detach as soon as the close slide starts.
+  useEffect(() => {
+    if (aboutVisible) {
+      const t = setTimeout(() => setAboutSettled(true), 340)
+      return () => clearTimeout(t)
+    }
+    setAboutSettled(false)
+  }, [aboutVisible])
 
   // Physics init for about panel — portrait + logo start in a deliberate scrapbook
   // arrangement (portrait centred near the top, logo overlapping its bottom), then
@@ -1358,14 +1375,15 @@ export default function HomePage() {
 
       </section>
 
-      {/* ─── Background colour picker — top-left corner ──────────────────
+      {/* ─── Background colour picker — bottom-left corner, horizontal ────
+          Anchored bottom:24 left:24; strip emerges to the right on hover.
           Desktop: :hover expands the strip (pure CSS).
           Mobile:  always expanded via @media — drag to pick, no JS needed. */}
       <div
         className="cpicker"
         style={{
           position: 'fixed',
-          top: 24,
+          bottom: 24,
           left: 24,
           zIndex: 30,
           opacity: (workMounted || aboutOpen || !!activePhoto) ? 0 : 1,
@@ -1533,23 +1551,23 @@ export default function HomePage() {
           onClick={closeAbout}
         />
 
-        {/* Panel — fades in/out, pointer-events disabled when invisible.
-            Blend is applied per-text-element below — NOT on this root —
-            so portrait + logo stay un-inverted. */}
+        {/* Panel — slides up to enter, down to exit (matches work overlay).
+            opacity is hardcoded to 1; show/hide handled by the slide transform
+            so the panel never enters a fractional-opacity state that traps the
+            container-level mix-blend-mode in a sub-stacking-context. */}
         <div
-          className="fixed inset-0 z-[60]"
+          className="fixed inset-0 z-[60] pointer-events-none"
           style={{
-            opacity: aboutVisible ? 1 : 0,
-            pointerEvents: aboutVisible ? 'auto' : 'none',
-            transition: 'opacity 0.3s ease-in-out',
-            willChange: 'opacity',
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            opacity: 1,
+            willChange: 'transform',
+            mixBlendMode: 'difference',
+            color: '#ffffff',
           }}
           role="dialog"
           aria-modal={aboutVisible ? 'true' : 'false'}
           aria-label="About Nadim Kurimbokus"
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerLeave={onPointerUp}
         >
             {/* Click-to-close layer — z:1, sits behind physics elements */}
             <div
@@ -1571,64 +1589,99 @@ export default function HomePage() {
               >Close</button>
             </div>
 
-            {/* Portrait — z:2, physics-driven, draggable */}
-            <div
-              ref={el => { elRefs.current['aboutPortrait'] = el }}
-              className="absolute top-0 left-0 touch-none"
-              style={{
-                width:        isMobile ? 200 : 340,
-                height:       isMobile ? Math.round(200 * 4 / 3) : Math.round(340 * 4 / 3),
-                willChange:   'transform',
-                borderRadius: 2,
-                overflow:     'hidden',
-                cursor:       'grab',
-                zIndex:       2,
-              }}
-              onPointerDown={e => onPointerDown(e, 'aboutPortrait')}
-              onPointerUp={onPointerUp}
-              onContextMenu={e => e.preventDefault()}
-              role="img"
-              aria-label="Portrait of Nadim Kurimbokus"
-            >
-              <Image
-                src="/images/portrait.jpg"
-                width={1080}
-                height={1440}
-                priority
-                alt="Nadim Kurimbokus"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                unoptimized
-              />
-              <div className="absolute inset-0" style={{ zIndex: 1 }} />
-            </div>
-
-            {/* Logo — z:3, physics-driven, draggable */}
-            <div
-              ref={el => { elRefs.current['aboutLogo'] = el }}
-              className="absolute top-0 left-0 touch-none"
-              style={{
-                width:      isMobile ? 155 : 280,
-                height:     isMobile ? 155 : 280,
-                willChange: 'transform',
-                cursor:     'grab',
-                zIndex:     3,
-              }}
-              onPointerDown={e => onPointerDown(e, 'aboutLogo')}
-              onPointerUp={onPointerUp}
-              onContextMenu={e => e.preventDefault()}
-              aria-hidden="true"
-            >
-              <Image
-                src="/logo.png"
-                fill
-                alt=""
-                style={{ objectFit: 'contain', pointerEvents: 'none' }}
-                unoptimized
-              />
-              <div className="absolute inset-0" style={{ zIndex: 1 }} />
-            </div>
-
           </div>
+
+        {/* ── About PORTRAIT layer — z:60 sibling, NO blend ─────────────
+            Image lives outside the blending panel root so it renders normally
+            (no inversion). Mirrors the panel's slide transform so it slides
+            up with the panel on open and away on close. */}
+        <div
+          className="fixed inset-0 z-[60]"
+          style={{
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        >
+          <div
+            ref={el => { elRefs.current['aboutPortrait'] = el }}
+            className="absolute top-0 left-0 touch-none"
+            style={{
+              width:        isMobile ? 200 : 340,
+              height:       isMobile ? Math.round(200 * 4 / 3) : Math.round(340 * 4 / 3),
+              willChange:   'transform',
+              borderRadius: 2,
+              overflow:     'hidden',
+              cursor:       'grab',
+              zIndex:       2,
+              // Re-enable interactivity for dragging — parent container is
+              // pointer-events:none so the empty area falls through to the
+              // backdrop click-to-close behind.
+              pointerEvents: 'auto',
+            }}
+            onPointerDown={e => onPointerDown(e, 'aboutPortrait')}
+            onPointerUp={onPointerUp}
+            // Only attach once the slide-in animation has settled — see
+            // aboutSettled effect. Avoids per-frame handler calls during slide.
+            onPointerMove={aboutSettled ? onPointerMove : undefined}
+            onContextMenu={e => e.preventDefault()}
+            role="img"
+            aria-label="Portrait of Nadim Kurimbokus"
+          >
+            <Image
+              src="/images/portrait.jpg"
+              width={1080}
+              height={1440}
+              priority
+              alt="Nadim Kurimbokus"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              unoptimized
+            />
+            <div className="absolute inset-0" style={{ zIndex: 1 }} />
+          </div>
+        </div>
+
+        {/* ── About LOGO layer — z:60 sibling, NO blend ────────────────── */}
+        <div
+          className="fixed inset-0 z-[60]"
+          style={{
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        >
+          <div
+            ref={el => { elRefs.current['aboutLogo'] = el }}
+            className="absolute top-0 left-0 touch-none"
+            style={{
+              width:      isMobile ? 155 : 280,
+              height:     isMobile ? 155 : 280,
+              willChange: 'transform',
+              cursor:     'grab',
+              zIndex:     3,
+              pointerEvents: 'auto',
+            }}
+            onPointerDown={e => onPointerDown(e, 'aboutLogo')}
+            onPointerUp={onPointerUp}
+            // Only attach once the slide-in animation has settled.
+            onPointerMove={aboutSettled ? onPointerMove : undefined}
+            onContextMenu={e => e.preventDefault()}
+            aria-hidden="true"
+          >
+            <Image
+              src="/logo.png"
+              fill
+              alt=""
+              style={{ objectFit: 'contain', pointerEvents: 'none' }}
+              unoptimized
+            />
+            <div className="absolute inset-0" style={{ zIndex: 1 }} />
+          </div>
+        </div>
 
         {/* ── About TEXT layer — z:61, SEPARATE container ──────────────────
             Lives OUTSIDE the panel root. Contains ONLY text (name, bio, email,
