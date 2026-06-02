@@ -772,6 +772,7 @@ export default function HomePage() {
     }
     // Reset zoom/pan eagerly so the DOM element always opens at 1× — belt-and-suspenders
     // alongside the useEffect that fires after the new activePhoto renders.
+    setLbZoom(1)
     lbZoomRef.current = 1
     lbPanRef.current  = { x: 0, y: 0 }
     lbPanBaseRef.current = { x: 0, y: 0 }
@@ -1167,6 +1168,9 @@ export default function HomePage() {
       // Otherwise the finger was panning — already committed live in onLbTouchMove
       return
     }
+
+    // Swipe navigation is desktop-only — on mobile, use the arrow buttons or keyboard
+    if (window.innerWidth < 768) return
 
     // Swipe threshold: 50 px horizontal, more horizontal than vertical
     if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
@@ -1766,6 +1770,7 @@ export default function HomePage() {
                   AND when not zoomed (so users can't tap them by accident while panning). */}
               {activePhoto.gallery.length > 1 && (
                 <div
+                  className="lb-arrows"
                   style={{
                     opacity: lbZoom === 1 ? 1 : 0,
                     pointerEvents: lbZoom === 1 ? 'auto' : 'none',

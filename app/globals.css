@@ -147,11 +147,26 @@ body {
 button, a { -webkit-tap-highlight-color: transparent; }
 
 /* ─── Text blend mode ────────────────────────────────────────────────────
-   white + difference = black on light, white on dark. Apply to any text
-   that sits over the live canvas or photo tiles. */
+   Sitewide: every text element blends with mix-blend-mode:difference so
+   text is always readable regardless of the background-hue picker value.
+   Color follows --color-text-inverted (RGB inverse of the chosen bg),
+   which is set on :root by the slider and inherited down the tree. */
+h1, h2, h3, h4, h5, h6, p, a, button, span, li {
+  mix-blend-mode: difference;
+}
+
 .blend-text {
   mix-blend-mode: difference;
-  color: black;
+  color: var(--color-text-inverted);
+}
+
+/* ─── Lightbox navigation arrows ────────────────────────────────────────
+   Hidden on mobile — swipe is disabled there anyway, and the arrows would
+   overlap the image. */
+@media (max-width: 767px) {
+  .lb-arrows {
+    display: none;
+  }
 }
 
 /* ─── About panel floating animations ───────────────────────────────────── */
