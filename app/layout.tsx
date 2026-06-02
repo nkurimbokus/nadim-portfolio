@@ -1,14 +1,13 @@
 import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
+import { Archivo_Black } from 'next/font/google'
 import './globals.css'
 
 // ─── Font ─────────────────────────────────────────────────────────────────────
-// Geist, regular weight (400) only — applied to <html> via geist.className so it
-// sets font-family directly and every element inherits it. No Geist Mono, no
-// bold/semibold weights loaded → the whole site renders at 400.
-const geist = Geist({
+// Archivo Black, weight 400 (the only weight it ships) — applied to <html> via
+// archivo.className so every element inherits it.
+const archivo = Archivo_Black({
   subsets: ['latin'],
-  weight: ['400'],
+  weight: '400',
   display: 'swap',
 })
 
@@ -66,7 +65,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={geist.className}
+      className={archivo.className}
     >
       <body className="bg-bg-default text-fg-default antialiased">
         {children}

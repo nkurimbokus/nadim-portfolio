@@ -22,14 +22,12 @@
   --color-accent-blue:     #1565C0;   /* blue  — Brand category */
   --color-accent-yellow:   #F2B800;   /* yellow — Cultural category */
 
-  /* Font is applied to <html> via geist.className in layout.tsx — no font-family
-     tokens here, so nothing overrides the inherited Geist. */
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
 
 body {
-  /* font-family intentionally omitted — inherits Geist from <html> (geist.className) */
+  font-family: var(--font-archivo-black), sans-serif;
   background-color: var(--color-bg-default);
 }
 
@@ -104,7 +102,6 @@ body {
 .cpicker:focus-within .cpicker-strip {
   width: 240px;
 }
-
 /* The actual <input type="range"> overlays the strip; fixed width so the thumb
    stays at its value-relative position regardless of the strip's current width. */
 .cpicker-input {
@@ -143,20 +140,24 @@ body {
   cursor: grab;
 }
 
-/* Mobile (<768px): same logic as desktop — dot collapsed, focus-within expands.
-   Everything scaled down: 14px dot, 190px strip, 40px tall touch target.
-   Wrapper starts at 14px (dot width), snaps to 200px on focus-within. */
-@media (max-width: 767px) {
-  .cpicker               { width: 14px; height: 40px; }
-  .cpicker:focus-within  { width: 200px; }
-  .cpicker-dot           { width: 14px !important; height: 14px !important;
-                           left: 0 !important; top: 13px !important; }
-  .cpicker-strip         { left: 7px; top: 13px; height: 14px;
-                           border-radius: 0 7px 7px 0; }
-  .cpicker:focus-within .cpicker-strip { width: 190px; }
-  .cpicker-input         { width: 190px; height: 40px; }
-  .cpicker-input::-webkit-slider-thumb { width: 8px; height: 8px; }
-  .cpicker-input::-moz-range-thumb     { width: 8px; height: 8px; }
+
+.canvas-section { height: 100vh; height: calc(var(--vh, 1vh) * 100); }
+
+/* ─── About panel floating animations ───────────────────────────────────── */
+@keyframes aboutPortraitFloat {
+  0%   { transform: translate(0px,  0px)  rotate(0deg);   }
+  25%  { transform: translate(6px,  -8px) rotate(0.6deg); }
+  50%  { transform: translate(-4px, 6px)  rotate(-0.4deg);}
+  75%  { transform: translate(5px,  4px)  rotate(0.3deg); }
+  100% { transform: translate(0px,  0px)  rotate(0deg);   }
+}
+/* Logo keyframes include the base translate(-50%, 50%) so Tailwind transforms
+   can be removed — the animation owns the full transform. */
+@keyframes aboutLogoFloat {
+  0%   { transform: translate(-50%, 50%) rotate(0deg);                                       }
+  30%  { transform: translate(calc(-50% + 10px), calc(50% - 8px))  rotate(-1.2deg);          }
+  65%  { transform: translate(calc(-50% -  7px), calc(50% + 10px)) rotate( 0.9deg);          }
+  100% { transform: translate(-50%, 50%) rotate(0deg);                                       }
 }
 
 
