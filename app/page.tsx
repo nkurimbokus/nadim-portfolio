@@ -717,7 +717,8 @@ export default function HomePage() {
   }, [])
   const closeMenu = useCallback(() => {
     setMenuVisible(false)
-    setTimeout(() => setMenuOpen(false), 220)
+    // Delay unmount until the 320ms slide-down on the menu content finishes.
+    setTimeout(() => setMenuOpen(false), 320)
   }, [])
 
   // Hue picker — close when the user taps outside on mobile.
@@ -1416,24 +1417,25 @@ export default function HomePage() {
           <div
             className="fixed inset-0 z-[68] md:hidden"
             style={{
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
+              backdropFilter: 'blur(3px)',
+              WebkitBackdropFilter: 'blur(3px)',
               opacity: menuVisible ? 1 : 0,
               transition: 'opacity 0.22s ease',
             }}
             onClick={closeMenu}
           />
-          {/* Menu content — buttons inherit the sitewide blend rule
-              (button { mix-blend-mode: difference; color: #ffffff; }) so the
-              text inverts against whatever the blurred backdrop reveals.
-              Opacity hardcoded to 1 so no fractional-opacity stacking-context
-              traps the per-button blend during transitions. Backdrop (z-[68])
-              still fades; menu text just appears/disappears with mount/unmount. */}
+          {/* Menu content — slides up to enter, down to exit (matches the
+              work overlay and about panel). Opacity hardcoded to 1 so the
+              container-level mix-blend-mode never enters a fractional-opacity
+              state mid-transition. */}
           <div
             className="fixed inset-0 z-[69] flex flex-col items-center justify-center gap-10 md:hidden"
             style={{
+              transform: menuVisible ? 'translateY(0)' : 'translateY(100%)',
+              transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
               opacity: 1,
               pointerEvents: menuVisible ? 'auto' : 'none',
+              willChange: 'transform',
               mixBlendMode: 'difference',
               color: '#ffffff',
             }}
@@ -1692,17 +1694,18 @@ export default function HomePage() {
         {/* ── About TEXT layer — z:61, SEPARATE container ──────────────────
             Lives OUTSIDE the panel root. Contains ONLY text (name, bio, email,
             instagram). White text + container-level mix-blend-mode: difference.
-            TEST (A): conditionally mounted on aboutVisible so opacity can
-            stay hardcoded at 1 (no fractional-opacity stacking-context trap
-            during fade). Trade-off: no opacity fade-in — text appears once
-            the panel's fade-in completes and unmounts at the start of fade-out.
-            Show/hide handled entirely by mount/unmount lifecycle. */}
-        {aboutVisible && (
+            Slides up with the panel (matches z-[60] panel + portrait + logo
+            slide animations) so all about content moves together as one unit.
+            Opacity hardcoded to 1 so the blend never enters a fractional-opacity
+            state mid-transition. */}
         <div
           className="fixed inset-0 z-[61]"
           style={{
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             opacity: 1,
             pointerEvents: 'none',
+            willChange: 'transform',
             mixBlendMode: 'difference',
             color: '#ffffff',
           }}
@@ -1749,7 +1752,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-        )}
         </>
 
       {/* ─── Photo viewer ───────────────────────────────────────────────── */}
