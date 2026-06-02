@@ -151,7 +151,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
    that sits over the live canvas or photo tiles. */
 .blend-text {
   mix-blend-mode: difference;
-  color: white;
+  color: black;
 }
 
 /* ─── About panel floating animations ───────────────────────────────────── */
