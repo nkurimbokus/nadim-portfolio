@@ -770,6 +770,15 @@ export default function HomePage() {
         })
       }
     }
+    // Reset zoom/pan eagerly so the DOM element always opens at 1× — belt-and-suspenders
+    // alongside the useEffect that fires after the new activePhoto renders.
+    lbZoomRef.current = 1
+    lbPanRef.current  = { x: 0, y: 0 }
+    lbPanBaseRef.current = { x: 0, y: 0 }
+    if (lbZoomLayerRef.current) {
+      lbZoomLayerRef.current.style.transition = 'none'
+      lbZoomLayerRef.current.style.transform  = 'scale(1) translate(0px, 0px)'
+    }
     setCanvasScaled(true)   // canvas starts zooming out
     setActivePhoto(proj)
   }, [])
@@ -1082,21 +1091,22 @@ export default function HomePage() {
   const onLbTouchStart = useCallback((e: React.TouchEvent) => {
     lbWasTouchRef.current = true
     if (e.touches.length === 2) {
-      // 2-finger: start pinch tracking, cancel any in-progress swipe
+      // 2-finger: start pinch tracking, cancel any in-progress swipe/pan
       lbTouchRef.current = null
       const dx = e.touches[1].clientX - e.touches[0].clientX
       const dy = e.touches[1].clientY - e.touches[0].clientY
       lbPinchRef.current = { dist: Math.hypot(dx, dy), zoom: lbZoomRef.current }
     } else if (e.touches.length === 1) {
-      // 1-finger: record swipe start
       lbPinchRef.current = null
       lbTouchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+      // Snapshot pan so deltas during this touch are relative to where we were
+      if (lbZoomRef.current > 1) lbPanBaseRef.current = { ...lbPanRef.current }
     }
   }, [])
 
   const onLbTouchMove = useCallback((e: React.TouchEvent) => {
+    // ── 2-finger pinch zoom ───────────────────────────────────────────────
     if (e.touches.length === 2 && lbPinchRef.current) {
-      // Scale zoom live — no React state churn, committed at touchend
       const dx = e.touches[1].clientX - e.touches[0].clientX
       const dy = e.touches[1].clientY - e.touches[0].clientY
       const z = Math.min(4, Math.max(1,
@@ -1104,6 +1114,22 @@ export default function HomePage() {
       ))
       lbZoomRef.current = z
       applyLbTransform(z, lbPanRef.current.x, lbPanRef.current.y, false)
+      return
+    }
+    // ── 1-finger pan when zoomed ─────────────────────────────────────────
+    if (e.touches.length === 1 && lbTouchRef.current && lbZoomRef.current > 1) {
+      const t  = e.touches[0]
+      const dx = t.clientX - lbTouchRef.current.x
+      const dy = t.clientY - lbTouchRef.current.y
+      const el   = lbZoomLayerRef.current
+      const zoom = lbZoomRef.current
+      // Max safe pan = half the image overhang on each axis
+      const maxPx = el ? el.offsetWidth  * (zoom - 1) / 2 : 9999
+      const maxPy = el ? el.offsetHeight * (zoom - 1) / 2 : 9999
+      const px = Math.max(-maxPx, Math.min(maxPx, lbPanBaseRef.current.x + dx))
+      const py = Math.max(-maxPy, Math.min(maxPy, lbPanBaseRef.current.y + dy))
+      lbPanRef.current = { x: px, y: py }
+      applyLbTransform(zoom, px, py, false)
     }
   }, [applyLbTransform])
 
@@ -1124,16 +1150,25 @@ export default function HomePage() {
       return
     }
 
-    // ── Swipe — only when at 1× zoom ───────────────────────────────────
-    if (!lbTouchRef.current || lbZoomRef.current > 1) {
-      lbTouchRef.current = null
-      return
-    }
+    // ── 1-finger: swipe (unzoomed) or tap-to-reset (zoomed) ──────────────
+    if (!lbTouchRef.current) return
     const t  = e.changedTouches[0]
     const dx = t.clientX - lbTouchRef.current.x
     const dy = t.clientY - lbTouchRef.current.y
     lbTouchRef.current = null
-    // Threshold: 50 px horizontal, and more horizontal than vertical
+
+    if (lbZoomRef.current > 1) {
+      // Tap while zoomed (tiny movement) → reset to 1×
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+        lbZoomRef.current = 1; setLbZoom(1)
+        lbPanRef.current = { x: 0, y: 0 }; lbPanBaseRef.current = { x: 0, y: 0 }
+        applyLbTransform(1, 0, 0, true)
+      }
+      // Otherwise the finger was panning — already committed live in onLbTouchMove
+      return
+    }
+
+    // Swipe threshold: 50 px horizontal, more horizontal than vertical
     if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
       navigate(dx < 0 ? 1 : -1)
     }
@@ -1173,19 +1208,19 @@ export default function HomePage() {
           {/* Desktop: text buttons */}
           <button
             onClick={openWork}
-            className="hidden md:flex text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
+            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: 'auto' }}
           >Work</button>
           <button
             onClick={openAbout}
-            className="hidden md:flex text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
+            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: 'auto' }}
           >About</button>
 
           {/* Mobile: hamburger */}
           <button
             onClick={openMenu}
-            className="flex md:hidden items-center justify-center min-h-[44px] min-w-[44px] opacity-60 hover:opacity-100 transition-opacity focus:outline-none"
+            className="flex md:hidden items-center justify-center min-h-[44px] min-w-[44px] bg-transparent opacity-60 hover:opacity-100 transition-opacity focus:outline-none"
             style={{ pointerEvents: 'auto' }}
             aria-label="Open menu"
           >
@@ -1404,7 +1439,7 @@ export default function HomePage() {
             aria-label="Work index"
           >
             {/* Top bar — minimal, just a Close affordance */}
-            <div className="flex items-center justify-between px-6 md:px-12 py-6 pointer-events-auto">
+            <div className="blend-text flex items-center justify-between px-6 md:px-12 py-6 pointer-events-auto">
               <span className="text-sm tracking-widest lowercase opacity-45">Work</span>
               <button
                 onClick={closeWork}
@@ -1423,7 +1458,7 @@ export default function HomePage() {
                   <li key={p.id}>
                     <button
                       onClick={() => openFromWork(p)}
-                      className="group w-full flex items-baseline gap-4 md:gap-8 py-1 md:py-1.5 text-left focus:outline-none pointer-events-auto"
+                      className="blend-text group w-full flex items-baseline gap-4 md:gap-8 py-1 md:py-1.5 text-left focus:outline-none pointer-events-auto"
                     >
                       {/* Number — fixed-width left column so all titles line up */}
                       <span className="text-xl md:text-3xl tabular-nums w-9 md:w-16 shrink-0 opacity-45">
@@ -1491,7 +1526,7 @@ export default function HomePage() {
 
             {/* Top bar — z:4, always readable above everything */}
             <div
-              className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 md:px-12 py-6"
+              className="blend-text absolute top-0 left-0 right-0 flex items-center justify-between px-6 md:px-12 py-6"
               style={{ zIndex: 4, pointerEvents: aboutVisible ? 'auto' : 'none' }}
             >
               <span className="text-sm tracking-widest lowercase opacity-45">About</span>
@@ -1569,7 +1604,7 @@ export default function HomePage() {
                 pointerEvents: 'none',
               }}
             >
-              <div className="mx-auto text-center" style={{ maxWidth: 660, pointerEvents: 'none' }}>
+              <div className="blend-text mx-auto text-center" style={{ maxWidth: 660, pointerEvents: 'none' }}>
                 <p className="text-2xl md:text-4xl" style={{ marginBottom: '1.5rem' }}>
                   Nadim Kurimbokus
                 </p>
@@ -1761,7 +1796,7 @@ export default function HomePage() {
 
             {/* Caption */}
             <div
-              className="relative flex items-center justify-between w-full max-w-2xl pointer-events-auto"
+              className="blend-text relative flex items-center justify-between w-full max-w-2xl pointer-events-auto"
               style={{
                 zIndex: 1,
                 opacity: lbVisible ? 1 : 0,

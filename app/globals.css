@@ -143,6 +143,17 @@ body {
 
 .canvas-section { height: 100vh; height: calc(var(--vh, 1vh) * 100); }
 
+/* ─── Tap highlight — remove the grey square on mobile taps ─────────────── */
+button, a { -webkit-tap-highlight-color: transparent; }
+
+/* ─── Text blend mode ────────────────────────────────────────────────────
+   white + difference = black on light, white on dark. Apply to any text
+   that sits over the live canvas or photo tiles. */
+.blend-text {
+  mix-blend-mode: difference;
+  color: white;
+}
+
 /* ─── About panel floating animations ───────────────────────────────────── */
 @keyframes aboutPortraitFloat {
   0%   { transform: translate(0px,  0px)  rotate(0deg);   }
