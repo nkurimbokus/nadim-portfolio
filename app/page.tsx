@@ -1423,18 +1423,19 @@ export default function HomePage() {
             }}
             onClick={closeMenu}
           />
-          {/* Menu content — solid black text on the blurred backdrop, NO blend.
-              `mixBlendMode: 'normal'` on the container is for symmetry; the per-
-              button inline `mixBlendMode: 'normal'` is what actually overrides
-              the global CSS rule (button { mix-blend-mode: difference }). */}
+          {/* Menu content — buttons inherit the sitewide blend rule
+              (button { mix-blend-mode: difference; color: #ffffff; }) so the
+              text inverts against whatever the blurred backdrop reveals.
+              Opacity hardcoded to 1 so no fractional-opacity stacking-context
+              traps the per-button blend during transitions. Backdrop (z-[68])
+              still fades; menu text just appears/disappears with mount/unmount. */}
           <div
             className="fixed inset-0 z-[69] flex flex-col items-center justify-center gap-10 md:hidden"
             style={{
-              opacity: menuVisible ? 1 : 0,
-              transition: 'opacity 0.22s ease',
+              opacity: 1,
               pointerEvents: menuVisible ? 'auto' : 'none',
-              color: '#000000',
-              mixBlendMode: 'normal',
+              mixBlendMode: 'difference',
+              color: '#ffffff',
             }}
             role="dialog"
             aria-modal="true"
@@ -1443,17 +1444,14 @@ export default function HomePage() {
             <button
               onClick={() => { closeMenu(); setTimeout(openWork, 60) }}
               className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
-              style={{ mixBlendMode: 'normal', color: '#000000' }}
             >Work</button>
             <button
               onClick={() => { closeMenu(); setTimeout(openAbout, 60) }}
               className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
-              style={{ mixBlendMode: 'normal', color: '#000000' }}
             >About</button>
             <button
               onClick={closeMenu}
               className="mt-6 text-sm tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[44px] flex items-center"
-              style={{ mixBlendMode: 'normal', color: '#000000' }}
             >Close</button>
           </div>
         </>
