@@ -602,6 +602,11 @@ export default function HomePage() {
   const lbDidPanRef     = useRef(false)
   const lbZoomRef       = useRef(1)
 
+  // Touch tracking — swipe + pinch for mobile
+  const lbTouchRef    = useRef<{ x: number; y: number } | null>(null)   // 1-finger start
+  const lbPinchRef    = useRef<{ dist: number; zoom: number } | null>(null)  // 2-finger start
+  const lbWasTouchRef = useRef(false)  // suppress synthetic click after touchend
+
   // Smooth ease — no bounce/overshoot on zoom
   const ZOOM_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)'
 
@@ -654,7 +659,7 @@ export default function HomePage() {
     galleryTimerRef.current = setTimeout(() => {
       setGalleryPrev(null)
       setGalleryPhase('idle')
-    }, 540)
+    }, 350)
   }, [activePhoto])
 
   // Preload neighbours so the crossfade has nothing to wait for
@@ -1029,6 +1034,7 @@ export default function HomePage() {
   const onLbImageDown = useCallback((e: React.PointerEvent) => {
     e.stopPropagation(); lbDidPanRef.current = false
     if (lbZoomRef.current <= 1) return
+    if (e.pointerType === 'touch') return  // touch handled by onLbTouch* below
     lbPanningRef.current  = true
     lbPanStartRef.current = { x: e.clientX, y: e.clientY }
     lbPanBaseRef.current  = { ...lbPanRef.current }
@@ -1036,7 +1042,7 @@ export default function HomePage() {
   }, [])
 
   const onLbImageMove = useCallback((e: React.PointerEvent) => {
-    if (!lbPanningRef.current) return
+    if (!lbPanningRef.current || e.pointerType === 'touch') return
     const dx = e.clientX - lbPanStartRef.current.x
     const dy = e.clientY - lbPanStartRef.current.y
     if (Math.hypot(dx, dy) > 4) lbDidPanRef.current = true
@@ -1053,17 +1059,85 @@ export default function HomePage() {
   }, [ZOOM_EASE])
 
   const onLbImageClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation(); if (lbDidPanRef.current) return
+    e.stopPropagation()
+    // Suppress the synthetic click the browser fires ~300 ms after touchend
+    if (lbWasTouchRef.current) { lbWasTouchRef.current = false; return }
+    if (lbDidPanRef.current) return
+    // Desktop-only: click toggles 1x ↔ 2x zoom
     if (lbZoomRef.current === 1) {
-      lbZoomRef.current = 2.5; setLbZoom(2.5)
+      lbZoomRef.current = 2; setLbZoom(2)
       lbPanRef.current = { x: 0, y: 0 }
-      applyLbTransform(2.5, 0, 0, true)
+      applyLbTransform(2, 0, 0, true)
     } else {
       lbZoomRef.current = 1; setLbZoom(1)
-      lbPanRef.current = { x: 0, y: 0 }
+      lbPanRef.current = { x: 0, y: 0 }; lbPanBaseRef.current = { x: 0, y: 0 }
       applyLbTransform(1, 0, 0, true)
     }
   }, [applyLbTransform])
+
+  // ── Mobile touch handlers ──────────────────────────────────────────────
+  // Pinch-to-zoom (2-finger) and swipe-to-navigate (1-finger, unzoomed only).
+  // All decisions are made at touchend — no real-time swipe tracking.
+
+  const onLbTouchStart = useCallback((e: React.TouchEvent) => {
+    lbWasTouchRef.current = true
+    if (e.touches.length === 2) {
+      // 2-finger: start pinch tracking, cancel any in-progress swipe
+      lbTouchRef.current = null
+      const dx = e.touches[1].clientX - e.touches[0].clientX
+      const dy = e.touches[1].clientY - e.touches[0].clientY
+      lbPinchRef.current = { dist: Math.hypot(dx, dy), zoom: lbZoomRef.current }
+    } else if (e.touches.length === 1) {
+      // 1-finger: record swipe start
+      lbPinchRef.current = null
+      lbTouchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    }
+  }, [])
+
+  const onLbTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lbPinchRef.current) {
+      // Scale zoom live — no React state churn, committed at touchend
+      const dx = e.touches[1].clientX - e.touches[0].clientX
+      const dy = e.touches[1].clientY - e.touches[0].clientY
+      const z = Math.min(4, Math.max(1,
+        lbPinchRef.current.zoom * (Math.hypot(dx, dy) / lbPinchRef.current.dist)
+      ))
+      lbZoomRef.current = z
+      applyLbTransform(z, lbPanRef.current.x, lbPanRef.current.y, false)
+    }
+  }, [applyLbTransform])
+
+  const onLbTouchEnd = useCallback((e: React.TouchEvent) => {
+    // ── Pinch ended — commit zoom to state ─────────────────────────────
+    if (lbPinchRef.current && e.touches.length < 2) {
+      const z = lbZoomRef.current
+      if (z < 1.3) {
+        // Snapped below threshold — spring back to 1×
+        lbZoomRef.current = 1; setLbZoom(1)
+        lbPanRef.current = { x: 0, y: 0 }; lbPanBaseRef.current = { x: 0, y: 0 }
+        applyLbTransform(1, 0, 0, true)
+      } else {
+        setLbZoom(z)  // commit whatever zoom the pinch landed on
+      }
+      lbPinchRef.current = null
+      lbTouchRef.current = null
+      return
+    }
+
+    // ── Swipe — only when at 1× zoom ───────────────────────────────────
+    if (!lbTouchRef.current || lbZoomRef.current > 1) {
+      lbTouchRef.current = null
+      return
+    }
+    const t  = e.changedTouches[0]
+    const dx = t.clientX - lbTouchRef.current.x
+    const dy = t.clientY - lbTouchRef.current.y
+    lbTouchRef.current = null
+    // Threshold: 50 px horizontal, and more horizontal than vertical
+    if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
+      navigate(dx < 0 ? 1 : -1)
+    }
+  }, [navigate, applyLbTransform])
 
   const lbCfg    = activePhoto ? PHOTO_CFG[activePhoto.id] : null
   // Lightbox shape follows the current gallery image, not a fixed project aspect
@@ -1575,11 +1649,15 @@ export default function HomePage() {
                 style={{
                   position: 'absolute', inset: 0,
                   cursor: lbZoom > 1 ? 'grab' : 'zoom-in',
+                  touchAction: 'none',  // let our touch handlers own all gestures
                 }}
                 onPointerDown={onLbImageDown}
                 onPointerMove={onLbImageMove}
                 onPointerUp={onLbImageUp}
                 onClick={onLbImageClick}
+                onTouchStart={onLbTouchStart}
+                onTouchMove={onLbTouchMove}
+                onTouchEnd={onLbTouchEnd}
                 onContextMenu={e => e.preventDefault()}
               >
                 {/* Gallery — directional two-layer slide via state-driven CSS transitions.
@@ -1598,7 +1676,7 @@ export default function HomePage() {
                     const currTransform = isAnimating && galleryPhase === 'start' ? offScreen(dirSign) : onScreen
                     // Prev layer: starts on-screen, ends off-screen in the opposite direction
                     const prevTransform = galleryPhase === 'end' ? offScreen(-dirSign) : onScreen
-                    const trans = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)'
+                    const trans = 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)'
                     return (
                       <>
                         {isAnimating && activePhoto.gallery[galleryPrev!] && (
@@ -1703,7 +1781,9 @@ export default function HomePage() {
                     {galleryIndex + 1} / {activePhoto.gallery.length}
                   </span>
                 )}
-                <span className="text-xs opacity-40">{lbZoom === 1 ? 'tap to zoom' : 'tap to fit'}</span>
+                {!isMobile && (
+                  <span className="text-xs opacity-40">{lbZoom === 1 ? 'click to zoom' : 'click to fit'}</span>
+                )}
                 <button
                   className="text-sm tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
                   onClick={closeLightbox}
