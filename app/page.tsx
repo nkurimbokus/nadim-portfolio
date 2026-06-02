@@ -1423,13 +1423,18 @@ export default function HomePage() {
             }}
             onClick={closeMenu}
           />
-          {/* Menu content */}
+          {/* Menu content — solid black text on the blurred backdrop, NO blend.
+              `mixBlendMode: 'normal'` on the container is for symmetry; the per-
+              button inline `mixBlendMode: 'normal'` is what actually overrides
+              the global CSS rule (button { mix-blend-mode: difference }). */}
           <div
             className="fixed inset-0 z-[69] flex flex-col items-center justify-center gap-10 md:hidden"
             style={{
               opacity: menuVisible ? 1 : 0,
               transition: 'opacity 0.22s ease',
               pointerEvents: menuVisible ? 'auto' : 'none',
+              color: '#000000',
+              mixBlendMode: 'normal',
             }}
             role="dialog"
             aria-modal="true"
@@ -1438,14 +1443,17 @@ export default function HomePage() {
             <button
               onClick={() => { closeMenu(); setTimeout(openWork, 60) }}
               className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
+              style={{ mixBlendMode: 'normal', color: '#000000' }}
             >Work</button>
             <button
               onClick={() => { closeMenu(); setTimeout(openAbout, 60) }}
               className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
+              style={{ mixBlendMode: 'normal', color: '#000000' }}
             >About</button>
             <button
               onClick={closeMenu}
               className="mt-6 text-sm tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[44px] flex items-center"
+              style={{ mixBlendMode: 'normal', color: '#000000' }}
             >Close</button>
           </div>
         </>
