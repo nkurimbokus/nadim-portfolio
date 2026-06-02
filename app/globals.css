@@ -147,17 +147,27 @@ body {
 button, a { -webkit-tap-highlight-color: transparent; }
 
 /* ─── Text blend mode ────────────────────────────────────────────────────
-   Sitewide: every text element blends with mix-blend-mode:difference so
-   text is always readable regardless of the background-hue picker value.
-   Color follows --color-text-inverted (RGB inverse of the chosen bg),
-   which is set on :root by the slider and inherited down the tree. */
+   Sitewide: every text element is white with mix-blend-mode: difference.
+   The blend inverts the white against whatever pixel sits behind the glyph
+   (bg colour, a floating photo, a portrait — anything in the same stacking
+   context). Surfaces that need a single stacking-context blend (the header,
+   work overlay, about text layer, lightbox caption) also set mix-blend-mode
+   on their container in page.tsx so the whole group blends against the page. */
 h1, h2, h3, h4, h5, h6, p, a, button, span, li {
   mix-blend-mode: difference;
+  color: #ffffff;
 }
 
 .blend-text {
   mix-blend-mode: difference;
-  color: var(--color-text-inverted);
+  color: #ffffff;
+}
+
+/* Re-enable normal blending inside overlays that have their OWN backdrop
+   (work index, about panel, lightbox caption) — those sit on a blurred layer
+   and shouldn't try to blend through to the canvas underneath. */
+.no-blend, .no-blend * {
+  mix-blend-mode: normal !important;
 }
 
 /* ─── Lightbox navigation arrows ────────────────────────────────────────

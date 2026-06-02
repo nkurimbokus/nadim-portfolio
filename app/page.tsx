@@ -3,6 +3,23 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import Image from 'next/image'
 
+/**
+ * BLEND MODE SURFACES (mix-blend-mode: difference)
+ *
+ * Every surface that inverts text against a dynamic background uses this pattern:
+ * 1. Container div: fixed inset-0, z-[N], style={{ mixBlendMode: 'difference', color: '#ffffff', opacity: 1, pointerEvents: 'none' }}
+ * 2. Inner wrapper: absolute inset-x-0, style={{ pointerEvents: 'auto' }} (re-enables clicks)
+ * 3. Text elements: no inline colour, no opacity utilities, inherit #ffffff from parent
+ * 4. Show/hide: conditional mount/unmount ({aboutVisible && ...}), not opacity animations
+ *
+ * Applied to: <header>, work overlay (z-[60]), about text layer (z-[61]), lightbox caption (z-[10])
+ *
+ * Global CSS rule (app/globals.css:156–159): all p/a/span/button get mix-blend-mode: difference + color: #ffffff
+ * Exception: <main> inherits color: var(--color-text-inverted) which is black, so blending surfaces must override with color: '#ffffff'
+ *
+ * NO opacity utilities on text — they create stacking contexts that trap blend modes
+ */
+
 const useClientLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
@@ -1169,9 +1186,6 @@ export default function HomePage() {
       return
     }
 
-    // Swipe navigation is desktop-only — on mobile, use the arrow buttons or keyboard
-    if (window.innerWidth < 768) return
-
     // Swipe threshold: 50 px horizontal, more horizontal than vertical
     if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
       navigate(dx < 0 ? 1 : -1)
@@ -1198,34 +1212,41 @@ export default function HomePage() {
         Skip to content
       </a>
 
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-end px-6 md:px-10 h-16 pointer-events-none">
+      <header
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-end px-6 md:px-10 h-16 pointer-events-none"
+        style={{ mixBlendMode: 'difference', color: '#ffffff', opacity: 1 }}
+      >
         {/* Nav fades out when any overlay (work / about / photo viewer / mobile menu) is open. */}
+        {(() => {
+          const navDisabled = workMounted || aboutOpen || !!activePhoto || menuOpen
+          const btnPE: 'auto' | 'none' = navDisabled ? 'none' : 'auto'
+          return (
         <nav
           className="flex gap-4 md:gap-6"
           aria-label="Primary navigation"
           style={{
-            opacity: (workMounted || aboutOpen || !!activePhoto || menuOpen) ? 0 : 1,
-            pointerEvents: (workMounted || aboutOpen || !!activePhoto || menuOpen) ? 'none' : 'auto',
+            opacity: navDisabled ? 0 : 1,
+            pointerEvents: navDisabled ? 'none' : 'auto',
             transition: 'opacity 0.18s ease',
           }}
         >
           {/* Desktop: text buttons */}
           <button
             onClick={openWork}
-            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
-            style={{ pointerEvents: 'auto' }}
+            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
+            style={{ pointerEvents: btnPE }}
           >Work</button>
           <button
             onClick={openAbout}
-            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
-            style={{ pointerEvents: 'auto' }}
+            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
+            style={{ pointerEvents: btnPE }}
           >About</button>
 
           {/* Mobile: hamburger */}
           <button
             onClick={openMenu}
-            className="flex md:hidden items-center justify-center min-h-[44px] min-w-[44px] bg-transparent opacity-60 hover:opacity-100 transition-opacity focus:outline-none"
-            style={{ pointerEvents: 'auto' }}
+            className="flex md:hidden items-center justify-center min-h-[44px] min-w-[44px] bg-transparent text-white/60 hover:text-white transition-colors focus:outline-none"
+            style={{ pointerEvents: btnPE }}
             aria-label="Open menu"
           >
             <svg width="22" height="15" viewBox="0 0 22 15" fill="none" aria-hidden="true">
@@ -1235,13 +1256,15 @@ export default function HomePage() {
             </svg>
           </button>
         </nav>
+          )
+        })()}
       </header>
 
       {/* ─── Canvas ─────────────────────────────────────────────────────── */}
       <section
         id="canvas"
         ref={(el) => { sectionRef.current = el }}
-        className="relative canvas-section bg-bg-default overflow-hidden isolate"
+        className="relative canvas-section bg-bg-default overflow-hidden"
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerLeave={onPointerUp}
@@ -1396,15 +1419,15 @@ export default function HomePage() {
           >
             <button
               onClick={() => { closeMenu(); setTimeout(openWork, 60) }}
-              className="text-4xl tracking-widest lowercase opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
+              className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
             >Work</button>
             <button
               onClick={() => { closeMenu(); setTimeout(openAbout, 60) }}
-              className="text-4xl tracking-widest lowercase opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
+              className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
             >About</button>
             <button
               onClick={closeMenu}
-              className="mt-6 text-sm tracking-widest lowercase opacity-45 hover:opacity-80 transition-opacity focus:outline-none focus-visible:underline min-h-[44px] flex items-center"
+              className="mt-6 text-sm tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[44px] flex items-center"
             >Close</button>
           </div>
         </>
@@ -1437,6 +1460,11 @@ export default function HomePage() {
               transform: workVisible ? 'translateY(0)' : 'translateY(100%)',
               transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
               willChange: 'transform',
+              // Work index is text-only — applying blend at the stacking-context
+              // root inverts white text against whatever sits behind (canvas bg + photos).
+              mixBlendMode: 'difference',
+              color: '#ffffff',
+              opacity: 1,
             }}
             role="dialog"
             aria-modal="true"
@@ -1444,10 +1472,10 @@ export default function HomePage() {
           >
             {/* Top bar — minimal, just a Close affordance */}
             <div className="blend-text flex items-center justify-between px-6 md:px-12 py-6 pointer-events-auto">
-              <span className="text-sm tracking-widest lowercase opacity-45">Work</span>
+              <span className="text-sm tracking-widest lowercase">Work</span>
               <button
                 onClick={closeWork}
-                className="text-sm tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
+                className="text-sm tracking-widest lowercase focus:outline-none focus-visible:underline"
               >Close</button>
             </div>
 
@@ -1465,17 +1493,17 @@ export default function HomePage() {
                       className="blend-text group w-full flex items-baseline gap-4 md:gap-8 py-1 md:py-1.5 text-left focus:outline-none pointer-events-auto"
                     >
                       {/* Number — fixed-width left column so all titles line up */}
-                      <span className="text-xl md:text-3xl tabular-nums w-9 md:w-16 shrink-0 opacity-45">
+                      <span className="text-xl md:text-3xl tabular-nums w-9 md:w-16 shrink-0">
                         {String(i + 1).padStart(2, '0')}
                       </span>
                       {/* Title — Geist 400, inherits --color-text-inverted from <main> */}
                       <span
-                        className="tracking-tight leading-none text-4xl md:text-6xl lg:text-7xl flex-1 group-hover:opacity-70 transition-opacity duration-200"
+                        className="tracking-tight leading-none text-4xl md:text-6xl lg:text-7xl flex-1 transition-opacity duration-200"
                       >
                         {p.title}
                       </span>
                       {/* Year — far right, always visible */}
-                      <span className="text-xs tracking-widest uppercase shrink-0 self-center opacity-45">
+                      <span className="text-xs tracking-widest uppercase shrink-0 self-center">
                         {p.year}
                       </span>
                     </button>
@@ -1505,7 +1533,9 @@ export default function HomePage() {
           onClick={closeAbout}
         />
 
-        {/* Panel — fades in/out, pointer-events disabled when invisible */}
+        {/* Panel — fades in/out, pointer-events disabled when invisible.
+            Blend is applied per-text-element below — NOT on this root —
+            so portrait + logo stay un-inverted. */}
         <div
           className="fixed inset-0 z-[60]"
           style={{
@@ -1528,15 +1558,16 @@ export default function HomePage() {
               onClick={closeAbout}
             />
 
-            {/* Top bar — z:4, always readable above everything */}
+            {/* Top bar — z:4, always readable above everything.
+                Blending is inherited from the about panel root. */}
             <div
-              className="blend-text absolute top-0 left-0 right-0 flex items-center justify-between px-6 md:px-12 py-6"
+              className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 md:px-12 py-6"
               style={{ zIndex: 4, pointerEvents: aboutVisible ? 'auto' : 'none' }}
             >
-              <span className="text-sm tracking-widest lowercase opacity-45">About</span>
+              <span className="text-sm tracking-widest lowercase">About</span>
               <button
                 onClick={closeAbout}
-                className="text-sm tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
+                className="text-sm tracking-widest lowercase focus:outline-none focus-visible:underline"
               >Close</button>
             </div>
 
@@ -1597,42 +1628,69 @@ export default function HomePage() {
               <div className="absolute inset-0" style={{ zIndex: 1 }} />
             </div>
 
-            {/* Bio text — z:10, pinned lower, pointer-events:none except on links */}
-            <div
-              className="absolute inset-x-0"
-              style={{
-                bottom:       'clamp(56px, 9vh, 110px)',
-                paddingLeft:  'clamp(24px, 7vw, 96px)',
-                paddingRight: 'clamp(24px, 7vw, 96px)',
-                zIndex:       10,
-                pointerEvents: 'none',
-              }}
-            >
-              <div className="blend-text mx-auto text-center" style={{ maxWidth: 660, pointerEvents: 'none' }}>
-                <p className="text-2xl md:text-4xl" style={{ marginBottom: '1.5rem' }}>
-                  Nadim Kurimbokus
-                </p>
-                <p className="text-base md:text-xl opacity-60 leading-loose" style={{ marginBottom: '2.5rem' }}>
-                  British-Mauritian photographer based in London. Shooting music, performance,
-                  and the spaces in between — from headline stages to rehearsal rooms.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-4">
-                  <a
-                    href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
-                    style={{ pointerEvents: 'auto' }}
-                    className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm hover:bg-[color:var(--color-text-inverted)] hover:text-[color:var(--color-bg-default)] transition-colors focus:outline-none focus:bg-[color:var(--color-text-inverted)] focus:text-[color:var(--color-bg-default)]"
-                  >Email me</a>
-                  <a
-                    href="https://www.instagram.com/nadim_kurimbokus/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ pointerEvents: 'auto' }}
-                    className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm hover:bg-[color:var(--color-text-inverted)] hover:text-[color:var(--color-bg-default)] transition-colors focus:outline-none focus:bg-[color:var(--color-text-inverted)] focus:text-[color:var(--color-bg-default)]"
-                  >Instagram</a>
-                </div>
+          </div>
+
+        {/* ── About TEXT layer — z:61, SEPARATE container ──────────────────
+            Lives OUTSIDE the panel root. Contains ONLY text (name, bio, email,
+            instagram). White text + container-level mix-blend-mode: difference.
+            TEST (A): conditionally mounted on aboutVisible so opacity can
+            stay hardcoded at 1 (no fractional-opacity stacking-context trap
+            during fade). Trade-off: no opacity fade-in — text appears once
+            the panel's fade-in completes and unmounts at the start of fade-out.
+            Show/hide handled entirely by mount/unmount lifecycle. */}
+        {aboutVisible && (
+        <div
+          className="fixed inset-0 z-[61]"
+          style={{
+            opacity: 1,
+            pointerEvents: 'none',
+            mixBlendMode: 'difference',
+            color: '#ffffff',
+          }}
+          aria-hidden={!aboutVisible}
+        >
+          <div
+            className="absolute inset-x-0"
+            style={{
+              bottom:       'clamp(56px, 9vh, 110px)',
+              paddingLeft:  'clamp(24px, 7vw, 96px)',
+              paddingRight: 'clamp(24px, 7vw, 96px)',
+              // Only the inner text wrapper gates pointer-events on aboutVisible.
+              // The individual <a> buttons re-enable it on themselves with
+              // `pointerEvents: 'auto'` in their own inline styles.
+              pointerEvents: aboutVisible ? 'auto' : 'none',
+            }}
+          >
+            <div className="mx-auto text-center" style={{ maxWidth: 660, pointerEvents: 'none' }}>
+              {/* Name */}
+              <p className="text-2xl md:text-4xl" style={{ marginBottom: '1.5rem' }}>
+                Nadim Kurimbokus
+              </p>
+              {/* Bio */}
+              <p className="text-base md:text-xl leading-loose" style={{ marginBottom: '2.5rem' }}>
+                British-Mauritian photographer based in London. Shooting music, performance,
+                and the spaces in between — from headline stages to rehearsal rooms.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                {/* Email button */}
+                <a
+                  href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
+                  style={{ pointerEvents: 'auto' }}
+                  className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
+                >Email me</a>
+                {/* Instagram button */}
+                <a
+                  href="https://www.instagram.com/nadim_kurimbokus/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ pointerEvents: 'auto' }}
+                  className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
+                >Instagram</a>
               </div>
             </div>
           </div>
+        </div>
+        )}
         </>
 
       {/* ─── Photo viewer ───────────────────────────────────────────────── */}
@@ -1652,7 +1710,9 @@ export default function HomePage() {
           />
 
           {/* No overlay — the photo just floats above the live canvas.
-              Shadow on the photo card gives the sense of elevation. */}
+              Shadow on the photo card gives the sense of elevation.
+              Blend is applied per-text-element on the caption nodes below —
+              NOT on this root — so the photo stays un-inverted. */}
           <div
             className="fixed inset-0 z-[9] flex flex-col items-center justify-center p-6 gap-4 pointer-events-none"
             style={{ backgroundColor: 'transparent' }}
@@ -1778,7 +1838,7 @@ export default function HomePage() {
                   }}
                 >
                   <button
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-4 pl-1 py-6 opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-4 pl-1 py-6 focus:outline-none focus-visible:underline"
                     onClick={e => { e.stopPropagation(); navigate(-1) }}
                     aria-label="Previous image"
                   >
@@ -1787,7 +1847,7 @@ export default function HomePage() {
                     </svg>
                   </button>
                   <button
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-4 pr-1 py-6 opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-4 pr-1 py-6 focus:outline-none focus-visible:underline"
                     onClick={e => { e.stopPropagation(); navigate(1) }}
                     aria-label="Next image"
                   >
@@ -1798,34 +1858,49 @@ export default function HomePage() {
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Caption */}
+          {/* ── Lightbox CAPTION layer — z:10, SEPARATE container ──────────
+              Lives OUTSIDE the lightbox content root. Contains ONLY text
+              (title, category•year, counter, zoom hint, close button). Plain
+              black text — no blend. The full-screen layer is pointer-events:
+              none so clicks fall through to the photo/backdrop below; only
+              the inner caption wrapper turns events back on for the close
+              button. */}
+          <div
+            className="fixed inset-0 z-[10] flex flex-col items-end justify-end p-6"
+            style={{
+              // TEST (A): opacity hardcoded to 1 so the layer never enters a
+              // fractional-opacity state that creates a stacking context and
+              // traps mix-blend-mode. Show/hide handled by the parent
+              // `{activePhoto && ...}` conditional unmount.
+              opacity: 1,
+              pointerEvents: 'none',
+              mixBlendMode: 'difference',
+              color: '#ffffff',
+            }}
+            aria-hidden={!lbVisible}
+          >
             <div
-              className="blend-text relative flex items-center justify-between w-full max-w-2xl pointer-events-auto"
-              style={{
-                zIndex: 1,
-                opacity: lbVisible ? 1 : 0,
-                transition: lbVisible
-                  ? 'opacity 0.20s ease 0.28s'
-                  : 'opacity 0.08s ease',
-              }}
+              className="relative flex items-center justify-between w-full max-w-2xl mx-auto"
+              style={{ pointerEvents: lbVisible ? 'auto' : 'none' }}
               onClick={e => e.stopPropagation()}
             >
               <div>
                 <p className="text-sm">{activePhoto.title}</p>
-                <p className="text-xs mt-0.5 opacity-50">{activePhoto.category} &bull; {activePhoto.year}</p>
+                <p className="text-xs mt-0.5">{activePhoto.category} &bull; {activePhoto.year}</p>
               </div>
               <div className="flex items-center gap-4">
                 {activePhoto.gallery.length > 1 && (
-                  <span className="text-xs opacity-30 tabular-nums">
+                  <span className="text-xs tabular-nums">
                     {galleryIndex + 1} / {activePhoto.gallery.length}
                   </span>
                 )}
                 {!isMobile && (
-                  <span className="text-xs opacity-40">{lbZoom === 1 ? 'click to zoom' : 'click to fit'}</span>
+                  <span className="text-xs">{lbZoom === 1 ? 'click to zoom' : 'click to fit'}</span>
                 )}
                 <button
-                  className="text-sm tracking-widest lowercase opacity-60 hover:opacity-100 transition-opacity focus:outline-none focus-visible:underline"
+                  className="text-sm tracking-widest lowercase focus:outline-none focus-visible:underline"
                   onClick={closeLightbox}
                 >Close</button>
               </div>
