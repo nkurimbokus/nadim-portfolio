@@ -29,6 +29,7 @@
 body {
   font-family: var(--font-archivo-black), sans-serif;
   background-color: var(--color-bg-default);
+  touch-action: manipulation; /* disable browser double-tap zoom; custom pinch/double-tap uses touch-action:none on the zoom layer */
 }
 
 /* ─── Background colour picker ────────────────────────────────────────────

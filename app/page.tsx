@@ -616,8 +616,9 @@ export default function HomePage() {
   const dragRef    = useRef<DragState | null>(null)
   const didDragRef = useRef(false)
 
-  // Pan: entirely direct DOM — no React state during drag, zero latency
+  // Pan / drag: entirely direct DOM — no React state during gesture, zero latency
   const lbZoomLayerRef  = useRef<HTMLDivElement | null>(null)
+  const lbCardRef       = useRef<HTMLDivElement | null>(null)  // photo card
   const lbPanRef        = useRef({ x: 0, y: 0 })
   const lbPanBaseRef    = useRef({ x: 0, y: 0 })
   const lbPanStartRef   = useRef({ x: 0, y: 0 })
@@ -628,14 +629,17 @@ export default function HomePage() {
   // Touch tracking — swipe + pinch for mobile
   const lbTouchRef    = useRef<{ x: number; y: number } | null>(null)   // 1-finger start
   const lbPinchRef    = useRef<{ dist: number; zoom: number } | null>(null)  // 2-finger start
-  const lbWasTouchRef = useRef(false)  // suppress synthetic click after touchend
+  const lbWasTouchRef   = useRef(false)   // suppress synthetic click after touchend
+  const lbDoubleTapRef  = useRef<{ time: number; x: number; y: number } | null>(null)
+  const lbOpenTimeRef   = useRef(0)
+  const prefersReducedMotionRef = useRef(false)
 
   // Smooth ease — no bounce/overshoot on zoom
   const ZOOM_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)'
 
   const applyLbTransform = useCallback((z: number, px: number, py: number, animated: boolean) => {
     const el = lbZoomLayerRef.current; if (!el) return
-    el.style.transition = animated ? `transform 0.42s ${ZOOM_EASE}` : 'none'
+    el.style.transition = (animated && !prefersReducedMotionRef.current) ? `transform 0.42s ${ZOOM_EASE}` : 'none'
     el.style.transform  = `scale(${z}) translate(${px / z}px, ${py / z}px)`
   }, [ZOOM_EASE])
 
@@ -662,6 +666,14 @@ export default function HomePage() {
     if (activePhoto) requestAnimationFrame(() => setLbVisible(true))
   }, [activePhoto, applyLbTransform])
 
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    prefersReducedMotionRef.current = mq.matches
+    const handler = (ev: MediaQueryListEvent) => { prefersReducedMotionRef.current = ev.matches }
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
   // Navigate within the job's gallery — directional two-layer slide.
   // Outgoing image slides off opposite to direction, incoming slides in from direction.
   // Implementation: paint the layers at their START offsets (no transition), then on the
@@ -670,12 +682,18 @@ export default function HomePage() {
     const photo = activePhoto
     if (!photo || photo.gallery.length <= 1) return
     if (galleryTimerRef.current) clearTimeout(galleryTimerRef.current)
+    // Reset zoom/pan so each new image starts at 1×
+    lbZoomRef.current = 1
+    lbPanRef.current  = { x: 0, y: 0 }
+    lbPanBaseRef.current = { x: 0, y: 0 }
+    setLbZoom(1)
+    applyLbTransform(1, 0, 0, false)
     const oldIdx = galleryIndexRef.current
     setGalleryDir(dir)
     setGalleryPrev(oldIdx)
     setGalleryIndex((oldIdx + dir + photo.gallery.length) % photo.gallery.length)
     setGalleryPhase('start')
-    // Two rAFs — first one ensures the browser paints the 'start' frame, the second flips to 'end'
+    // Two rAFs — first ensures the browser paints the 'start' frame, second flips to 'end'
     requestAnimationFrame(() => {
       requestAnimationFrame(() => setGalleryPhase('end'))
     })
@@ -683,7 +701,7 @@ export default function HomePage() {
       setGalleryPrev(null)
       setGalleryPhase('idle')
     }, 350)
-  }, [activePhoto])
+  }, [activePhoto, applyLbTransform])
 
   // Preload neighbours so the crossfade has nothing to wait for
   useEffect(() => {
@@ -816,6 +834,7 @@ export default function HomePage() {
       lbZoomLayerRef.current.style.transform  = 'scale(1) translate(0px, 0px)'
     }
     setCanvasScaled(true)   // canvas starts zooming out
+    lbOpenTimeRef.current = Date.now()
     setActivePhoto(proj)
   }, [])
 
@@ -1078,46 +1097,106 @@ export default function HomePage() {
   // Lightbox pan — direct DOM, no React state, 1:1 with pointer
   const onLbImageDown = useCallback((e: React.PointerEvent) => {
     e.stopPropagation(); lbDidPanRef.current = false
-    if (lbZoomRef.current <= 1) return
     if (e.pointerType === 'touch') return  // touch handled by onLbTouch* below
-    lbPanningRef.current  = true
     lbPanStartRef.current = { x: e.clientX, y: e.clientY }
-    lbPanBaseRef.current  = { ...lbPanRef.current }
+    if (lbZoomRef.current <= 1) return  // scale=1: no pan, touch swipe handled by onLbTouchEnd
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    lbPanningRef.current = true
+    lbPanBaseRef.current = { ...lbPanRef.current }
+    const el = lbZoomLayerRef.current; if (el) el.style.cursor = 'grabbing'
   }, [])
 
   const onLbImageMove = useCallback((e: React.PointerEvent) => {
-    if (!lbPanningRef.current || e.pointerType === 'touch') return
+    if (e.pointerType === 'touch') return
     const dx = e.clientX - lbPanStartRef.current.x
     const dy = e.clientY - lbPanStartRef.current.y
-    if (Math.hypot(dx, dy) > 4) lbDidPanRef.current = true
-    const p = { x: lbPanBaseRef.current.x + dx, y: lbPanBaseRef.current.y + dy }
-    lbPanRef.current = p
-    applyLbTransform(lbZoomRef.current, p.x, p.y, false)  // direct DOM, no render
+    if (Math.hypot(dx, dy) > 10) lbDidPanRef.current = true
+    if (!lbPanningRef.current) return  // zoom=1: not panning
+    const el   = lbZoomLayerRef.current
+    const zoom = lbZoomRef.current
+    const maxPx = el ? el.offsetWidth  * (zoom - 1) / 2 : 9999
+    const maxPy = el ? el.offsetHeight * (zoom - 1) / 2 : 9999
+    const px = Math.max(-maxPx, Math.min(maxPx, lbPanBaseRef.current.x + dx))
+    const py = Math.max(-maxPy, Math.min(maxPy, lbPanBaseRef.current.y + dy))
+    lbPanRef.current = { x: px, y: py }
+    applyLbTransform(zoom, px, py, false)
   }, [applyLbTransform])
 
-  const onLbImageUp = useCallback((_e: React.PointerEvent) => {
+  const onLbImageUp = useCallback((e: React.PointerEvent) => {
     lbPanningRef.current = false
-    // Restore spring transition so next zoom click feels bouncy
     const el = lbZoomLayerRef.current
-    if (el) el.style.transition = `transform 0.42s ${ZOOM_EASE}`
+    if (el) {
+      el.style.cursor = lbZoomRef.current > 1 ? 'grab' : 'zoom-in'
+      if (!prefersReducedMotionRef.current) el.style.transition = `transform 0.42s ${ZOOM_EASE}`
+    }
+    // drag-navigate (touch): handled by onLbTouchEnd
   }, [ZOOM_EASE])
 
   const onLbImageClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    // Suppress the synthetic click the browser fires ~300 ms after touchend
     if (lbWasTouchRef.current) { lbWasTouchRef.current = false; return }
     if (lbDidPanRef.current) return
-    // Desktop-only: click toggles 1x ↔ 2x zoom
+    const el = lbZoomLayerRef.current
     if (lbZoomRef.current === 1) {
-      lbZoomRef.current = 2; setLbZoom(2)
-      lbPanRef.current = { x: 0, y: 0 }
-      applyLbTransform(2, 0, 0, true)
+      const newZ = 2.5
+      const rect = el?.getBoundingClientRect()
+      const cx = rect ? e.clientX - (rect.left + rect.width  / 2) : 0
+      const cy = rect ? e.clientY - (rect.top  + rect.height / 2) : 0
+      const maxPx = el ? el.offsetWidth  * (newZ - 1) / 2 : 9999
+      const maxPy = el ? el.offsetHeight * (newZ - 1) / 2 : 9999
+      const px = Math.max(-maxPx, Math.min(maxPx, cx * (1 - newZ)))
+      const py = Math.max(-maxPy, Math.min(maxPy, cy * (1 - newZ)))
+      lbZoomRef.current = newZ; setLbZoom(newZ)
+      lbPanRef.current = { x: px, y: py }; lbPanBaseRef.current = { x: px, y: py }
+      applyLbTransform(newZ, px, py, true)
     } else {
       lbZoomRef.current = 1; setLbZoom(1)
       lbPanRef.current = { x: 0, y: 0 }; lbPanBaseRef.current = { x: 0, y: 0 }
       applyLbTransform(1, 0, 0, true)
     }
+  }, [applyLbTransform])
+
+  const onLbDoubleTap = useCallback((clientX: number, clientY: number) => {
+    const el = lbZoomLayerRef.current
+    if (lbZoomRef.current > 1) {
+      lbZoomRef.current = 1; setLbZoom(1)
+      lbPanRef.current = { x: 0, y: 0 }; lbPanBaseRef.current = { x: 0, y: 0 }
+      applyLbTransform(1, 0, 0, true)
+    } else {
+      const newZ = 2.5
+      const rect = el?.getBoundingClientRect()
+      const cx = rect ? clientX - (rect.left + rect.width  / 2) : 0
+      const cy = rect ? clientY - (rect.top  + rect.height / 2) : 0
+      const maxPx = el ? el.offsetWidth  * (newZ - 1) / 2 : 9999
+      const maxPy = el ? el.offsetHeight * (newZ - 1) / 2 : 9999
+      const px = Math.max(-maxPx, Math.min(maxPx, cx * (1 - newZ)))
+      const py = Math.max(-maxPy, Math.min(maxPy, cy * (1 - newZ)))
+      lbZoomRef.current = newZ; setLbZoom(newZ)
+      lbPanRef.current = { x: px, y: py }; lbPanBaseRef.current = { x: px, y: py }
+      applyLbTransform(newZ, px, py, true)
+    }
+  }, [applyLbTransform])
+
+  const onLbWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault(); e.stopPropagation()
+    const el = lbZoomLayerRef.current; if (!el) return
+    const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15
+    const oldZ = lbZoomRef.current
+    const newZ = Math.min(4, Math.max(1, oldZ * factor))
+    if (newZ === oldZ) return
+    const rect = el.getBoundingClientRect()
+    const cx = e.clientX - (rect.left + rect.width  / 2)
+    const cy = e.clientY - (rect.top  + rect.height / 2)
+    const r = newZ / oldZ
+    const maxPx = el.offsetWidth  * (newZ - 1) / 2
+    const maxPy = el.offsetHeight * (newZ - 1) / 2
+    const px = Math.max(-maxPx, Math.min(maxPx, cx * (1 - r) + lbPanRef.current.x * r))
+    const py = Math.max(-maxPy, Math.min(maxPy, cy * (1 - r) + lbPanRef.current.y * r))
+    lbZoomRef.current = newZ
+    lbPanRef.current  = { x: px, y: py }
+    lbPanBaseRef.current = { x: px, y: py }
+    setLbZoom(newZ)
+    applyLbTransform(newZ, px, py, false)
   }, [applyLbTransform])
 
   // ── Mobile touch handlers ──────────────────────────────────────────────
@@ -1127,7 +1206,7 @@ export default function HomePage() {
   const onLbTouchStart = useCallback((e: React.TouchEvent) => {
     lbWasTouchRef.current = true
     if (e.touches.length === 2) {
-      // 2-finger: start pinch tracking, cancel any in-progress swipe/pan
+      // 2-finger: start pinch tracking
       lbTouchRef.current = null
       const dx = e.touches[1].clientX - e.touches[0].clientX
       const dy = e.touches[1].clientY - e.touches[0].clientY
@@ -1137,6 +1216,7 @@ export default function HomePage() {
       lbTouchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
       // Snapshot pan so deltas during this touch are relative to where we were
       if (lbZoomRef.current > 1) lbPanBaseRef.current = { ...lbPanRef.current }
+      // drag-navigate (touch): handled by onLbTouchEnd
     }
   }, [])
 
@@ -1152,6 +1232,7 @@ export default function HomePage() {
       applyLbTransform(z, lbPanRef.current.x, lbPanRef.current.y, false)
       return
     }
+    // ── 1-finger drag when unzoomed — swipe decision deferred to onLbTouchEnd ──
     // ── 1-finger pan when zoomed ─────────────────────────────────────────
     if (e.touches.length === 1 && lbTouchRef.current && lbZoomRef.current > 1) {
       const t  = e.touches[0]
@@ -1159,7 +1240,6 @@ export default function HomePage() {
       const dy = t.clientY - lbTouchRef.current.y
       const el   = lbZoomLayerRef.current
       const zoom = lbZoomRef.current
-      // Max safe pan = half the image overhang on each axis
       const maxPx = el ? el.offsetWidth  * (zoom - 1) / 2 : 9999
       const maxPy = el ? el.offsetHeight * (zoom - 1) / 2 : 9999
       const px = Math.max(-maxPx, Math.min(maxPx, lbPanBaseRef.current.x + dx))
@@ -1170,6 +1250,11 @@ export default function HomePage() {
   }, [applyLbTransform])
 
   const onLbTouchEnd = useCallback((e: React.TouchEvent) => {
+    // Snapshot and clear the pending double-tap immediately so any early return
+    // (pinch end, missing touch record, etc.) can't leave a stale first-tap entry.
+    const pendingDoubleTap = lbDoubleTapRef.current
+    lbDoubleTapRef.current = null
+
     // ── Pinch ended — commit zoom to state ─────────────────────────────
     if (lbPinchRef.current && e.touches.length < 2) {
       const z = lbZoomRef.current
@@ -1186,12 +1271,24 @@ export default function HomePage() {
       return
     }
 
-    // ── 1-finger: swipe (unzoomed) or tap-to-reset (zoomed) ──────────────
+    // ── 1-finger: swipe (unzoomed) or double-tap or tap-to-reset (zoomed) ──
     if (!lbTouchRef.current) return
     const t  = e.changedTouches[0]
     const dx = t.clientX - lbTouchRef.current.x
     const dy = t.clientY - lbTouchRef.current.y
     lbTouchRef.current = null
+
+    // Double-tap detection — intercepts before swipe/reset logic
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+      const now  = Date.now()
+      if (pendingDoubleTap && now - pendingDoubleTap.time < 300 && Math.hypot(t.clientX - pendingDoubleTap.x, t.clientY - pendingDoubleTap.y) < 40) {
+        if (!lbVisible) return
+        if (now - lbOpenTimeRef.current < 800) return
+        onLbDoubleTap(t.clientX, t.clientY)
+        return
+      }
+      lbDoubleTapRef.current = { time: now, x: t.clientX, y: t.clientY }
+    }
 
     if (lbZoomRef.current > 1) {
       // Tap while zoomed (tiny movement) → reset to 1×
@@ -1203,12 +1300,11 @@ export default function HomePage() {
       // Otherwise the finger was panning — already committed live in onLbTouchMove
       return
     }
-
     // Swipe threshold: 50 px horizontal, more horizontal than vertical
     if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
       navigate(dx < 0 ? 1 : -1)
     }
-  }, [navigate, applyLbTransform])
+  }, [navigate, applyLbTransform, onLbDoubleTap, lbVisible])
 
   const lbCfg    = activePhoto ? PHOTO_CFG[activePhoto.id] : null
   // Lightbox shape follows the current gallery image, not a fixed project aspect
@@ -1782,6 +1878,7 @@ export default function HomePage() {
           >
             {/* Selected photo — rises from below on open, drifts upward on close */}
             <div
+              ref={el => { lbCardRef.current = el }}
               className="relative pointer-events-auto"
               style={{
                 aspectRatio: lbAspect,
@@ -1789,16 +1886,12 @@ export default function HomePage() {
                 maxHeight: '80vh',
                 opacity: lbVisible ? 1 : 0,
                 // FLIP — photo snaps from the canvas tile into the viewer and back.
-                // Rotation: straightens as it lifts, tilts back as it lands.
-                // No opacity dissolves — snaps on pickup, snaps off on landing.
+                // FLIP — photo snaps from the canvas tile into the viewer and back.
                 transform: lbVisible
                   ? 'translate(0px, 0px) scale(1) rotate(0deg)'
                   : `translate(${lbSource.x}px, ${lbSource.y}px) scale(${lbSource.scale}) rotate(${lbSource.rot}deg)`,
                 transition: lbVisible
-                  // Pickup: quick spring to viewer — snaps visible instantly, no fade-in.
-                  // aspect-ratio + width also transition so navigating between portrait/landscape gallery images is smooth.
                   ? 'transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0s, aspect-ratio 0.34s cubic-bezier(0.16, 1, 0.3, 1), width 0.34s cubic-bezier(0.16, 1, 0.3, 1)'
-                  // Putdown: dashes back home — opacity snaps off just as it arrives
                   : 'transform 0.26s cubic-bezier(0.55, 0, 1, 0.45), opacity 0s ease 0.22s',
               }}
               onClick={e => e.stopPropagation()}
@@ -1810,11 +1903,13 @@ export default function HomePage() {
                   position: 'absolute', inset: 0,
                   cursor: lbZoom > 1 ? 'grab' : 'zoom-in',
                   touchAction: 'none',  // let our touch handlers own all gestures
+                  willChange: 'transform',
                 }}
                 onPointerDown={onLbImageDown}
                 onPointerMove={onLbImageMove}
                 onPointerUp={onLbImageUp}
                 onClick={onLbImageClick}
+                onWheel={onLbWheel}
                 onTouchStart={onLbTouchStart}
                 onTouchMove={onLbTouchMove}
                 onTouchEnd={onLbTouchEnd}
@@ -1887,39 +1982,32 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Gallery nav arrows — only shown when there's more than one image,
-                  AND when not zoomed (so users can't tap them by accident while panning). */}
-              {activePhoto.gallery.length > 1 && (
-                <div
-                  className="lb-arrows"
-                  style={{
-                    opacity: lbZoom === 1 ? 1 : 0,
-                    pointerEvents: lbZoom === 1 ? 'auto' : 'none',
-                    transition: 'opacity 0.18s ease',
-                  }}
-                >
-                  <button
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-4 pl-1 py-6 focus:outline-none focus-visible:underline"
-                    onClick={e => { e.stopPropagation(); navigate(-1) }}
-                    aria-label="Previous image"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="13 4 7 10 13 16" />
-                    </svg>
-                  </button>
-                  <button
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-4 pr-1 py-6 focus:outline-none focus-visible:underline"
-                    onClick={e => { e.stopPropagation(); navigate(1) }}
-                    aria-label="Next image"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="7 4 13 10 7 16" />
-                    </svg>
-                  </button>
-                </div>
-              )}
             </div>
           </div>
+
+          {/* Gallery nav arrows — fixed viewport, outside all stacking contexts */}
+          {activePhoto.gallery.length > 1 && lbZoom === 1 && (
+            <>
+              <button
+                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'pointer' }}
+                onClick={e => { e.stopPropagation(); navigate(-1) }}
+                aria-label="Previous image"
+              >
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ mixBlendMode: 'difference' }}>
+                  <polyline points="18 6 10 14 18 22" />
+                </svg>
+              </button>
+              <button
+                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'pointer' }}
+                onClick={e => { e.stopPropagation(); navigate(1) }}
+                aria-label="Next image"
+              >
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ mixBlendMode: 'difference' }}>
+                  <polyline points="10 6 18 14 10 22" />
+                </svg>
+              </button>
+            </>
+          )}
 
           {/* ── Lightbox CAPTION layer — z:10, SEPARATE container ──────────
               Lives OUTSIDE the lightbox content root. Contains ONLY text

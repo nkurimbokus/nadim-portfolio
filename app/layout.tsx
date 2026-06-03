@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Archivo_Black } from 'next/font/google'
 import './globals.css'
 
@@ -10,6 +10,19 @@ const archivo = Archivo_Black({
   weight: '400',
   display: 'swap',
 })
+
+// ─── Viewport ─────────────────────────────────────────────────────────────────
+// maximum-scale=1 / user-scalable=no prevents the browser from auto-zooming
+// the page when a tap occurs near a small element on mobile.
+// The lightbox's custom pinch/double-tap zoom is unaffected — it uses
+// touch-action: none on the zoom layer and handles all gestures in JS.
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
 
 // ─── Site-wide metadata ───────────────────────────────────────────────────────
 // Per-page overrides: export a `metadata` const from each route file.
