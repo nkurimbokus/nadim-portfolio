@@ -559,8 +559,8 @@ export default function HomePage() {
   const [workMounted, setWorkMounted] = useState(false)   // in the DOM
   const [workVisible, setWorkVisible] = useState(false)   // animation state — true = at translateY(0)
   // Mobile burger menu — fades in/out. Only shown on small screens.
-  const [menuOpen,    setMenuOpen]    = useState(false)
-  const [menuVisible, setMenuVisible] = useState(false)
+  const [menuOpen,      setMenuOpen]      = useState(false)
+  const [menuVisible,   setMenuVisible]   = useState(false)
   // Tracks whether the currently-open lightbox was launched from the work index.
   // If yes, closing the lightbox returns to work instead of back to the canvas.
   const cameFromWorkRef = useRef(false)
@@ -615,7 +615,6 @@ export default function HomePage() {
   const sectionRef = useRef<HTMLElement | null>(null)
   const dragRef    = useRef<DragState | null>(null)
   const didDragRef = useRef(false)
-
   // Pan / drag: entirely direct DOM — no React state during gesture, zero latency
   const lbZoomLayerRef  = useRef<HTMLDivElement | null>(null)
   const lbCardRef       = useRef<HTMLDivElement | null>(null)  // photo card
@@ -1412,7 +1411,7 @@ export default function HomePage() {
                 style={{
                   width: tileW, height: tileH,
                   willChange: 'transform', borderRadius: 2, overflow: 'hidden',
-                  cursor: 'grab', zIndex: 1,
+                  cursor: 'none', zIndex: 1,
                   // Snap invisible the moment it's picked up; snap back the instant photo lands
                   opacity: isPickedUp && canvasScaled ? 0 : 1,
                   transition: isPickedUp
@@ -1458,7 +1457,7 @@ export default function HomePage() {
               style={{
                 top: '50%', width: '100%', height: '40%',
                 transform: 'translateY(-50%)',
-                cursor: 'grab',
+                cursor: 'none',
               }}
               onPointerDown={e => onPointerDown(e, 'logo')}
               onPointerUp={onPointerUp}
@@ -1566,7 +1565,7 @@ export default function HomePage() {
           <div
             className="fixed inset-0 z-[55]"
             style={{
-              cursor: 'zoom-out',
+              cursor: 'none',
               backdropFilter: 'blur(3px)',
               WebkitBackdropFilter: 'blur(3px)',
               opacity: workVisible ? 1 : 0,
@@ -1645,7 +1644,7 @@ export default function HomePage() {
         <div
           className="fixed inset-0 z-[55]"
           style={{
-            cursor: 'zoom-out',
+            cursor: 'none',
             backdropFilter: 'blur(3px)',
             WebkitBackdropFilter: 'blur(3px)',
             opacity: aboutVisible ? 1 : 0,
@@ -1676,7 +1675,7 @@ export default function HomePage() {
             {/* Click-to-close layer — z:1, sits behind physics elements */}
             <div
               className="absolute inset-0"
-              style={{ zIndex: 1, cursor: 'zoom-out', pointerEvents: aboutVisible ? 'auto' : 'none' }}
+              style={{ zIndex: 1, cursor: 'none', pointerEvents: aboutVisible ? 'auto' : 'none' }}
               onClick={closeAbout}
             />
 
@@ -1718,7 +1717,7 @@ export default function HomePage() {
               willChange:   'transform',
               borderRadius: 2,
               overflow:     'hidden',
-              cursor:       'grab',
+              cursor:       'none',
               zIndex:       2,
               // Re-enable interactivity for dragging — parent container is
               // pointer-events:none so the empty area falls through to the
@@ -1765,7 +1764,7 @@ export default function HomePage() {
               width:      isMobile ? 155 : 280,
               height:     isMobile ? 155 : 280,
               willChange: 'transform',
-              cursor:     'grab',
+              cursor:     'none',
               zIndex:     3,
               pointerEvents: 'auto',
             }}
@@ -1857,7 +1856,7 @@ export default function HomePage() {
           <div
             className="fixed inset-0 z-[8]"
             style={{
-              cursor: 'zoom-out',
+              cursor: 'none',
               backdropFilter: 'blur(3px)',
               WebkitBackdropFilter: 'blur(3px)',
               opacity: lbVisible ? 1 : 0,
@@ -1901,7 +1900,7 @@ export default function HomePage() {
                 ref={(el) => { lbZoomLayerRef.current = el }}
                 style={{
                   position: 'absolute', inset: 0,
-                  cursor: lbZoom > 1 ? 'grab' : 'zoom-in',
+                  cursor: 'none',
                   touchAction: 'none',  // let our touch handlers own all gestures
                   willChange: 'transform',
                 }}
@@ -1989,7 +1988,7 @@ export default function HomePage() {
           {activePhoto.gallery.length > 1 && lbZoom === 1 && (
             <>
               <button
-                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'pointer' }}
+                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'none' }}
                 onClick={e => { e.stopPropagation(); navigate(-1) }}
                 aria-label="Previous image"
               >
@@ -1998,7 +1997,7 @@ export default function HomePage() {
                 </svg>
               </button>
               <button
-                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'pointer' }}
+                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'none' }}
                 onClick={e => { e.stopPropagation(); navigate(1) }}
                 aria-label="Next image"
               >

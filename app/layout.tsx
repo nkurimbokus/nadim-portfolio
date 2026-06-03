@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Archivo_Black } from 'next/font/google'
 import './globals.css'
+import CursorDot from '../components/CursorDot'
 
 // ─── Font ─────────────────────────────────────────────────────────────────────
 // Archivo Black, weight 400 (the only weight it ships) — applied to <html> via
@@ -79,8 +80,19 @@ export default function RootLayout({
     <html
       lang="en"
       className={archivo.className}
+      style={{ cursor: 'none' }}
     >
-      <body className="bg-bg-default text-fg-default antialiased">
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: `
+  @media (pointer: fine) {
+    *, *::before, *::after {
+      cursor: none !important;
+    }
+  }
+` }} />
+      </head>
+      <body className="bg-bg-default text-fg-default antialiased" style={{ cursor: 'none' }}>
+        <CursorDot />
         {children}
       </body>
     </html>

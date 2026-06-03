@@ -32,6 +32,13 @@ body {
   touch-action: manipulation; /* disable browser double-tap zoom; custom pinch/double-tap uses touch-action:none on the zoom layer */
 }
 
+/* Hide the system cursor on pointer-device screens — replaced by the custom dot cursor. */
+@media (pointer: fine) {
+  * { cursor: none !important; }
+  /* Re-expose the cursor inside iframes (e.g. dev-tools overlays) that don't render the custom dot. */
+}
+
+
 /* ─── Background colour picker ────────────────────────────────────────────
    Collapsed: a tiny round black dot in the top-left corner. On hover, a
    gradient strip emerges from BEHIND the dot and extends to the right; the
@@ -46,7 +53,7 @@ body {
      The visual expand animation lives on .cpicker-strip instead. */
   width: 18px;
   height: 18px;
-  cursor: pointer;
+  cursor: none;
 }
 .cpicker:hover,
 .cpicker:focus-within {
@@ -116,7 +123,7 @@ body {
   appearance: none;
   margin: 0;
   outline: none;
-  cursor: pointer;
+  cursor: none;
 }
 /* Slider thumb — a small solid dot. No white border, no shadow — clean and tiny. */
 .cpicker-input::-webkit-slider-thumb {
@@ -128,9 +135,9 @@ body {
   background: #0a0a0a;
   border: 0;
   box-shadow: none;
-  cursor: grab;
+  cursor: none;
 }
-.cpicker-input::-webkit-slider-thumb:active { cursor: grabbing; }
+.cpicker-input::-webkit-slider-thumb:active { cursor: none; }
 .cpicker-input::-moz-range-thumb {
   width: 10px;
   height: 10px;
@@ -138,7 +145,7 @@ body {
   background: #0a0a0a;
   border: 0;
   box-shadow: none;
-  cursor: grab;
+  cursor: none;
 }
 
 
