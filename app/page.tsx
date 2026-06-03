@@ -614,7 +614,10 @@ export default function HomePage() {
   const rafRef     = useRef<number | null>(null)
   const sectionRef = useRef<HTMLElement | null>(null)
   const dragRef    = useRef<DragState | null>(null)
-  const didDragRef = useRef(false)
+  const didDragRef     = useRef(false)
+  const tickerTrackRef = useRef<HTMLDivElement | null>(null)
+  const tickerRafRef   = useRef<number>(0)
+  const tickerDragRef  = useRef({ dragging: false, x: 0, vel: 0, lastT: 0, lastX: 0 })
   // Pan / drag: entirely direct DOM — no React state during gesture, zero latency
   const lbZoomLayerRef  = useRef<HTMLDivElement | null>(null)
   const lbCardRef       = useRef<HTMLDivElement | null>(null)  // photo card
@@ -1812,10 +1815,9 @@ export default function HomePage() {
               bottom:       'clamp(56px, 9vh, 110px)',
               paddingLeft:  'clamp(24px, 7vw, 96px)',
               paddingRight: 'clamp(24px, 7vw, 96px)',
-              // Only the inner text wrapper gates pointer-events on aboutVisible.
-              // The individual <a> buttons re-enable it on themselves with
-              // `pointerEvents: 'auto'` in their own inline styles.
-              pointerEvents: aboutVisible ? 'auto' : 'none',
+              // Clicks pass through to the photos below; the <a> buttons
+              // re-enable pointer-events on themselves individually.
+              pointerEvents: 'none',
             }}
           >
             <div className="mx-auto text-center" style={{ maxWidth: 660, pointerEvents: 'none' }}>
@@ -1824,9 +1826,14 @@ export default function HomePage() {
                 Nadim Kurimbokus
               </p>
               {/* Bio */}
+              <p className="text-base md:text-xl leading-loose" style={{ marginBottom: '1.5rem' }}>
+                Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.
+              </p>
+              <p className="text-base md:text-xl leading-loose" style={{ marginBottom: '1.5rem' }}>
+                Clients have included the BBC, Roundhouse, Jazz Cafe, BAPE, Westside Gunn, Teg Live Europe, Lomography and Museum of the Home, among others. Away from commissions, the work is looser. Shot for its own sake.
+              </p>
               <p className="text-base md:text-xl leading-loose" style={{ marginBottom: '2.5rem' }}>
-                British-Mauritian photographer based in London. Shooting music, performance,
-                and the spaces in between — from headline stages to rehearsal rooms.
+                Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 {/* Email button */}
@@ -1844,6 +1851,73 @@ export default function HomePage() {
                   className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
                 >Instagram</a>
               </div>
+            </div>
+          </div>
+
+          {/* ── Testimonial ticker — fixed to bottom of text layer ───────── */}
+          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+          <div
+            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', pointerEvents: 'auto', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', paddingTop: 10, paddingBottom: 10, cursor: 'none' }}
+            onPointerDown={e => {
+              const el = tickerTrackRef.current; if (!el) return
+              cancelAnimationFrame(tickerRafRef.current)
+              const matrix = new DOMMatrix(getComputedStyle(el).transform)
+              const x = matrix.m41
+              el.style.animation = 'none'
+              el.style.transform = `translateX(${x}px)`
+              const d = tickerDragRef.current
+              d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
+              e.currentTarget.setPointerCapture(e.pointerId)
+            }}
+            onPointerMove={e => {
+              const d = tickerDragRef.current; if (!d.dragging) return
+              const el = tickerTrackRef.current; if (!el) return
+              const halfW = el.offsetWidth / 2
+              const dt = e.timeStamp - d.lastT
+              const dx = e.clientX - d.lastX
+              d.vel = dt > 0 ? dx / dt : 0
+              d.lastT = e.timeStamp; d.lastX = e.clientX
+              d.x += dx
+              if (d.x > 0) d.x -= halfW
+              if (d.x < -halfW) d.x += halfW
+              el.style.transform = `translateX(${d.x}px)`
+            }}
+            onPointerUp={() => {
+              const d = tickerDragRef.current; if (!d.dragging) return
+              d.dragging = false
+              const el = tickerTrackRef.current; if (!el) return
+              const halfW = el.offsetWidth / 2
+              const coasting = () => {
+                d.x += d.vel * 16
+                d.vel *= 0.95
+                if (d.x > 0) d.x -= halfW
+                if (d.x < -halfW) d.x += halfW
+                el.style.transform = `translateX(${d.x}px)`
+                if (Math.abs(d.vel) < 0.031) {
+                  // Normalise position into [−halfW, 0] via modulo then sign-fix
+                  let x = d.x % -halfW
+                  if (x > 0) x -= halfW
+                  const progress = Math.abs(x) / halfW          // 0..1
+                  const delay    = -(progress * 60)              // negative = start partway through
+                  // Set animation first so the browser has the correct start frame,
+                  // then clear the inline transform so the animation takes over cleanly.
+                  el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
+                  el.style.transform  = ''
+                  return
+                }
+                tickerRafRef.current = requestAnimationFrame(coasting)
+              }
+              tickerRafRef.current = requestAnimationFrame(coasting)
+            }}
+          >
+            <div ref={tickerTrackRef} style={{ display: 'inline-block', animation: 'tickerScroll 60s linear infinite' }}>
+              {[0, 1].map(i => (
+                <span key={i} style={{ display: 'inline-block' }}>
+                  <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Nadim was prompt, great to work with, and really understood what pics we were after. He nailed the vibe perfectly, and we absolutely loved the photos.&rdquo; — Alicia Grimshaw, Tamil Prince</span>
+                  <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Working with Nadim is an absolute pleasure, he consistently understands the brief and delivers exceptional results for every show. He is incredibly versatile, works seamlessly with artists, and always manages to capture the true, lively energy of the Roundhouse.&rdquo; — Saskia Burrows, Roundhouse</span>
+                  <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Nadim has captured wonderful memories at our events for many years, always bringing vibrant energy to our spaces and his images.&rdquo; — Mark Norton, The Photography Foundation</span>
+                </span>
+              ))}
             </div>
           </div>
         </div>
