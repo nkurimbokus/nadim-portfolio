@@ -1875,14 +1875,14 @@ export default function HomePage() {
           {/* Zone 3 — Static text block, sits below the middle physics band */}
           <div
             className="about-text-block"
-            style={{ position: 'absolute', top: '68%', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+            style={{ position: 'absolute', top: '60%', bottom: '80px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.375rem', overflow: 'hidden' }}
           >
-            {/* Row A — flush left */}
-            <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'left' }}>
+            {/* Row A — centred */}
+            <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
               <span style={{ fontSize: 'clamp(12px, 3vw, 18px)' }}>Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.</span>
             </p>
-            {/* Row B — flush right */}
-            <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'right' }}>
+            {/* Row B — centred */}
+            <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
               <span style={{ fontSize: 'clamp(12px, 3vw, 18px)' }}>BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
             </p>
             {/* Row C — centred */}
