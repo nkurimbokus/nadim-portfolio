@@ -2202,7 +2202,7 @@ export default function HomePage() {
                   : `translate(${lbSource.x}px, ${lbSource.y}px) scale(${lbSource.scale}) rotate(${lbSource.rot}deg)`,
                 transition: lbVisible
                   ? 'transform 0.35s cubic-bezier(0, 0, 0.2, 1), opacity 0.18s ease'
-                  : 'transform 0.35s cubic-bezier(0.4, 0, 1, 1), opacity 0.14s ease',
+                  : 'transform 0.4s cubic-bezier(0.4, 0, 0.6, 1), opacity 0.14s ease',
                 willChange: 'transform, opacity',
               }}
               onClick={e => e.stopPropagation()}
