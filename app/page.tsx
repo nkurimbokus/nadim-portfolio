@@ -1875,7 +1875,7 @@ export default function HomePage() {
           {/* Zone 3 — Static text block, sits below the middle physics band */}
           <div
             className="about-text-block"
-            style={{ position: 'absolute', top: '60%', bottom: '80px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.375rem', overflow: 'hidden' }}
+            style={{ position: 'absolute', top: '60%', bottom: '80px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}
           >
             {/* Row A — centred */}
             <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
