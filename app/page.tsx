@@ -1877,7 +1877,7 @@ export default function HomePage() {
           }}
           aria-hidden={!aboutVisible}
         >
-          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 55% !important; bottom: 120px !important; } .about-text-block .about-bio { display: none; } }`}</style>
+          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 55% !important; bottom: 120px !important; } }`}</style>
 
           {/* Zone 1 — Name ticker, pinned below the "About" / "Close" bar */}
           <div
