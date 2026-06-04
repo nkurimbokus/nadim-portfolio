@@ -1877,7 +1877,7 @@ export default function HomePage() {
           }}
           aria-hidden={!aboutVisible}
         >
-          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 45% !important; } }`}</style>
+          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 48% !important; bottom: 100px !important; } }`}</style>
 
           {/* Zone 1 — Name ticker, pinned below the "About" / "Close" bar */}
           <div
@@ -1944,32 +1944,32 @@ export default function HomePage() {
           {/* Zone 3 — Static text block, sits below the middle physics band */}
           <div
             className="about-text-block"
-            style={{ position: 'absolute', top: '65%', bottom: '140px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}
+            style={{ position: 'absolute', top: '65%', bottom: '140px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: isMobile ? '0.25rem' : '0.375rem' }}
           >
             {/* Row A — centred */}
             <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: 'clamp(14px, 2.5vw, 20px)' }}>Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.</span>
+              <span style={{ fontSize: isMobile ? 'clamp(11px, 3vw, 14px)' : 'clamp(14px, 2.5vw, 20px)' }}>Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.</span>
             </p>
             {/* Row B — centred */}
             <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center', marginTop: '2rem' }}>
-              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
+              <span style={{ fontSize: isMobile ? 'clamp(10px, 2.5vw, 12px)' : 'clamp(11px, 1.6vw, 15px)' }}>BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
             </p>
             {/* Row C — centred */}
             <p className="text-base md:text-xl" style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.</span>
+              <span style={{ fontSize: isMobile ? 'clamp(10px, 2.5vw, 12px)' : 'clamp(11px, 1.6vw, 15px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.</span>
             </p>
             {/* Row D — centred buttons */}
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginTop: '1.5rem', position: 'relative', zIndex: 66 }}>
               <a
                 href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
-                style={{ pointerEvents: 'auto' }}
+                style={{ pointerEvents: 'auto', ...(isMobile ? { padding: '6px 12px', fontSize: '13px' } : {}) }}
                 className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
               >Email me</a>
               <a
                 href="https://www.instagram.com/nadim_kurimbokus/"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ pointerEvents: 'auto' }}
+                style={{ pointerEvents: 'auto', ...(isMobile ? { padding: '6px 12px', fontSize: '13px' } : {}) }}
                 className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
               >Instagram</a>
             </div>
@@ -2075,14 +2075,10 @@ export default function HomePage() {
                 width: `min(calc(100vw - 48px), calc(80vh * ${lbRatio.toFixed(6)}))`,
                 maxHeight: '80vh',
                 opacity: lbVisible ? 1 : 0,
-                // FLIP — photo snaps from the canvas tile into the viewer and back.
-                // FLIP — photo snaps from the canvas tile into the viewer and back.
-                transform: lbVisible
-                  ? 'translate(0px, 0px) scale(1) rotate(0deg)'
-                  : `translate(${lbSource.x}px, ${lbSource.y}px) scale(${lbSource.scale}) rotate(${lbSource.rot}deg)`,
+                transform: 'translate(0px, 0px) scale(1) rotate(0deg)',
                 transition: lbVisible
-                  ? 'transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0s, aspect-ratio 0.34s cubic-bezier(0.16, 1, 0.3, 1), width 0.34s cubic-bezier(0.16, 1, 0.3, 1)'
-                  : 'transform 0.26s cubic-bezier(0.55, 0, 1, 0.45), opacity 0s ease 0.22s',
+                  ? 'opacity 0.18s ease, aspect-ratio 0.34s cubic-bezier(0.16, 1, 0.3, 1), width 0.34s cubic-bezier(0.16, 1, 0.3, 1)'
+                  : 'opacity 0.14s ease',
               }}
               onClick={e => e.stopPropagation()}
             >
