@@ -2066,22 +2066,22 @@ export default function HomePage() {
             <div style={{ height: '52vh', pointerEvents: 'none' }} />
 
             {/* Bio */}
-            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(11px, 3vw, 14px)', lineHeight: '1.75', marginBottom: '2rem' }}>
+            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(11px, 3vw, 14px)', lineHeight: '1.75', marginBottom: '0.5rem' }}>
               Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.
             </p>
 
             {/* Client list */}
-            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.75', marginBottom: '1rem' }}>
+            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.75', marginBottom: '0.5rem' }}>
               BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home
             </p>
 
             {/* Availability */}
-            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.5', marginBottom: '0.5rem' }}>
               Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.
             </p>
 
             {/* Buttons */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginBottom: '3rem', padding: '0 24px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginBottom: '0.5rem', padding: '0 24px' }}>
               <a
                 href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
                 style={{ pointerEvents: 'auto', padding: '6px 12px', fontSize: '13px' }}
@@ -2098,7 +2098,7 @@ export default function HomePage() {
 
             {/* Testimonial ticker */}
             <div
-              style={{ pointerEvents: 'auto', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', marginTop: '1rem', paddingTop: 10, paddingBottom: 10, cursor: 'none' }}
+              style={{ pointerEvents: 'auto', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', marginTop: '1rem', paddingTop: 10, paddingBottom: 0, cursor: 'none' }}
               onPointerDown={e => {
                 const el = tickerTrackRef.current; if (!el) return
                 cancelAnimationFrame(tickerRafRef.current)
