@@ -41,8 +41,10 @@ interface Project {
   gallery: string[]         // all images for this job — flip through in viewer
 }
 
-const LOGO_SIZE        = 360
-const LOGO_SIZE_MOBILE = 240
+const LOGO_SIZE        = 180
+const LOGO_SIZE_MOBILE = 120
+const LOGO_VISUAL_SIZE        = 360
+const LOGO_VISUAL_SIZE_MOBILE = 240
 const DRAG_THRESHOLD   = 8
 const LOGO_INIT = { xPct: 0.4, yPct: 0.3, rot: -2, baseVx: 6, baseVy: 4, baseVrot: 0.2 }
 
@@ -425,7 +427,7 @@ function getDims(id: string): { w: number; h: number } {
   // About portrait/logo get their own mobile targets (not shared `s`) so we can
   // tune them independently of the general 0.65 photo scale.
   if (id === 'aboutPortrait') { const w = mobile ? 200 : 340; return { w, h: Math.round(w * 4 / 3) } }
-  if (id === 'aboutLogo')     { const w = mobile ? 155 : 280; return { w, h: w } }
+  if (id === 'aboutLogo')     { return mobile ? { w: 155, h: 155 } : { w: 280, h: 280 } }
   const cfg = PHOTO_CFG[id]
   if (!cfg) return { w: Math.round(200 * s), h: Math.round(200 * s) }
   const w = cfg.w * TILE_SIZE_SCALE * s
@@ -475,7 +477,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
   const s: Record<string, PhysicsState> = {}
   const isMobile = vw < 768
   const vScale = isMobile ? VELOCITY_SCALE * 0.5 : VELOCITY_SCALE
-  const logoSz = isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE
+  const logoSz = isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE
   s['logo'] = {
     x: (vw - logoSz) / 2,
     y: -logoSz * 0.30,
@@ -610,6 +612,7 @@ export default function HomePage() {
   const frozenLogoRef  = useRef<{ x: number; y: number; rot: number } | null>(null)
 
   const elRefs     = useRef<Record<string, HTMLElement | null>>({})
+  const visualElRefs = useRef<Record<string, HTMLElement | null>>({})
   const posRef     = useRef<Record<string, PhysicsState>>({})
   const rafRef     = useRef<number | null>(null)
   const sectionRef = useRef<HTMLElement | null>(null)
@@ -780,31 +783,50 @@ export default function HomePage() {
     const { w: pW, h: pH } = getDims('aboutPortrait')
     const { w: lW, h: lH } = getDims('aboutLogo')
 
-    // Portrait: spawns in the middle band (20–48% down), left of centre.
-    const pX = Math.round(vw * 0.35)
-    const pY = Math.round(vh * 0.25)
+    // Portrait: horizontally centred, upper middle between ticker and text block.
+    const pX = Math.round(isMob ? vw * 0.5 - 100 : vw * 0.5 - 130)
+    const pY = Math.round(isMob ? vh * 0.13 : vh * 0.17)
 
-    // Logo: spawns in the middle band, right of centre — floats on top (z-[62]).
-    const lX = Math.round(vw * 0.60)
-    const lY = Math.round(vh * 0.32)
+    // Logo: centred horizontally over portrait, one-third down — uses rendered size if available.
+    const portraitRect = elRefs.current['aboutPortrait']?.getBoundingClientRect()
+    const portraitW = portraitRect ? portraitRect.width  : 260
+    const portraitH = portraitRect ? portraitRect.height : 340
+    const lX = Math.round(pX + portraitW / 2 - lW / 2)
+    const lY = Math.round(pY + portraitH / 3)
 
     posRef.current['aboutPortrait'] = {
       x: pX, y: pY, rot: -1.5,
       vx: 0, vy: 0, vrot: 0,
-      baseVx: -7 * vScale, baseVy:  5 * vScale, baseVrot:  0.18 * vScale,
+      baseVx: -7 * vScale, baseVy: isMob ? -6 * vScale : 5 * vScale, baseVrot:  0.18 * vScale,
     }
     posRef.current['aboutLogo'] = {
       x: lX, y: lY, rot: 2.5,
       vx: 0, vy: 0, vrot: 0,
-      baseVx:  6 * vScale, baseVy: -7 * vScale, baseVrot: -0.20 * vScale,
+      baseVx: 6 * vScale, baseVy: 4 * vScale, baseVrot: 0.2 * vScale,
     }
 
-    const pel = elRefs.current['aboutPortrait']
-    const lel = elRefs.current['aboutLogo']
-    const pp  = posRef.current['aboutPortrait']
-    const lp  = posRef.current['aboutLogo']
-    if (pel && pp) pel.style.transform = `translate3d(${pp.x}px,${pp.y}px,0) rotate(${pp.rot}deg)`
-    if (lel && lp) lel.style.transform = `translate3d(${lp.x}px,${lp.y}px,0) rotate(${lp.rot}deg)`
+    const pel  = elRefs.current['aboutPortrait']
+    const pelv = visualElRefs.current['aboutPortrait']
+    const lel  = elRefs.current['aboutLogo']
+    const lelv = visualElRefs.current['aboutLogo']
+    const pp   = posRef.current['aboutPortrait']
+    const lp   = posRef.current['aboutLogo']
+    if (pp) {
+      const t = `translate3d(${pp.x}px,${pp.y}px,0) rotate(${pp.rot}deg)`
+      if (pel) pel.style.transform = t
+      if (pelv) pelv.style.transform = t
+    }
+    if (lp) {
+      const t = `translate3d(${lp.x}px,${lp.y}px,0) rotate(${lp.rot}deg)`
+      if (lel) lel.style.transform = t
+      if (lelv) lelv.style.transform = t
+    }
+    // Reset name ticker to the start of the string on every open so it never
+    // resumes mid-name from a stale transform left by a previous drag interaction.
+    if (nameTickerTrackRef.current) {
+      nameTickerTrackRef.current.style.transform = ''
+      nameTickerTrackRef.current.style.animation = 'tickerScroll 16s linear infinite'
+    }
   }, [aboutOpen])
 
   const openLightbox = useCallback((proj: Project) => {
@@ -951,8 +973,9 @@ export default function HomePage() {
     const vw = window.innerWidth; const vh = window.innerHeight
     posRef.current = buildInitialState(vw, vh)
     for (const [id, pos] of Object.entries(posRef.current)) {
-      const el = elRefs.current[id]
-      if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+      const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+      const el = elRefs.current[id]; if (el) el.style.transform = t
+      const vel = visualElRefs.current[id]; if (vel) vel.style.transform = t
     }
     // Sync isMobile state so the JSX tile filter matches the physics state built above
     setIsMobile(vw < 768)
@@ -977,14 +1000,16 @@ export default function HomePage() {
         // Freeze physics during return animations so canvas elements meet the viewer exactly
         if (frozenPhotoRef.current?.id === id) {
           const f = frozenPhotoRef.current
-          const el = elRefs.current[id]
-          if (el) el.style.transform = `translate3d(${f.x}px,${f.y}px,0) rotate(${f.rot}deg)`
+          const t = `translate3d(${f.x}px,${f.y}px,0) rotate(${f.rot}deg)`
+          const el = elRefs.current[id]; if (el) el.style.transform = t
+          const vel = visualElRefs.current[id]; if (vel) vel.style.transform = t
           continue
         }
         if (id === 'logo' && frozenLogoRef.current) {
           const f = frozenLogoRef.current
-          const el = elRefs.current['logo']
-          if (el) el.style.transform = `translate3d(${f.x}px,${f.y}px,0) rotate(${f.rot}deg)`
+          const t = `translate3d(${f.x}px,${f.y}px,0) rotate(${f.rot}deg)`
+          const el = elRefs.current['logo']; if (el) el.style.transform = t
+          const vel = visualElRefs.current['logo']; if (vel) vel.style.transform = t
           continue
         }
         pos.vx   = pos.baseVx   + (pos.vx   - pos.baseVx)   * 0.985
@@ -1001,8 +1026,9 @@ export default function HomePage() {
         if (pos.x < -w)       pos.x =  vw + 60
         if (pos.y >  vh + 60) pos.y = -h
         if (pos.y < -h)       pos.y =  vh + 60
-        const el = elRefs.current[id]
-        if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+        const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+        const el = elRefs.current[id]; if (el) el.style.transform = t
+        const vel = visualElRefs.current[id]; if (vel) vel.style.transform = t
       }
       rafRef.current = requestAnimationFrame(tick)
     }
@@ -1010,8 +1036,9 @@ export default function HomePage() {
       if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
       posRef.current = buildInitialState(window.innerWidth, window.innerHeight)
       for (const [id, pos] of Object.entries(posRef.current)) {
-        const el = elRefs.current[id]
-        if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+        const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+        const el = elRefs.current[id]; if (el) el.style.transform = t
+        const vel = visualElRefs.current[id]; if (vel) vel.style.transform = t
       }
       setIsMobile(window.innerWidth < 768)
       prev = performance.now() - 16
@@ -1078,8 +1105,9 @@ export default function HomePage() {
     const sRect = sectionRef.current?.getBoundingClientRect()
     pos.x = e.clientX - (sRect?.left ?? 0) - d.ox
     pos.y = e.clientY - (sRect?.top  ?? 0) - d.oy
-    const el = elRefs.current[d.id]
-    if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+    const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+    const el = elRefs.current[d.id]; if (el) el.style.transform = t
+    const vel = visualElRefs.current[d.id]; if (vel) vel.style.transform = t
   }, [])
 
   const onPointerUp = useCallback((_e: React.PointerEvent) => {
@@ -1447,8 +1475,8 @@ export default function HomePage() {
             ref={el => { elRefs.current['logo'] = el }}
             className="absolute top-0 left-0 touch-none"
             style={{
-              width:  isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE,
-              height: isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE,
+              width:  isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE,
+              height: isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE,
               willChange: 'transform', zIndex: 5,
               opacity: aboutOpen ? (aboutVisible ? 0 : 1) : 1,
               transition: aboutOpen
@@ -1700,12 +1728,81 @@ export default function HomePage() {
 
           </div>
 
-        {/* ── About PORTRAIT layer — z:60 sibling, NO blend ─────────────
+        {/* ── About PORTRAIT layer — z:56 sibling, NO blend ─────────────
             Image lives outside the blending panel root so it renders normally
             (no inversion). Mirrors the panel's slide transform so it slides
             up with the panel on open and away on close. */}
+        {/* ── About PORTRAIT visual — z:56, renders image, no pointer events ── */}
         <div
-          className="fixed inset-0 z-[60]"
+          className="fixed inset-0 z-[56]"
+          style={{
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        >
+          <div
+            ref={el => { visualElRefs.current['aboutPortrait'] = el }}
+            className="absolute top-0 left-0 touch-none"
+            style={{
+              width:        isMobile ? 200 : 340,
+              height:       isMobile ? Math.round(200 * 4 / 3) : Math.round(340 * 4 / 3),
+              willChange:   'transform',
+              borderRadius: 2,
+              overflow:     'hidden',
+              pointerEvents: 'none',
+            }}
+            aria-hidden="true"
+          >
+            <Image
+              src="/images/portrait.jpg"
+              width={1080}
+              height={1440}
+              priority
+              alt="Nadim Kurimbokus"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+              unoptimized
+            />
+          </div>
+        </div>
+
+        {/* ── About LOGO visual — z:57, renders image, no pointer events ────── */}
+        <div
+          className="fixed inset-0 z-[57]"
+          style={{
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        >
+          <div
+            ref={el => { visualElRefs.current['aboutLogo'] = el }}
+            className="absolute top-0 left-0 touch-none"
+            style={{
+              width:      isMobile ? 155 : 280,
+              height:     isMobile ? 155 : 280,
+              willChange: 'transform',
+              pointerEvents: 'none',
+            }}
+            aria-hidden="true"
+          >
+            <Image
+              src="/logo.png"
+              fill
+              alt=""
+              style={{ objectFit: 'contain', pointerEvents: 'none' }}
+              unoptimized
+            />
+          </div>
+        </div>
+
+        {/* ── About PORTRAIT hitbox — z:64, invisible, handles drag ─────────── */}
+        <div
+          className="fixed inset-0 z-[64]"
           style={{
             transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
@@ -1721,40 +1818,21 @@ export default function HomePage() {
               width:        isMobile ? 200 : 340,
               height:       isMobile ? Math.round(200 * 4 / 3) : Math.round(340 * 4 / 3),
               willChange:   'transform',
-              borderRadius: 2,
-              overflow:     'hidden',
               cursor:       'none',
-              zIndex:       2,
-              // Re-enable interactivity for dragging — parent container is
-              // pointer-events:none so the empty area falls through to the
-              // backdrop click-to-close behind.
               pointerEvents: 'auto',
             }}
             onPointerDown={e => onPointerDown(e, 'aboutPortrait')}
             onPointerUp={onPointerUp}
-            // Only attach once the slide-in animation has settled — see
-            // aboutSettled effect. Avoids per-frame handler calls during slide.
             onPointerMove={aboutSettled ? onPointerMove : undefined}
             onContextMenu={e => e.preventDefault()}
             role="img"
             aria-label="Portrait of Nadim Kurimbokus"
-          >
-            <Image
-              src="/images/portrait.jpg"
-              width={1080}
-              height={1440}
-              priority
-              alt="Nadim Kurimbokus"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              unoptimized
-            />
-            <div className="absolute inset-0" style={{ zIndex: 1 }} />
-          </div>
+          />
         </div>
 
-        {/* ── About LOGO layer — z:62, floats above portrait ──────────── */}
+        {/* ── About LOGO hitbox — z:65, invisible, handles drag ────────────── */}
         <div
-          className="fixed inset-0 z-[62]"
+          className="fixed inset-0 z-[65]"
           style={{
             transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
@@ -1771,25 +1849,14 @@ export default function HomePage() {
               height:     isMobile ? 155 : 280,
               willChange: 'transform',
               cursor:     'none',
-              zIndex:     3,
               pointerEvents: 'auto',
             }}
             onPointerDown={e => onPointerDown(e, 'aboutLogo')}
             onPointerUp={onPointerUp}
-            // Only attach once the slide-in animation has settled.
             onPointerMove={aboutSettled ? onPointerMove : undefined}
             onContextMenu={e => e.preventDefault()}
             aria-hidden="true"
-          >
-            <Image
-              src="/logo.png"
-              fill
-              alt=""
-              style={{ objectFit: 'contain', pointerEvents: 'none' }}
-              unoptimized
-            />
-            <div className="absolute inset-0" style={{ zIndex: 1 }} />
-          </div>
+          />
         </div>
 
         {/* ── About TEXT layer — z:61, SEPARATE container ──────────────────
@@ -1808,11 +1875,11 @@ export default function HomePage() {
           }}
           aria-hidden={!aboutVisible}
         >
-          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 50% !important; } }`}</style>
+          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 45% !important; } }`}</style>
 
           {/* Zone 1 — Name ticker, pinned below the "About" / "Close" bar */}
           <div
-            style={{ position: 'absolute', top: 68, left: 0, right: 0, zIndex: 63, overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'auto', cursor: 'none' }}
+            style={{ position: 'absolute', top: 68, left: 0, right: 0, height: 'clamp(66px, 11vw, 132px)', zIndex: 63, overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'auto', cursor: 'none' }}
             onPointerDown={e => {
               const el = nameTickerTrackRef.current; if (!el) return
               cancelAnimationFrame(nameTickerRafRef.current)
@@ -1853,7 +1920,7 @@ export default function HomePage() {
                   if (x > 0) x -= halfW
                   const progress = Math.abs(x) / halfW
                   const delay = -(progress * 8)
-                  el.style.animation = `tickerScroll 8s linear ${delay}s infinite`
+                  el.style.animation = `tickerScroll 16s linear ${delay}s infinite`
                   el.style.transform = ''
                   return
                 }
@@ -1864,9 +1931,9 @@ export default function HomePage() {
           >
             <div
               ref={nameTickerTrackRef}
-              style={{ display: 'inline-block', animation: 'tickerScroll 8s linear infinite', fontSize: 'clamp(60px, 10vw, 120px)', lineHeight: 1.1 }}
+              style={{ display: 'inline-block', animation: 'tickerScroll 16s linear infinite', fontSize: 'clamp(60px, 10vw, 120px)', lineHeight: 1.1 }}
             >
-              {[0, 1].map(i => (
+              {[0, 1, 2, 3].map(i => (
                 <span key={i} style={{ display: 'inline-block', paddingRight: '4rem' }}>Nadim Kurimbokus</span>
               ))}
             </div>
@@ -1875,22 +1942,22 @@ export default function HomePage() {
           {/* Zone 3 — Static text block, sits below the middle physics band */}
           <div
             className="about-text-block"
-            style={{ position: 'absolute', top: '60%', bottom: '80px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}
+            style={{ position: 'absolute', top: '65%', bottom: '140px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}
           >
             {/* Row A — centred */}
             <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: 'clamp(12px, 3vw, 18px)' }}>Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.</span>
+              <span style={{ fontSize: 'clamp(14px, 2.5vw, 20px)' }}>Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.</span>
             </p>
             {/* Row B — centred */}
-            <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: 'clamp(12px, 3vw, 18px)' }}>BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
+            <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
             </p>
             {/* Row C — centred */}
             <p className="text-base md:text-xl" style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: 'clamp(12px, 3vw, 18px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.</span>
+              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.</span>
             </p>
             {/* Row D — centred buttons */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginTop: '1.5rem', position: 'relative', zIndex: 66 }}>
               <a
                 href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
                 style={{ pointerEvents: 'auto' }}
