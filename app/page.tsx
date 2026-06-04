@@ -41,8 +41,10 @@ interface Project {
   gallery: string[]         // all images for this job — flip through in viewer
 }
 
-const LOGO_SIZE        = 360
-const LOGO_SIZE_MOBILE = 240
+const LOGO_SIZE        = 180
+const LOGO_SIZE_MOBILE = 120
+const LOGO_VISUAL_SIZE        = 360
+const LOGO_VISUAL_SIZE_MOBILE = 240
 const DRAG_THRESHOLD   = 8
 const LOGO_INIT = { xPct: 0.4, yPct: 0.3, rot: -2, baseVx: 6, baseVy: 4, baseVrot: 0.2 }
 
@@ -73,9 +75,9 @@ const PHOTO_CFG: Record<string, {
 // Per-image aspect ratios for brand galleries — used so the tile and the lightbox container
 // can match whichever image is currently showing (galleries have mixed portrait + landscape)
 const IMAGE_ASPECTS: Record<string, string> = {
-  '/images/brand/sum-ldn/brand_2025_sum-ldn_fashion-shoot_001_standard.jpg': '1060/1600',
-  '/images/brand/sum-ldn/brand_2025_sum-ldn_fashion-shoot_002_standard.jpg': '1233/1600',
-  '/images/brand/sum-ldn/brand_2025_sum-ldn_fashion-shoot_003_standard.jpg': '1259/1600',
+  '/images/brand/sum-london/brand_2025_sum-london_fashion-shoot_001_standard.jpg': '1060/1600',
+  '/images/brand/sum-london/brand_2025_sum-london_fashion-shoot_002_standard.jpg': '1233/1600',
+  '/images/brand/sum-london/brand_2025_sum-london_fashion-shoot_003_standard.jpg': '1259/1600',
   '/images/brand/yosqi/brand_2025_yosqi_001_standard.jpg': '1600/1074',
   '/images/brand/yosqi/brand_2025_yosqi_002_standard.jpg': '1073/1600',
   '/images/brand/yosqi/brand_2025_yosqi_003_standard.jpg': '1074/1600',
@@ -102,11 +104,11 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/julies-top-5/live_2026_julies-top-5_003_standard.jpg': '1067/1600',
   '/images/live/julies-top-5/live_2026_julies-top-5_004_standard.jpg': '1600/1067',
   '/images/live/julies-top-5/live_2026_julies-top-5_005_standard.jpg': '1600/1067',
-  '/images/live/julies-top-5/live_2026_julies-top-5_006_standard.jpg': '1600/1067',
+
   '/images/live/julies-top-5/live_2026_julies-top-5_007_standard.jpg': '1600/1067',
   '/images/live/julies-top-5/live_2026_julies-top-5_008_standard.jpg': '1067/1600',
   '/images/live/julies-top-5/live_2026_julies-top-5_009_standard.jpg': '1600/1067',
-  '/images/live/julies-top-5/live_2026_julies-top-5_010_standard.jpg': '1600/1067',
+
   // Live — Jazz Cafe Festival (2024): mixed; 005, 007, 009 are portrait
   '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_001_standard.jpg': '1600/1113',
   '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_002_standard.jpg': '1600/1105',
@@ -138,12 +140,12 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_009_standard.jpg': '1073/1600',
   '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_010_standard.jpg': '1078/1600',
   // Live — Sonnyjim (2025)
-  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_001_standard.jpg': '1076/1600',
-  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_002_standard.jpg': '1074/1600',
-  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_003_standard.jpg': '1078/1600',
-  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_004_standard.jpg': '1600/1065',
-  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_005_standard.jpg': '1075/1600',
-  '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_006_standard.jpg': '1600/1073',
+  '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_001_standard.jpg': '1076/1600',
+  '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_002_standard.jpg': '1074/1600',
+  '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_003_standard.jpg': '1078/1600',
+  '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_004_standard.jpg': '1600/1065',
+  '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_005_standard.jpg': '1075/1600',
+  '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_006_standard.jpg': '1600/1073',
   // Live — Schoolboy Q · Roundhouse (2025)
   '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_001_standard.jpg': '1077/1600',
   '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_002_standard.jpg': '1075/1600',
@@ -158,39 +160,41 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_011_standard.jpg': '1600/1078',
   '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_012_standard.jpg': '1078/1600',
   // Live — The Pharcyde · Spread Love (2025)
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_001_standard.jpg': '1600/1080',
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_002_standard.jpg': '1064/1600',
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_003_standard.jpg': '1600/1062',
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_004_standard.jpg': '1600/1076',
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_005_standard.jpg': '1600/1071',
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_006_standard.jpg': '1600/1064',
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_007_standard.jpg': '1090/1600',
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_008_standard.jpg': '1600/1065',
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_009_standard.jpg': '1600/1072',
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_010_standard.jpg': '1600/1066',
-  '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_011_standard.jpg': '1056/1600',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_001_standard.jpg': '1600/1080',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_002_standard.jpg': '1064/1600',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_003_standard.jpg': '1600/1062',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_004_standard.jpg': '1600/1076',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_005_standard.jpg': '1600/1071',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_006_standard.jpg': '1600/1064',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_007_standard.jpg': '1090/1600',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_008_standard.jpg': '1600/1065',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_009_standard.jpg': '1600/1072',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_010_standard.jpg': '1600/1066',
+  '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_011_standard.jpg': '1056/1600',
   // Live — WSG · Jazz Cafe Festival (2025)
-  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_001_standard.jpg': '1076/1600',
-  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_002_standard.jpg': '1583/1600',
-  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_003_standard.jpg': '1600/1075',
-  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_004_standard.jpg': '1600/1083',
-  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_005_standard.jpg': '1600/1068',
-  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_006_standard.jpg': '1600/1074',
-  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_007_standard.jpg': '1078/1600',
-  '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_008_standard.jpg': '1081/1600',
+  '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg': '1076/1600',
+  '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_002_standard.jpg': '1583/1600',
+  '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_003_standard.jpg': '1600/1075',
+  '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_004_standard.jpg': '1600/1083',
+  '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_005_standard.jpg': '1600/1068',
+  '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_006_standard.jpg': '1600/1074',
+  '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_007_standard.jpg': '1078/1600',
+  '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_008_standard.jpg': '1081/1600',
   // Live — Freddie Gibbs · QB NYC (2025)
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_001_standard.jpg': '1078/1600',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_002_standard.jpg': '1079/1600',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_003_standard.jpg': '1600/1074',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_004_standard.jpg': '1600/1077',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_005_standard.jpg': '1600/1080',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_006_standard.jpg': '1600/1081',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_007_standard.jpg': '1600/1075',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_008_standard.jpg': '1073/1600',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_009_standard.jpg': '1600/1074',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_010_standard.jpg': '1077/1600',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_011_standard.jpg': '1600/1076',
-  '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_012_standard.jpg': '1600/1075',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_001_standard.jpg': '1078/1600',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_002_standard.jpg': '1079/1600',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_003_standard.jpg': '1600/1073',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_004_standard.jpg': '1600/1077',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_005_standard.jpg': '1600/1080',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_006_standard.jpg': '1600/1081',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_007_standard.jpg': '1600/1075',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_008_standard.jpg': '1073/1600',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_009_standard.jpg': '1600/1075',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_010_standard.jpg': '1077/1600',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_011_standard.jpg': '1600/1077',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_012_standard.jpg': '1600/1075',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_013_standard.png': '1600/1525',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.png': '1600/1067',
 }
 
 function getSrcAspect(src: string | null | undefined, fallback: string): string {
@@ -221,16 +225,16 @@ function getTileDims(id: string, src: string | null | undefined): { w: number; h
 const PROJECTS: Project[] = [
   // Brand 2025
   {
-    id: 'b1', kind: 'photo', title: 'Sum Ldn', category: 'Brand', year: '2025', color: '#1565C0',
-    src: '/images/brand/sum-ldn/brand_2025_sum-ldn_fashion-shoot_001_standard.jpg',
+    id: 'b1', kind: 'photo', title: 'Sum London · reworked 501 horse face skirt', category: 'Brand', year: '2025', color: '#1565C0',
+    src: '/images/brand/sum-london/brand_2025_sum-london_fashion-shoot_001_standard.jpg',
     gallery: [
-      '/images/brand/sum-ldn/brand_2025_sum-ldn_fashion-shoot_001_standard.jpg',
-      '/images/brand/sum-ldn/brand_2025_sum-ldn_fashion-shoot_002_standard.jpg',
-      '/images/brand/sum-ldn/brand_2025_sum-ldn_fashion-shoot_003_standard.jpg',
+      '/images/brand/sum-london/brand_2025_sum-london_fashion-shoot_001_standard.jpg',
+      '/images/brand/sum-london/brand_2025_sum-london_fashion-shoot_002_standard.jpg',
+      '/images/brand/sum-london/brand_2025_sum-london_fashion-shoot_003_standard.jpg',
     ],
   },
   {
-    id: 'b2', kind: 'photo', title: 'Yosqi', category: 'Brand', year: '2025', color: '#2C3E50',
+    id: 'b2', kind: 'photo', title: 'yosqi · Autumn 25', category: 'Brand', year: '2025', color: '#2C3E50',
     src: '/images/brand/yosqi/brand_2025_yosqi_006_standard.jpg',
     gallery: [
       '/images/brand/yosqi/brand_2025_yosqi_001_standard.jpg',
@@ -242,8 +246,8 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'b3', kind: 'photo', title: '22Impact', category: 'Brand', year: '2025', color: '#1A2B3C',
-    src: '/images/brand/22impact/brand_2025_22impact_002_standard.jpg',
+    id: 'b3', kind: 'photo', title: '22impact · Model shoot', category: 'Brand', year: '2025', color: '#1A2B3C',
+    src: '/images/brand/22impact/brand_2025_22impact_005_standard.jpg',
     gallery: [
       '/images/brand/22impact/brand_2025_22impact_001_standard.jpg',
       '/images/brand/22impact/brand_2025_22impact_002_standard.jpg',
@@ -254,7 +258,7 @@ const PROJECTS: Project[] = [
   },
   // Cultural 2025
   {
-    id: 'c1', kind: 'photo', title: 'Voice of Mauritius', category: 'Cultural', year: '2025', color: '#F2B800',
+    id: 'c1', kind: 'photo', title: 'voice of Mauritius · Notting Hill Carnival', category: 'Cultural', year: '2025', color: '#F2B800',
     src: '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_001_standard.jpg',
     gallery: [
       '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_001_standard.jpg',
@@ -277,16 +281,14 @@ const PROJECTS: Project[] = [
       '/images/live/julies-top-5/live_2026_julies-top-5_003_standard.jpg',
       '/images/live/julies-top-5/live_2026_julies-top-5_004_standard.jpg',
       '/images/live/julies-top-5/live_2026_julies-top-5_005_standard.jpg',
-      '/images/live/julies-top-5/live_2026_julies-top-5_006_standard.jpg',
       '/images/live/julies-top-5/live_2026_julies-top-5_007_standard.jpg',
       '/images/live/julies-top-5/live_2026_julies-top-5_008_standard.jpg',
       '/images/live/julies-top-5/live_2026_julies-top-5_009_standard.jpg',
-      '/images/live/julies-top-5/live_2026_julies-top-5_010_standard.jpg',
     ],
   },
   {
     id: 'l2', kind: 'photo', title: 'Jazz Cafe Festival', category: 'Live', year: '2024', color: '#C8432A',
-    src: '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_001_standard.jpg',
+    src: '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_005_standard.jpg',
     gallery: [
       '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_001_standard.jpg',
       '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_002_standard.jpg',
@@ -330,20 +332,20 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l5', kind: 'photo', title: 'Sonnyjim', category: 'Live', year: '2025', color: '#C8432A',
-    src: '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_001_standard.jpg',
+    id: 'l5', kind: 'photo', title: 'Sonnyjim · Hootananny Brixton', category: 'Live', year: '2025', color: '#C8432A',
+    src: '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_006_standard.jpg',
     gallery: [
-      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_001_standard.jpg',
-      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_002_standard.jpg',
-      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_003_standard.jpg',
-      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_004_standard.jpg',
-      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_005_standard.jpg',
-      '/images/live/sonnyjim-sonnyjim/live_2025_sonnyjim_sonnyjim_006_standard.jpg',
+      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_001_standard.jpg',
+      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_002_standard.jpg',
+      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_003_standard.jpg',
+      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_004_standard.jpg',
+      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_005_standard.jpg',
+      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_006_standard.jpg',
     ],
   },
   {
     id: 'l6', kind: 'photo', title: 'Schoolboy Q · Roundhouse', category: 'Live', year: '2025', color: '#C8432A',
-    src: '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_001_standard.jpg',
+    src: '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_008_standard.jpg',
     gallery: [
       '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_001_standard.jpg',
       '/images/live/roundhouse-schoolboy-q/live_2025_roundhouse_schoolboy-q_002_standard.jpg',
@@ -360,52 +362,54 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l7', kind: 'photo', title: 'The Pharcyde · Spread Love', category: 'Live', year: '2025', color: '#C8432A',
-    src: '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_001_standard.jpg',
+    id: 'l7', kind: 'photo', title: 'The Pharcyde · O2 Kentish Town', category: 'Live', year: '2025', color: '#C8432A',
+    src: '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_010_standard.jpg',
     gallery: [
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_001_standard.jpg',
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_002_standard.jpg',
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_003_standard.jpg',
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_004_standard.jpg',
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_005_standard.jpg',
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_006_standard.jpg',
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_007_standard.jpg',
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_008_standard.jpg',
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_009_standard.jpg',
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_010_standard.jpg',
-      '/images/live/spread-love-pharcyde/live_2025_spread-love_pharcyde_011_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_001_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_002_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_003_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_004_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_005_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_006_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_007_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_008_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_009_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_010_standard.jpg',
+      '/images/live/pharcyde-o2-kentish-town/live_2025_pharcyde-o2-kentish-town_011_standard.jpg',
     ],
   },
   {
-    id: 'l8', kind: 'photo', title: 'WSG · Jazz Cafe Festival', category: 'Live', year: '2025', color: '#C8432A',
-    src: '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_001_standard.jpg',
+    id: 'l8', kind: 'photo', title: 'Westside Gunn · Jazz Cafe', category: 'Live', year: '2025', color: '#C8432A',
+    src: '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg',
     gallery: [
-      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_001_standard.jpg',
-      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_002_standard.jpg',
-      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_003_standard.jpg',
-      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_004_standard.jpg',
-      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_005_standard.jpg',
-      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_006_standard.jpg',
-      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_007_standard.jpg',
-      '/images/live/jazz-cafe-wsg/live_2025_jazz-cafe_wsg_008_standard.jpg',
+      '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg',
+      '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_002_standard.jpg',
+      '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_003_standard.jpg',
+      '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_004_standard.jpg',
+      '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_005_standard.jpg',
+      '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_006_standard.jpg',
+      '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_007_standard.jpg',
+      '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_008_standard.jpg',
     ],
   },
   {
-    id: 'l9', kind: 'photo', title: 'Freddie Gibbs · QB NYC', category: 'Live', year: '2025', color: '#C8432A',
-    src: '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_001_standard.jpg',
+    id: 'l9', kind: 'photo', title: 'Freddie Gibbs · O2 Brixton', category: 'Live', year: '2026', color: '#C8432A',
+    src: '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.png',
     gallery: [
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_001_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_002_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_003_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_004_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_005_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_006_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_007_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_008_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_009_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_010_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_011_standard.jpg',
-      '/images/live/qb-nyc-freddie-gibbs/live_2025_qb-nyc_freddie-gibbs_012_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_001_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_002_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_003_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_004_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_005_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_006_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_007_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_008_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_009_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_010_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_011_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_012_standard.jpg',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_013_standard.png',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.png',
     ],
   },
 ]
@@ -425,7 +429,7 @@ function getDims(id: string): { w: number; h: number } {
   // About portrait/logo get their own mobile targets (not shared `s`) so we can
   // tune them independently of the general 0.65 photo scale.
   if (id === 'aboutPortrait') { const w = mobile ? 200 : 340; return { w, h: Math.round(w * 4 / 3) } }
-  if (id === 'aboutLogo')     { const w = mobile ? 155 : 280; return { w, h: w } }
+  if (id === 'aboutLogo')     { return mobile ? { w: 155, h: 155 } : { w: 280, h: 280 } }
   const cfg = PHOTO_CFG[id]
   if (!cfg) return { w: Math.round(200 * s), h: Math.round(200 * s) }
   const w = cfg.w * TILE_SIZE_SCALE * s
@@ -475,7 +479,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
   const s: Record<string, PhysicsState> = {}
   const isMobile = vw < 768
   const vScale = isMobile ? VELOCITY_SCALE * 0.5 : VELOCITY_SCALE
-  const logoSz = isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE
+  const logoSz = isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE
   s['logo'] = {
     x: (vw - logoSz) / 2,
     y: -logoSz * 0.30,
@@ -610,11 +614,19 @@ export default function HomePage() {
   const frozenLogoRef  = useRef<{ x: number; y: number; rot: number } | null>(null)
 
   const elRefs     = useRef<Record<string, HTMLElement | null>>({})
+  const visualElRefs = useRef<Record<string, HTMLElement | null>>({})
   const posRef     = useRef<Record<string, PhysicsState>>({})
   const rafRef     = useRef<number | null>(null)
   const sectionRef = useRef<HTMLElement | null>(null)
   const dragRef    = useRef<DragState | null>(null)
-  const didDragRef = useRef(false)
+  const didDragRef     = useRef(false)
+  const tickerTrackRef = useRef<HTMLDivElement | null>(null)
+  const tickerRafRef   = useRef<number>(0)
+  const tickerDragRef  = useRef({ dragging: false, x: 0, vel: 0, lastT: 0, lastX: 0 })
+  // About panel — name ticker
+  const nameTickerTrackRef = useRef<HTMLDivElement | null>(null)
+  const nameTickerRafRef   = useRef<number>(0)
+  const nameTickerDragRef  = useRef({ dragging: false, x: 0, vel: 0, lastT: 0, lastX: 0 })
   // Pan / drag: entirely direct DOM — no React state during gesture, zero latency
   const lbZoomLayerRef  = useRef<HTMLDivElement | null>(null)
   const lbCardRef       = useRef<HTMLDivElement | null>(null)  // photo card
@@ -773,32 +785,50 @@ export default function HomePage() {
     const { w: pW, h: pH } = getDims('aboutPortrait')
     const { w: lW, h: lH } = getDims('aboutLogo')
 
-    // Portrait: horizontally centred, 10 % from the top (below the "About" bar).
-    const pX = Math.round((vw - pW) / 2)
-    const pY = Math.round(vh * 0.10)
+    // Portrait: horizontally centred, upper middle between ticker and text block.
+    const pX = Math.round(isMob ? vw * 0.5 - 100 : vw * 0.5 - 130)
+    const pY = Math.round(isMob ? vh * 0.13 : vh * 0.17)
 
-    // Logo: centred under the portrait with a slight rightward nudge, overlapping
-    // the bottom ~35 % of the portrait — the classic scrapbook sticker placement.
-    const lX = Math.round(pX + (pW - lW) / 2 + pW * 0.08)
-    const lY = Math.round(pY + pH - Math.round(lH * 0.35))
+    // Logo: centred horizontally over portrait, one-third down — uses rendered size if available.
+    const portraitRect = elRefs.current['aboutPortrait']?.getBoundingClientRect()
+    const portraitW = portraitRect ? portraitRect.width  : 260
+    const portraitH = portraitRect ? portraitRect.height : 340
+    const lX = Math.round(pX + portraitW / 2 - lW / 2)
+    const lY = Math.round(pY + portraitH / 3)
 
     posRef.current['aboutPortrait'] = {
       x: pX, y: pY, rot: -1.5,
       vx: 0, vy: 0, vrot: 0,
-      baseVx: -7 * vScale, baseVy:  5 * vScale, baseVrot:  0.18 * vScale,
+      baseVx: -7 * vScale, baseVy: isMob ? -6 * vScale : 5 * vScale, baseVrot:  0.18 * vScale,
     }
     posRef.current['aboutLogo'] = {
       x: lX, y: lY, rot: 2.5,
       vx: 0, vy: 0, vrot: 0,
-      baseVx:  6 * vScale, baseVy: -7 * vScale, baseVrot: -0.20 * vScale,
+      baseVx: 6 * vScale, baseVy: 4 * vScale, baseVrot: 0.2 * vScale,
     }
 
-    const pel = elRefs.current['aboutPortrait']
-    const lel = elRefs.current['aboutLogo']
-    const pp  = posRef.current['aboutPortrait']
-    const lp  = posRef.current['aboutLogo']
-    if (pel && pp) pel.style.transform = `translate3d(${pp.x}px,${pp.y}px,0) rotate(${pp.rot}deg)`
-    if (lel && lp) lel.style.transform = `translate3d(${lp.x}px,${lp.y}px,0) rotate(${lp.rot}deg)`
+    const pel  = elRefs.current['aboutPortrait']
+    const pelv = visualElRefs.current['aboutPortrait']
+    const lel  = elRefs.current['aboutLogo']
+    const lelv = visualElRefs.current['aboutLogo']
+    const pp   = posRef.current['aboutPortrait']
+    const lp   = posRef.current['aboutLogo']
+    if (pp) {
+      const t = `translate3d(${pp.x}px,${pp.y}px,0) rotate(${pp.rot}deg)`
+      if (pel) pel.style.transform = t
+      if (pelv) pelv.style.transform = t
+    }
+    if (lp) {
+      const t = `translate3d(${lp.x}px,${lp.y}px,0) rotate(${lp.rot}deg)`
+      if (lel) lel.style.transform = t
+      if (lelv) lelv.style.transform = t
+    }
+    // Reset name ticker to the start of the string on every open so it never
+    // resumes mid-name from a stale transform left by a previous drag interaction.
+    if (nameTickerTrackRef.current) {
+      nameTickerTrackRef.current.style.transform = ''
+      nameTickerTrackRef.current.style.animation = 'tickerScroll 16s linear infinite'
+    }
   }, [aboutOpen])
 
   const openLightbox = useCallback((proj: Project) => {
@@ -945,8 +975,9 @@ export default function HomePage() {
     const vw = window.innerWidth; const vh = window.innerHeight
     posRef.current = buildInitialState(vw, vh)
     for (const [id, pos] of Object.entries(posRef.current)) {
-      const el = elRefs.current[id]
-      if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+      const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+      const el = elRefs.current[id]; if (el) el.style.transform = t
+      const vel = visualElRefs.current[id]; if (vel) vel.style.transform = t
     }
     // Sync isMobile state so the JSX tile filter matches the physics state built above
     setIsMobile(vw < 768)
@@ -971,14 +1002,16 @@ export default function HomePage() {
         // Freeze physics during return animations so canvas elements meet the viewer exactly
         if (frozenPhotoRef.current?.id === id) {
           const f = frozenPhotoRef.current
-          const el = elRefs.current[id]
-          if (el) el.style.transform = `translate3d(${f.x}px,${f.y}px,0) rotate(${f.rot}deg)`
+          const t = `translate3d(${f.x}px,${f.y}px,0) rotate(${f.rot}deg)`
+          const el = elRefs.current[id]; if (el) el.style.transform = t
+          const vel = visualElRefs.current[id]; if (vel) vel.style.transform = t
           continue
         }
         if (id === 'logo' && frozenLogoRef.current) {
           const f = frozenLogoRef.current
-          const el = elRefs.current['logo']
-          if (el) el.style.transform = `translate3d(${f.x}px,${f.y}px,0) rotate(${f.rot}deg)`
+          const t = `translate3d(${f.x}px,${f.y}px,0) rotate(${f.rot}deg)`
+          const el = elRefs.current['logo']; if (el) el.style.transform = t
+          const vel = visualElRefs.current['logo']; if (vel) vel.style.transform = t
           continue
         }
         pos.vx   = pos.baseVx   + (pos.vx   - pos.baseVx)   * 0.985
@@ -995,8 +1028,9 @@ export default function HomePage() {
         if (pos.x < -w)       pos.x =  vw + 60
         if (pos.y >  vh + 60) pos.y = -h
         if (pos.y < -h)       pos.y =  vh + 60
-        const el = elRefs.current[id]
-        if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+        const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+        const el = elRefs.current[id]; if (el) el.style.transform = t
+        const vel = visualElRefs.current[id]; if (vel) vel.style.transform = t
       }
       rafRef.current = requestAnimationFrame(tick)
     }
@@ -1004,8 +1038,9 @@ export default function HomePage() {
       if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
       posRef.current = buildInitialState(window.innerWidth, window.innerHeight)
       for (const [id, pos] of Object.entries(posRef.current)) {
-        const el = elRefs.current[id]
-        if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+        const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+        const el = elRefs.current[id]; if (el) el.style.transform = t
+        const vel = visualElRefs.current[id]; if (vel) vel.style.transform = t
       }
       setIsMobile(window.innerWidth < 768)
       prev = performance.now() - 16
@@ -1072,8 +1107,9 @@ export default function HomePage() {
     const sRect = sectionRef.current?.getBoundingClientRect()
     pos.x = e.clientX - (sRect?.left ?? 0) - d.ox
     pos.y = e.clientY - (sRect?.top  ?? 0) - d.oy
-    const el = elRefs.current[d.id]
-    if (el) el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+    const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
+    const el = elRefs.current[d.id]; if (el) el.style.transform = t
+    const vel = visualElRefs.current[d.id]; if (vel) vel.style.transform = t
   }, [])
 
   const onPointerUp = useCallback((_e: React.PointerEvent) => {
@@ -1441,8 +1477,8 @@ export default function HomePage() {
             ref={el => { elRefs.current['logo'] = el }}
             className="absolute top-0 left-0 touch-none"
             style={{
-              width:  isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE,
-              height: isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE,
+              width:  isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE,
+              height: isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE,
               willChange: 'transform', zIndex: 5,
               opacity: aboutOpen ? (aboutVisible ? 0 : 1) : 1,
               transition: aboutOpen
@@ -1694,12 +1730,81 @@ export default function HomePage() {
 
           </div>
 
-        {/* ── About PORTRAIT layer — z:60 sibling, NO blend ─────────────
+        {/* ── About PORTRAIT layer — z:56 sibling, NO blend ─────────────
             Image lives outside the blending panel root so it renders normally
             (no inversion). Mirrors the panel's slide transform so it slides
             up with the panel on open and away on close. */}
+        {/* ── About PORTRAIT visual — z:56, renders image, no pointer events ── */}
         <div
-          className="fixed inset-0 z-[60]"
+          className="fixed inset-0 z-[56]"
+          style={{
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        >
+          <div
+            ref={el => { visualElRefs.current['aboutPortrait'] = el }}
+            className="absolute top-0 left-0 touch-none"
+            style={{
+              width:        isMobile ? 200 : 340,
+              height:       isMobile ? Math.round(200 * 4 / 3) : Math.round(340 * 4 / 3),
+              willChange:   'transform',
+              borderRadius: 2,
+              overflow:     'hidden',
+              pointerEvents: 'none',
+            }}
+            aria-hidden="true"
+          >
+            <Image
+              src="/images/portrait.jpg"
+              width={1080}
+              height={1440}
+              priority
+              alt="Nadim Kurimbokus"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+              unoptimized
+            />
+          </div>
+        </div>
+
+        {/* ── About LOGO visual — z:57, renders image, no pointer events ────── */}
+        <div
+          className="fixed inset-0 z-[57]"
+          style={{
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        >
+          <div
+            ref={el => { visualElRefs.current['aboutLogo'] = el }}
+            className="absolute top-0 left-0 touch-none"
+            style={{
+              width:      isMobile ? 155 : 280,
+              height:     isMobile ? 155 : 280,
+              willChange: 'transform',
+              pointerEvents: 'none',
+            }}
+            aria-hidden="true"
+          >
+            <Image
+              src="/logo.png"
+              fill
+              alt=""
+              style={{ objectFit: 'contain', pointerEvents: 'none' }}
+              unoptimized
+            />
+          </div>
+        </div>
+
+        {/* ── About PORTRAIT hitbox — z:64, invisible, handles drag ─────────── */}
+        <div
+          className="fixed inset-0 z-[64]"
           style={{
             transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
@@ -1715,40 +1820,21 @@ export default function HomePage() {
               width:        isMobile ? 200 : 340,
               height:       isMobile ? Math.round(200 * 4 / 3) : Math.round(340 * 4 / 3),
               willChange:   'transform',
-              borderRadius: 2,
-              overflow:     'hidden',
               cursor:       'none',
-              zIndex:       2,
-              // Re-enable interactivity for dragging — parent container is
-              // pointer-events:none so the empty area falls through to the
-              // backdrop click-to-close behind.
               pointerEvents: 'auto',
             }}
             onPointerDown={e => onPointerDown(e, 'aboutPortrait')}
             onPointerUp={onPointerUp}
-            // Only attach once the slide-in animation has settled — see
-            // aboutSettled effect. Avoids per-frame handler calls during slide.
             onPointerMove={aboutSettled ? onPointerMove : undefined}
             onContextMenu={e => e.preventDefault()}
             role="img"
             aria-label="Portrait of Nadim Kurimbokus"
-          >
-            <Image
-              src="/images/portrait.jpg"
-              width={1080}
-              height={1440}
-              priority
-              alt="Nadim Kurimbokus"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              unoptimized
-            />
-            <div className="absolute inset-0" style={{ zIndex: 1 }} />
-          </div>
+          />
         </div>
 
-        {/* ── About LOGO layer — z:60 sibling, NO blend ────────────────── */}
+        {/* ── About LOGO hitbox — z:65, invisible, handles drag ────────────── */}
         <div
-          className="fixed inset-0 z-[60]"
+          className="fixed inset-0 z-[65]"
           style={{
             transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
@@ -1765,34 +1851,19 @@ export default function HomePage() {
               height:     isMobile ? 155 : 280,
               willChange: 'transform',
               cursor:     'none',
-              zIndex:     3,
               pointerEvents: 'auto',
             }}
             onPointerDown={e => onPointerDown(e, 'aboutLogo')}
             onPointerUp={onPointerUp}
-            // Only attach once the slide-in animation has settled.
             onPointerMove={aboutSettled ? onPointerMove : undefined}
             onContextMenu={e => e.preventDefault()}
             aria-hidden="true"
-          >
-            <Image
-              src="/logo.png"
-              fill
-              alt=""
-              style={{ objectFit: 'contain', pointerEvents: 'none' }}
-              unoptimized
-            />
-            <div className="absolute inset-0" style={{ zIndex: 1 }} />
-          </div>
+          />
         </div>
 
         {/* ── About TEXT layer — z:61, SEPARATE container ──────────────────
-            Lives OUTSIDE the panel root. Contains ONLY text (name, bio, email,
-            instagram). White text + container-level mix-blend-mode: difference.
-            Slides up with the panel (matches z-[60] panel + portrait + logo
-            slide animations) so all about content moves together as one unit.
-            Opacity hardcoded to 1 so the blend never enters a fractional-opacity
-            state mid-transition. */}
+            Mix-blend-mode: difference on all text. Opacity hardcoded to 1.
+            Contains Zone 1 (name ticker), Zone 3 (static text), Zone 4 (testimonial ticker). */}
         <div
           className="fixed inset-0 z-[61]"
           style={{
@@ -1806,44 +1877,164 @@ export default function HomePage() {
           }}
           aria-hidden={!aboutVisible}
         >
+          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 55% !important; bottom: 120px !important; } .about-text-block .about-bio { display: none; } }`}</style>
+
+          {/* Zone 1 — Name ticker, pinned below the "About" / "Close" bar */}
           <div
-            className="absolute inset-x-0"
-            style={{
-              bottom:       'clamp(56px, 9vh, 110px)',
-              paddingLeft:  'clamp(24px, 7vw, 96px)',
-              paddingRight: 'clamp(24px, 7vw, 96px)',
-              // Only the inner text wrapper gates pointer-events on aboutVisible.
-              // The individual <a> buttons re-enable it on themselves with
-              // `pointerEvents: 'auto'` in their own inline styles.
-              pointerEvents: aboutVisible ? 'auto' : 'none',
+            style={{ position: 'absolute', top: 68, left: 0, right: 0, height: 'clamp(66px, 11vw, 132px)', zIndex: 63, overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'auto', cursor: 'none' }}
+            onPointerDown={e => {
+              const el = nameTickerTrackRef.current; if (!el) return
+              cancelAnimationFrame(nameTickerRafRef.current)
+              const matrix = new DOMMatrix(getComputedStyle(el).transform)
+              const x = matrix.m41
+              el.style.animation = 'none'
+              el.style.transform = `translateX(${x}px)`
+              const d = nameTickerDragRef.current
+              d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
+              e.currentTarget.setPointerCapture(e.pointerId)
+            }}
+            onPointerMove={e => {
+              const d = nameTickerDragRef.current; if (!d.dragging) return
+              const el = nameTickerTrackRef.current; if (!el) return
+              const halfW = el.offsetWidth / 2
+              const dt = e.timeStamp - d.lastT
+              const dx = e.clientX - d.lastX
+              d.vel = dt > 0 ? dx / dt : 0
+              d.lastT = e.timeStamp; d.lastX = e.clientX
+              d.x += dx
+              if (d.x > 0) d.x -= halfW
+              if (d.x < -halfW) d.x += halfW
+              el.style.transform = `translateX(${d.x}px)`
+            }}
+            onPointerUp={() => {
+              const d = nameTickerDragRef.current; if (!d.dragging) return
+              d.dragging = false
+              const el = nameTickerTrackRef.current; if (!el) return
+              const halfW = el.offsetWidth / 2
+              const coasting = () => {
+                d.x += d.vel * 16
+                d.vel *= 0.95
+                if (d.x > 0) d.x -= halfW
+                if (d.x < -halfW) d.x += halfW
+                el.style.transform = `translateX(${d.x}px)`
+                if (Math.abs(d.vel) < 0.031) {
+                  let x = d.x % -halfW
+                  if (x > 0) x -= halfW
+                  const progress = Math.abs(x) / halfW
+                  const delay = -(progress * 8)
+                  el.style.animation = `tickerScroll 16s linear ${delay}s infinite`
+                  el.style.transform = ''
+                  return
+                }
+                nameTickerRafRef.current = requestAnimationFrame(coasting)
+              }
+              nameTickerRafRef.current = requestAnimationFrame(coasting)
             }}
           >
-            <div className="mx-auto text-center" style={{ maxWidth: 660, pointerEvents: 'none' }}>
-              {/* Name */}
-              <p className="text-2xl md:text-4xl" style={{ marginBottom: '1.5rem' }}>
-                Nadim Kurimbokus
-              </p>
-              {/* Bio */}
-              <p className="text-base md:text-xl leading-loose" style={{ marginBottom: '2.5rem' }}>
-                British-Mauritian photographer based in London. Shooting music, performance,
-                and the spaces in between — from headline stages to rehearsal rooms.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                {/* Email button */}
-                <a
-                  href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
-                  style={{ pointerEvents: 'auto' }}
-                  className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
-                >Email me</a>
-                {/* Instagram button */}
-                <a
-                  href="https://www.instagram.com/nadim_kurimbokus/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ pointerEvents: 'auto' }}
-                  className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
-                >Instagram</a>
-              </div>
+            <div
+              ref={nameTickerTrackRef}
+              style={{ display: 'inline-block', animation: 'tickerScroll 16s linear infinite', fontSize: 'clamp(60px, 10vw, 120px)', lineHeight: 1.1 }}
+            >
+              {[0, 1, 2, 3].map(i => (
+                <span key={i} style={{ display: 'inline-block', paddingRight: '4rem' }}>Nadim Kurimbokus</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Zone 3 — Static text block, sits below the middle physics band */}
+          <div
+            className="about-text-block"
+            style={{ position: 'absolute', top: '65%', bottom: '140px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: isMobile ? '0.25rem' : '0.375rem' }}
+          >
+            {/* Row A — centred */}
+            <p className="about-bio text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
+              <span style={{ fontSize: isMobile ? 'clamp(11px, 3vw, 14px)' : 'clamp(14px, 2.5vw, 20px)' }}>Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.</span>
+            </p>
+            {/* Row B — centred */}
+            <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <span style={{ fontSize: isMobile ? 'clamp(10px, 2.5vw, 12px)' : 'clamp(11px, 1.6vw, 15px)' }}>BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
+            </p>
+            {/* Row C — centred */}
+            <p className="text-base md:text-xl" style={{ textAlign: 'center' }}>
+              <span style={{ fontSize: isMobile ? 'clamp(10px, 2.5vw, 12px)' : 'clamp(11px, 1.6vw, 15px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.</span>
+            </p>
+            {/* Row D — centred buttons */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginTop: '1.5rem', position: 'relative', zIndex: 66 }}>
+              <a
+                href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
+                style={{ pointerEvents: 'auto', ...(isMobile ? { padding: '6px 12px', fontSize: '13px' } : {}) }}
+                className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
+              >Email me</a>
+              <a
+                href="https://www.instagram.com/nadim_kurimbokus/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ pointerEvents: 'auto', ...(isMobile ? { padding: '6px 12px', fontSize: '13px' } : {}) }}
+                className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
+              >Instagram</a>
+            </div>
+          </div>
+
+          {/* Zone 4 — Testimonial ticker, unchanged */}
+          <div
+            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', pointerEvents: 'auto', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', paddingTop: 10, paddingBottom: 10, cursor: 'none' }}
+            onPointerDown={e => {
+              const el = tickerTrackRef.current; if (!el) return
+              cancelAnimationFrame(tickerRafRef.current)
+              const matrix = new DOMMatrix(getComputedStyle(el).transform)
+              const x = matrix.m41
+              el.style.animation = 'none'
+              el.style.transform = `translateX(${x}px)`
+              const d = tickerDragRef.current
+              d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
+              e.currentTarget.setPointerCapture(e.pointerId)
+            }}
+            onPointerMove={e => {
+              const d = tickerDragRef.current; if (!d.dragging) return
+              const el = tickerTrackRef.current; if (!el) return
+              const halfW = el.offsetWidth / 2
+              const dt = e.timeStamp - d.lastT
+              const dx = e.clientX - d.lastX
+              d.vel = dt > 0 ? dx / dt : 0
+              d.lastT = e.timeStamp; d.lastX = e.clientX
+              d.x += dx
+              if (d.x > 0) d.x -= halfW
+              if (d.x < -halfW) d.x += halfW
+              el.style.transform = `translateX(${d.x}px)`
+            }}
+            onPointerUp={() => {
+              const d = tickerDragRef.current; if (!d.dragging) return
+              d.dragging = false
+              const el = tickerTrackRef.current; if (!el) return
+              const halfW = el.offsetWidth / 2
+              const coasting = () => {
+                d.x += d.vel * 16
+                d.vel *= 0.95
+                if (d.x > 0) d.x -= halfW
+                if (d.x < -halfW) d.x += halfW
+                el.style.transform = `translateX(${d.x}px)`
+                if (Math.abs(d.vel) < 0.031) {
+                  let x = d.x % -halfW
+                  if (x > 0) x -= halfW
+                  const progress = Math.abs(x) / halfW
+                  const delay    = -(progress * 60)
+                  el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
+                  el.style.transform  = ''
+                  return
+                }
+                tickerRafRef.current = requestAnimationFrame(coasting)
+              }
+              tickerRafRef.current = requestAnimationFrame(coasting)
+            }}
+          >
+            <div ref={tickerTrackRef} style={{ display: 'inline-block', animation: 'tickerScroll 60s linear infinite' }}>
+              {[0, 1].map(i => (
+                <span key={i} style={{ display: 'inline-block' }}>
+                  <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Nadim was prompt, great to work with, and really understood what pics we were after. He nailed the vibe perfectly, and we absolutely loved the photos.&rdquo; — Alicia Grimshaw, Tamil Prince</span>
+                  <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Working with Nadim is an absolute pleasure, he consistently understands the brief and delivers exceptional results for every show. He is incredibly versatile, works seamlessly with artists, and always manages to capture the true, lively energy of the Roundhouse.&rdquo; — Saskia Burrows, Roundhouse</span>
+                  <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Nadim has captured wonderful memories at our events for many years, always bringing vibrant energy to our spaces and his images.&rdquo; — Mark Norton, The Photography Foundation</span>
+                </span>
+              ))}
             </div>
           </div>
         </div>

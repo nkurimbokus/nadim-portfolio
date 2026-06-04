@@ -8,6 +8,7 @@ export default function CursorDot() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
+    if (window.innerWidth < 768) return
     setReady(true)
     document.body.style.cursor = 'none'
     document.documentElement.style.cursor = 'none'

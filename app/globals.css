@@ -204,4 +204,10 @@ h1, h2, h3, h4, h5, h6, p, a, button, span, li {
   100% { transform: translate(-50%, 50%) rotate(0deg);                                       }
 }
 
+/* ─── Testimonial ticker ──────────────────────────────────────────────────── */
+@keyframes tickerScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
 
