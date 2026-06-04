@@ -618,6 +618,10 @@ export default function HomePage() {
   const tickerTrackRef = useRef<HTMLDivElement | null>(null)
   const tickerRafRef   = useRef<number>(0)
   const tickerDragRef  = useRef({ dragging: false, x: 0, vel: 0, lastT: 0, lastX: 0 })
+  // About panel — name ticker
+  const nameTickerTrackRef = useRef<HTMLDivElement | null>(null)
+  const nameTickerRafRef   = useRef<number>(0)
+  const nameTickerDragRef  = useRef({ dragging: false, x: 0, vel: 0, lastT: 0, lastX: 0 })
   // Pan / drag: entirely direct DOM — no React state during gesture, zero latency
   const lbZoomLayerRef  = useRef<HTMLDivElement | null>(null)
   const lbCardRef       = useRef<HTMLDivElement | null>(null)  // photo card
@@ -776,14 +780,13 @@ export default function HomePage() {
     const { w: pW, h: pH } = getDims('aboutPortrait')
     const { w: lW, h: lH } = getDims('aboutLogo')
 
-    // Portrait: horizontally centred, 10 % from the top (below the "About" bar).
-    const pX = Math.round((vw - pW) / 2)
-    const pY = Math.round(vh * 0.10)
+    // Portrait: spawns in the middle band (20–48% down), left of centre.
+    const pX = Math.round(vw * 0.35)
+    const pY = Math.round(vh * 0.25)
 
-    // Logo: centred under the portrait with a slight rightward nudge, overlapping
-    // the bottom ~35 % of the portrait — the classic scrapbook sticker placement.
-    const lX = Math.round(pX + (pW - lW) / 2 + pW * 0.08)
-    const lY = Math.round(pY + pH - Math.round(lH * 0.35))
+    // Logo: spawns in the middle band, right of centre — floats on top (z-[62]).
+    const lX = Math.round(vw * 0.60)
+    const lY = Math.round(vh * 0.32)
 
     posRef.current['aboutPortrait'] = {
       x: pX, y: pY, rot: -1.5,
@@ -1749,9 +1752,9 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* ── About LOGO layer — z:60 sibling, NO blend ────────────────── */}
+        {/* ── About LOGO layer — z:62, floats above portrait ──────────── */}
         <div
-          className="fixed inset-0 z-[60]"
+          className="fixed inset-0 z-[62]"
           style={{
             transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
@@ -1790,12 +1793,8 @@ export default function HomePage() {
         </div>
 
         {/* ── About TEXT layer — z:61, SEPARATE container ──────────────────
-            Lives OUTSIDE the panel root. Contains ONLY text (name, bio, email,
-            instagram). White text + container-level mix-blend-mode: difference.
-            Slides up with the panel (matches z-[60] panel + portrait + logo
-            slide animations) so all about content moves together as one unit.
-            Opacity hardcoded to 1 so the blend never enters a fractional-opacity
-            state mid-transition. */}
+            Mix-blend-mode: difference on all text. Opacity hardcoded to 1.
+            Contains Zone 1 (name ticker), Zone 3 (static text), Zone 4 (testimonial ticker). */}
         <div
           className="fixed inset-0 z-[61]"
           style={{
@@ -1809,53 +1808,104 @@ export default function HomePage() {
           }}
           aria-hidden={!aboutVisible}
         >
+          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+
+          {/* Zone 1 — Name ticker, pinned below the "About" / "Close" bar */}
           <div
-            className="absolute inset-x-0"
-            style={{
-              bottom:       'clamp(56px, 9vh, 110px)',
-              paddingLeft:  'clamp(24px, 7vw, 96px)',
-              paddingRight: 'clamp(24px, 7vw, 96px)',
-              // Clicks pass through to the photos below; the <a> buttons
-              // re-enable pointer-events on themselves individually.
-              pointerEvents: 'none',
+            style={{ position: 'absolute', top: 68, left: 0, right: 0, zIndex: 63, overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'auto', cursor: 'none' }}
+            onPointerDown={e => {
+              const el = nameTickerTrackRef.current; if (!el) return
+              cancelAnimationFrame(nameTickerRafRef.current)
+              const matrix = new DOMMatrix(getComputedStyle(el).transform)
+              const x = matrix.m41
+              el.style.animation = 'none'
+              el.style.transform = `translateX(${x}px)`
+              const d = nameTickerDragRef.current
+              d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
+              e.currentTarget.setPointerCapture(e.pointerId)
+            }}
+            onPointerMove={e => {
+              const d = nameTickerDragRef.current; if (!d.dragging) return
+              const el = nameTickerTrackRef.current; if (!el) return
+              const halfW = el.offsetWidth / 2
+              const dt = e.timeStamp - d.lastT
+              const dx = e.clientX - d.lastX
+              d.vel = dt > 0 ? dx / dt : 0
+              d.lastT = e.timeStamp; d.lastX = e.clientX
+              d.x += dx
+              if (d.x > 0) d.x -= halfW
+              if (d.x < -halfW) d.x += halfW
+              el.style.transform = `translateX(${d.x}px)`
+            }}
+            onPointerUp={() => {
+              const d = nameTickerDragRef.current; if (!d.dragging) return
+              d.dragging = false
+              const el = nameTickerTrackRef.current; if (!el) return
+              const halfW = el.offsetWidth / 2
+              const coasting = () => {
+                d.x += d.vel * 16
+                d.vel *= 0.95
+                if (d.x > 0) d.x -= halfW
+                if (d.x < -halfW) d.x += halfW
+                el.style.transform = `translateX(${d.x}px)`
+                if (Math.abs(d.vel) < 0.031) {
+                  let x = d.x % -halfW
+                  if (x > 0) x -= halfW
+                  const progress = Math.abs(x) / halfW
+                  const delay = -(progress * 8)
+                  el.style.animation = `tickerScroll 8s linear ${delay}s infinite`
+                  el.style.transform = ''
+                  return
+                }
+                nameTickerRafRef.current = requestAnimationFrame(coasting)
+              }
+              nameTickerRafRef.current = requestAnimationFrame(coasting)
             }}
           >
-            <div className="mx-auto text-center" style={{ maxWidth: 660, pointerEvents: 'none' }}>
-              {/* Name */}
-              <p className="text-2xl md:text-4xl" style={{ marginBottom: '1.5rem' }}>
-                Nadim Kurimbokus
-              </p>
-              {/* Bio */}
-              <p className="text-base md:text-xl leading-loose" style={{ marginBottom: '1.5rem' }}>
-                Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.
-              </p>
-              <p className="text-base md:text-xl leading-loose" style={{ marginBottom: '1.5rem' }}>
-                Clients have included the BBC, Roundhouse, Jazz Cafe, BAPE, Westside Gunn, Teg Live Europe, Lomography and Museum of the Home, among others. Away from commissions, the work is looser. Shot for its own sake.
-              </p>
-              <p className="text-base md:text-xl leading-loose" style={{ marginBottom: '2.5rem' }}>
-                Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                {/* Email button */}
-                <a
-                  href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
-                  style={{ pointerEvents: 'auto' }}
-                  className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
-                >Email me</a>
-                {/* Instagram button */}
-                <a
-                  href="https://www.instagram.com/nadim_kurimbokus/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ pointerEvents: 'auto' }}
-                  className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
-                >Instagram</a>
-              </div>
+            <div
+              ref={nameTickerTrackRef}
+              style={{ display: 'inline-block', animation: 'tickerScroll 8s linear infinite', fontSize: 'clamp(60px, 10vw, 120px)', lineHeight: 1.1 }}
+            >
+              {[0, 1].map(i => (
+                <span key={i} style={{ display: 'inline-block', paddingRight: '4rem' }}>Nadim Kurimbokus</span>
+              ))}
             </div>
           </div>
 
-          {/* ── Testimonial ticker — fixed to bottom of text layer ───────── */}
-          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+          {/* Zone 3 — Static text block, sits below the middle physics band */}
+          <div
+            style={{ position: 'absolute', top: '58%', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+          >
+            {/* Row A — flush left */}
+            <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'left' }}>
+              Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.
+            </p>
+            {/* Row B — flush right */}
+            <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'right' }}>
+              BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home
+            </p>
+            {/* Row C — centred */}
+            <p className="text-base md:text-xl" style={{ textAlign: 'center' }}>
+              Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.
+            </p>
+            {/* Row D — centred buttons */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto' }}>
+              <a
+                href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
+                style={{ pointerEvents: 'auto' }}
+                className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
+              >Email me</a>
+              <a
+                href="https://www.instagram.com/nadim_kurimbokus/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ pointerEvents: 'auto' }}
+                className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
+              >Instagram</a>
+            </div>
+          </div>
+
+          {/* Zone 4 — Testimonial ticker, unchanged */}
           <div
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', pointerEvents: 'auto', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', paddingTop: 10, paddingBottom: 10, cursor: 'none' }}
             onPointerDown={e => {
@@ -1894,13 +1944,10 @@ export default function HomePage() {
                 if (d.x < -halfW) d.x += halfW
                 el.style.transform = `translateX(${d.x}px)`
                 if (Math.abs(d.vel) < 0.031) {
-                  // Normalise position into [−halfW, 0] via modulo then sign-fix
                   let x = d.x % -halfW
                   if (x > 0) x -= halfW
-                  const progress = Math.abs(x) / halfW          // 0..1
-                  const delay    = -(progress * 60)              // negative = start partway through
-                  // Set animation first so the browser has the correct start frame,
-                  // then clear the inline transform so the animation takes over cleanly.
+                  const progress = Math.abs(x) / halfW
+                  const delay    = -(progress * 60)
                   el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
                   el.style.transform  = ''
                   return
