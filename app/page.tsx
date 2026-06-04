@@ -1877,7 +1877,7 @@ export default function HomePage() {
           }}
           aria-hidden={!aboutVisible}
         >
-          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 55% !important; bottom: 120px !important; } .about-text-block .about-bio { display: none; } }`}</style>
+          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 48% !important; bottom: 100px !important; } }`}</style>
 
           {/* Zone 1 — Name ticker, pinned below the "About" / "Close" bar */}
           <div
@@ -1947,7 +1947,7 @@ export default function HomePage() {
             style={{ position: 'absolute', top: '65%', bottom: '140px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: isMobile ? '0.25rem' : '0.375rem' }}
           >
             {/* Row A — centred */}
-            <p className="about-bio text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
+            <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
               <span style={{ fontSize: isMobile ? 'clamp(11px, 3vw, 14px)' : 'clamp(14px, 2.5vw, 20px)' }}>Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.</span>
             </p>
             {/* Row B — centred */}
@@ -2076,7 +2076,9 @@ export default function HomePage() {
                 maxHeight: '80vh',
                 opacity: lbVisible ? 1 : 0,
                 transform: 'translate(0px, 0px) scale(1) rotate(0deg)',
-                transition: lbVisible ? 'opacity 0.18s ease' : 'opacity 0.14s ease',
+                transition: lbVisible
+                  ? 'opacity 0.18s ease, aspect-ratio 0.34s cubic-bezier(0.16, 1, 0.3, 1), width 0.34s cubic-bezier(0.16, 1, 0.3, 1)'
+                  : 'opacity 0.14s ease',
               }}
               onClick={e => e.stopPropagation()}
             >
