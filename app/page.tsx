@@ -2063,7 +2063,7 @@ export default function HomePage() {
             aria-hidden={!aboutVisible}
           >
             {/* Spacer — 40vh pushes text below the physics photos */}
-            <div style={{ height: '45vh', pointerEvents: 'none' }} />
+            <div style={{ height: '52vh', pointerEvents: 'none' }} />
 
             {/* Bio */}
             <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(11px, 3vw, 14px)', lineHeight: '1.75', marginBottom: '2rem' }}>
