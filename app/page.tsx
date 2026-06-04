@@ -2062,8 +2062,8 @@ export default function HomePage() {
             }}
             aria-hidden={!aboutVisible}
           >
-            {/* Spacer — 60vh pushes text below the physics photos */}
-            <div style={{ height: '60vh', pointerEvents: 'none' }} />
+            {/* Spacer — 40vh pushes text below the physics photos */}
+            <div style={{ height: '40vh', pointerEvents: 'none' }} />
 
             {/* Bio */}
             <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(11px, 3vw, 14px)', lineHeight: '1.75', marginBottom: '2rem' }}>
@@ -2098,7 +2098,7 @@ export default function HomePage() {
 
             {/* Testimonial ticker */}
             <div
-              style={{ pointerEvents: 'auto', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', paddingTop: 10, paddingBottom: 80, cursor: 'none' }}
+              style={{ pointerEvents: 'auto', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', marginTop: '1rem', paddingTop: 10, paddingBottom: 10, cursor: 'none' }}
               onPointerDown={e => {
                 const el = tickerTrackRef.current; if (!el) return
                 cancelAnimationFrame(tickerRafRef.current)
