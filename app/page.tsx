@@ -941,7 +941,7 @@ export default function HomePage() {
     // we're about to re-open the work sheet right on top of it. Otherwise zoom back.
     if (!cameFromWorkRef.current) setCanvasScaled(false)
     lbIsClosingRef.current = true
-    setLbVisible(false)
+    requestAnimationFrame(() => setLbVisible(false))
     setTimeout(() => {
       setActivePhoto(null)
       lbIsClosingRef.current = false
