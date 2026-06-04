@@ -1874,7 +1874,7 @@ export default function HomePage() {
 
           {/* Zone 3 — Static text block, sits below the middle physics band */}
           <div
-            style={{ position: 'absolute', top: '58%', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+            style={{ position: 'absolute', top: '68%', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
           >
             {/* Row A — flush left */}
             <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'left' }}>
