@@ -1884,14 +1884,8 @@ export default function HomePage() {
                 width: `min(calc(100vw - 48px), calc(80vh * ${lbRatio.toFixed(6)}))`,
                 maxHeight: '80vh',
                 opacity: lbVisible ? 1 : 0,
-                // FLIP — photo snaps from the canvas tile into the viewer and back.
-                // FLIP — photo snaps from the canvas tile into the viewer and back.
-                transform: lbVisible
-                  ? 'translate(0px, 0px) scale(1) rotate(0deg)'
-                  : `translate(${lbSource.x}px, ${lbSource.y}px) scale(${lbSource.scale}) rotate(${lbSource.rot}deg)`,
-                transition: lbVisible
-                  ? 'transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0s, aspect-ratio 0.34s cubic-bezier(0.16, 1, 0.3, 1), width 0.34s cubic-bezier(0.16, 1, 0.3, 1)'
-                  : 'transform 0.26s cubic-bezier(0.55, 0, 1, 0.45), opacity 0s ease 0.22s',
+                transform: 'translate(0px, 0px) scale(1) rotate(0deg)',
+                transition: lbVisible ? 'opacity 0.18s ease' : 'opacity 0.14s ease',
               }}
               onClick={e => e.stopPropagation()}
             >
