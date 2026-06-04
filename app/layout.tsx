@@ -91,7 +91,7 @@ export default function RootLayout({
   }
 ` }} />
       </head>
-      <body className="bg-bg-default text-fg-default antialiased" style={{ cursor: 'none' }}>
+      <body className="bg-bg-default text-fg-default antialiased">
         <CursorDot />
         {children}
       </body>
