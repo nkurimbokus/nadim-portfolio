@@ -1941,41 +1941,44 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Zone 3 — Static text block, sits below the middle physics band */}
+          {/* Zone 3 — Static text block, desktop only (mobile gets its own scrollable layer) */}
+          {!isMobile && (
           <div
             className="about-text-block"
-            style={{ position: 'absolute', top: '65%', bottom: '140px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: isMobile ? '0.25rem' : '0.375rem', ...(isMobile ? { overflowY: 'auto', pointerEvents: 'auto' } : {}) }}
+            style={{ position: 'absolute', top: '65%', bottom: '140px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}
           >
             {/* Row A — centred */}
             <p className="about-bio text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: isMobile ? 'clamp(11px, 3vw, 14px)' : 'clamp(14px, 2.5vw, 20px)' }}>Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.</span>
+              <span style={{ fontSize: 'clamp(14px, 2.5vw, 20px)' }}>Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.</span>
             </p>
             {/* Row B — centred */}
             <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center', marginTop: '2rem' }}>
-              <span style={{ fontSize: isMobile ? 'clamp(10px, 2.5vw, 12px)' : 'clamp(11px, 1.6vw, 15px)' }}>BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
+              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
             </p>
             {/* Row C — centred */}
             <p className="text-base md:text-xl" style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: isMobile ? 'clamp(10px, 2.5vw, 12px)' : 'clamp(11px, 1.6vw, 15px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.</span>
+              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.</span>
             </p>
             {/* Row D — centred buttons */}
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginTop: '1.5rem', position: 'relative', zIndex: 66 }}>
               <a
                 href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
-                style={{ pointerEvents: 'auto', ...(isMobile ? { padding: '6px 12px', fontSize: '13px' } : {}) }}
+                style={{ pointerEvents: 'auto' }}
                 className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
               >Email me</a>
               <a
                 href="https://www.instagram.com/nadim_kurimbokus/"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ pointerEvents: 'auto', ...(isMobile ? { padding: '6px 12px', fontSize: '13px' } : {}) }}
+                style={{ pointerEvents: 'auto' }}
                 className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
               >Instagram</a>
             </div>
           </div>
+          )}
 
-          {/* Zone 4 — Testimonial ticker, unchanged */}
+          {/* Zone 4 — Testimonial ticker, desktop only */}
+          {!isMobile && (
           <div
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', pointerEvents: 'auto', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', paddingTop: 10, paddingBottom: 10, cursor: 'none' }}
             onPointerDown={e => {
@@ -2037,7 +2040,126 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+          )}
         </div>
+
+        {/* Mobile — scrollable text layer: z:[66], above physics hitboxes (z:[64]/[65]).
+            Container: pointer-events:none so touches on empty space reach the physics hitboxes below.
+            Text children: pointer-events:auto so touch events on them trigger scroll. */}
+        {isMobile && (
+          <div
+            className="fixed inset-0 z-[66]"
+            style={{
+              transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+              transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+              overflowY: 'scroll',
+              background: 'transparent',
+              pointerEvents: 'none',
+              willChange: 'transform',
+              mixBlendMode: 'difference',
+              color: '#ffffff',
+              opacity: 1,
+            }}
+            aria-hidden={!aboutVisible}
+          >
+            {/* Spacer — 60vh pushes text below the physics photos */}
+            <div style={{ height: '60vh', pointerEvents: 'none' }} />
+
+            {/* Bio */}
+            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(11px, 3vw, 14px)', lineHeight: '1.75', marginBottom: '2rem' }}>
+              Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.
+            </p>
+
+            {/* Client list */}
+            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.75', marginBottom: '1rem' }}>
+              BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home
+            </p>
+
+            {/* Availability */}
+            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+              Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.
+            </p>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginBottom: '3rem', padding: '0 24px' }}>
+              <a
+                href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
+                style={{ pointerEvents: 'auto', padding: '6px 12px', fontSize: '13px' }}
+                className="border border-current tracking-widest lowercase rounded-sm"
+              >Email me</a>
+              <a
+                href="https://www.instagram.com/nadim_kurimbokus/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ pointerEvents: 'auto', padding: '6px 12px', fontSize: '13px' }}
+                className="border border-current tracking-widest lowercase rounded-sm"
+              >Instagram</a>
+            </div>
+
+            {/* Testimonial ticker */}
+            <div
+              style={{ pointerEvents: 'auto', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', paddingTop: 10, paddingBottom: 80, cursor: 'none' }}
+              onPointerDown={e => {
+                const el = tickerTrackRef.current; if (!el) return
+                cancelAnimationFrame(tickerRafRef.current)
+                const matrix = new DOMMatrix(getComputedStyle(el).transform)
+                const x = matrix.m41
+                el.style.animation = 'none'
+                el.style.transform = `translateX(${x}px)`
+                const d = tickerDragRef.current
+                d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
+                e.currentTarget.setPointerCapture(e.pointerId)
+              }}
+              onPointerMove={e => {
+                const d = tickerDragRef.current; if (!d.dragging) return
+                const el = tickerTrackRef.current; if (!el) return
+                const halfW = el.offsetWidth / 2
+                const dt = e.timeStamp - d.lastT
+                const dx = e.clientX - d.lastX
+                d.vel = dt > 0 ? dx / dt : 0
+                d.lastT = e.timeStamp; d.lastX = e.clientX
+                d.x += dx
+                if (d.x > 0) d.x -= halfW
+                if (d.x < -halfW) d.x += halfW
+                el.style.transform = `translateX(${d.x}px)`
+              }}
+              onPointerUp={() => {
+                const d = tickerDragRef.current; if (!d.dragging) return
+                d.dragging = false
+                const el = tickerTrackRef.current; if (!el) return
+                const halfW = el.offsetWidth / 2
+                const coasting = () => {
+                  d.x += d.vel * 16
+                  d.vel *= 0.95
+                  if (d.x > 0) d.x -= halfW
+                  if (d.x < -halfW) d.x += halfW
+                  el.style.transform = `translateX(${d.x}px)`
+                  if (Math.abs(d.vel) < 0.031) {
+                    let x = d.x % -halfW
+                    if (x > 0) x -= halfW
+                    const progress = Math.abs(x) / halfW
+                    const delay    = -(progress * 60)
+                    el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
+                    el.style.transform  = ''
+                    return
+                  }
+                  tickerRafRef.current = requestAnimationFrame(coasting)
+                }
+                tickerRafRef.current = requestAnimationFrame(coasting)
+              }}
+            >
+              <div ref={tickerTrackRef} style={{ display: 'inline-block', animation: 'tickerScroll 60s linear infinite' }}>
+                {[0, 1].map(i => (
+                  <span key={i} style={{ display: 'inline-block' }}>
+                    <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Nadim was prompt, great to work with, and really understood what pics we were after. He nailed the vibe perfectly, and we absolutely loved the photos.&rdquo; — Alicia Grimshaw, Tamil Prince</span>
+                    <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Working with Nadim is an absolute pleasure, he consistently understands the brief and delivers exceptional results for every show. He is incredibly versatile, works seamlessly with artists, and always manages to capture the true, lively energy of the Roundhouse.&rdquo; — Saskia Burrows, Roundhouse</span>
+                    <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Nadim has captured wonderful memories at our events for many years, always bringing vibrant energy to our spaces and his images.&rdquo; — Mark Norton, The Photography Foundation</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         </>
 
       {/* ─── Photo viewer ───────────────────────────────────────────────── */}
