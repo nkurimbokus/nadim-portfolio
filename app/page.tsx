@@ -1808,7 +1808,7 @@ export default function HomePage() {
           }}
           aria-hidden={!aboutVisible}
         >
-          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 50% !important; } }`}</style>
 
           {/* Zone 1 — Name ticker, pinned below the "About" / "Close" bar */}
           <div
@@ -1874,19 +1874,20 @@ export default function HomePage() {
 
           {/* Zone 3 — Static text block, sits below the middle physics band */}
           <div
+            className="about-text-block"
             style={{ position: 'absolute', top: '68%', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
           >
             {/* Row A — flush left */}
             <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'left' }}>
-              Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.
+              <span style={{ fontSize: 'clamp(12px, 3vw, 18px)' }}>Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.</span>
             </p>
             {/* Row B — flush right */}
             <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'right' }}>
-              BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home
+              <span style={{ fontSize: 'clamp(12px, 3vw, 18px)' }}>BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
             </p>
             {/* Row C — centred */}
             <p className="text-base md:text-xl" style={{ textAlign: 'center' }}>
-              Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.
+              <span style={{ fontSize: 'clamp(12px, 3vw, 18px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.</span>
             </p>
             {/* Row D — centred buttons */}
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto' }}>
