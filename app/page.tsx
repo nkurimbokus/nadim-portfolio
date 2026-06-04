@@ -1703,6 +1703,7 @@ export default function HomePage() {
             willChange: 'transform',
             mixBlendMode: 'difference',
             color: '#ffffff',
+            ...(isMobile ? { overflowY: 'auto', WebkitOverflowScrolling: 'touch' } : {}),
           }}
           role="dialog"
           aria-modal={aboutVisible ? 'true' : 'false'}
