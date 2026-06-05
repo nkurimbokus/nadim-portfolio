@@ -787,7 +787,7 @@ export default function HomePage() {
 
     // Portrait: horizontally centred, upper middle between ticker and text block.
     const pX = Math.round(isMob ? vw * 0.5 - 100 : vw * 0.5 - 130)
-    const pY = Math.round(isMob ? vh * 0.24 : vh * 0.17)
+    const pY = Math.round(isMob ? vh * 0.20 : vh * 0.17)
 
     // Logo: centred horizontally over portrait, one-third down — uses rendered size if available.
     const portraitRect = elRefs.current['aboutPortrait']?.getBoundingClientRect()
