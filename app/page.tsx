@@ -1931,7 +1931,7 @@ export default function HomePage() {
               el.style.transform = `translateX(${x}px)`
               const d = nameTickerDragRef.current
               d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
-              e.currentTarget.setPointerCapture(e.pointerId)
+              if (e.pointerType !== 'touch') e.currentTarget.setPointerCapture(e.pointerId)
             }}
             onPointerMove={e => {
               if (!nameTickerDragRef.current.dragging) return
@@ -1975,15 +1975,26 @@ export default function HomePage() {
               const d = nameTickerDragRef.current
               if (!d.dragging) return
               d.dragging = false
-              cancelAnimationFrame(nameTickerRafRef.current)
               const el = nameTickerTrackRef.current; if (!el) return
               const halfW = el.offsetWidth / 2
-              let x = d.x % -halfW
-              if (x > 0) x -= halfW
-              const progress = Math.abs(x) / halfW
-              const delay = -(progress * 8)
-              el.style.animation = `tickerScroll 16s linear ${delay}s infinite`
-              el.style.transform = ''
+              const coasting = () => {
+                d.x += d.vel * 16
+                d.vel *= 0.95
+                if (d.x > 0) d.x -= halfW
+                if (d.x < -halfW) d.x += halfW
+                el.style.transform = `translateX(${d.x}px)`
+                if (Math.abs(d.vel) < 0.031) {
+                  let x = d.x % -halfW
+                  if (x > 0) x -= halfW
+                  const progress = Math.abs(x) / halfW
+                  const delay = -(progress * 8)
+                  el.style.animation = `tickerScroll 16s linear ${delay}s infinite`
+                  el.style.transform = ''
+                  return
+                }
+                nameTickerRafRef.current = requestAnimationFrame(coasting)
+              }
+              nameTickerRafRef.current = requestAnimationFrame(coasting)
             }}
             onTouchEnd={() => {
               const d = nameTickerDragRef.current; if (!d.dragging) return
@@ -2083,7 +2094,7 @@ export default function HomePage() {
               el.style.transform = `translateX(${x}px)`
               const d = tickerDragRef.current
               d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
-              e.currentTarget.setPointerCapture(e.pointerId)
+              if (e.pointerType !== 'touch') e.currentTarget.setPointerCapture(e.pointerId)
             }}
             onPointerMove={e => {
               if (!tickerDragRef.current.dragging) return
@@ -2127,15 +2138,26 @@ export default function HomePage() {
               const d = tickerDragRef.current
               if (!d.dragging) return
               d.dragging = false
-              cancelAnimationFrame(tickerRafRef.current)
               const el = tickerTrackRef.current; if (!el) return
               const halfW = el.offsetWidth / 2
-              let x = d.x % -halfW
-              if (x > 0) x -= halfW
-              const progress = Math.abs(x) / halfW
-              const delay    = -(progress * 60)
-              el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
-              el.style.transform  = ''
+              const coasting = () => {
+                d.x += d.vel * 16
+                d.vel *= 0.95
+                if (d.x > 0) d.x -= halfW
+                if (d.x < -halfW) d.x += halfW
+                el.style.transform = `translateX(${d.x}px)`
+                if (Math.abs(d.vel) < 0.031) {
+                  let x = d.x % -halfW
+                  if (x > 0) x -= halfW
+                  const progress = Math.abs(x) / halfW
+                  const delay    = -(progress * 60)
+                  el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
+                  el.style.transform  = ''
+                  return
+                }
+                tickerRafRef.current = requestAnimationFrame(coasting)
+              }
+              tickerRafRef.current = requestAnimationFrame(coasting)
             }}
             onTouchEnd={() => {
               const d = tickerDragRef.current; if (!d.dragging) return
@@ -2255,7 +2277,7 @@ export default function HomePage() {
                 el.style.transform = `translateX(${x}px)`
                 const d = tickerDragRef.current
                 d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
-                e.currentTarget.setPointerCapture(e.pointerId)
+                if (e.pointerType !== 'touch') e.currentTarget.setPointerCapture(e.pointerId)
               }}
               onPointerMove={e => {
                 if (!tickerDragRef.current.dragging) return
@@ -2299,15 +2321,26 @@ export default function HomePage() {
                 const d = tickerDragRef.current
                 if (!d.dragging) return
                 d.dragging = false
-                cancelAnimationFrame(tickerRafRef.current)
                 const el = tickerTrackRef.current; if (!el) return
                 const halfW = el.offsetWidth / 2
-                let x = d.x % -halfW
-                if (x > 0) x -= halfW
-                const progress = Math.abs(x) / halfW
-                const delay    = -(progress * 60)
-                el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
-                el.style.transform  = ''
+                const coasting = () => {
+                  d.x += d.vel * 16
+                  d.vel *= 0.95
+                  if (d.x > 0) d.x -= halfW
+                  if (d.x < -halfW) d.x += halfW
+                  el.style.transform = `translateX(${d.x}px)`
+                  if (Math.abs(d.vel) < 0.031) {
+                    let x = d.x % -halfW
+                    if (x > 0) x -= halfW
+                    const progress = Math.abs(x) / halfW
+                    const delay    = -(progress * 60)
+                    el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
+                    el.style.transform  = ''
+                    return
+                  }
+                  tickerRafRef.current = requestAnimationFrame(coasting)
+                }
+                tickerRafRef.current = requestAnimationFrame(coasting)
               }}
               onTouchEnd={() => {
                 const d = tickerDragRef.current; if (!d.dragging) return
