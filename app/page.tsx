@@ -1883,6 +1883,7 @@ export default function HomePage() {
           <div
             style={{ position: 'absolute', top: 68, left: 0, right: 0, height: 'clamp(66px, 11vw, 132px)', zIndex: 63, overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'auto', cursor: 'none' }}
             onPointerDown={e => {
+              console.log('[NAME] pointerdown clientX:', e.clientX, 'pointerType:', e.pointerType)
               const el = nameTickerTrackRef.current; if (!el) return
               cancelAnimationFrame(nameTickerRafRef.current)
               const matrix = new DOMMatrix(getComputedStyle(el).transform)
@@ -1895,6 +1896,7 @@ export default function HomePage() {
             }}
             onPointerMove={e => {
               if (!nameTickerDragRef.current.dragging) return
+              console.log('[NAME] pointermove clientX:', e.clientX, 'pointerType:', e.pointerType)
               const d = nameTickerDragRef.current
               const el = nameTickerTrackRef.current; if (!el) return
               const halfW = el.offsetWidth / 2
@@ -1908,6 +1910,7 @@ export default function HomePage() {
               el.style.transform = `translateX(${d.x}px)`
             }}
             onPointerUp={() => {
+              console.log('[NAME] pointerup dragging:', nameTickerDragRef.current.dragging, 'vel:', nameTickerDragRef.current.vel)
               const d = nameTickerDragRef.current; if (!d.dragging) return
               d.dragging = false
               const el = nameTickerTrackRef.current; if (!el) return
@@ -1932,6 +1935,7 @@ export default function HomePage() {
               nameTickerRafRef.current = requestAnimationFrame(coasting)
             }}
             onPointerCancel={() => {
+              console.log('[NAME] pointercancel dragging:', nameTickerDragRef.current.dragging)
               const d = nameTickerDragRef.current
               if (!d.dragging) return
               d.dragging = false
@@ -1946,6 +1950,7 @@ export default function HomePage() {
               el.style.transform = ''
             }}
             onTouchEnd={() => {
+              console.log('[NAME] touchend dragging:', nameTickerDragRef.current.dragging, 'vel:', nameTickerDragRef.current.vel)
               const d = nameTickerDragRef.current; if (!d.dragging) return
               d.dragging = false
               const el = nameTickerTrackRef.current; if (!el) return
@@ -1970,6 +1975,7 @@ export default function HomePage() {
               nameTickerRafRef.current = requestAnimationFrame(coasting)
             }}
             onTouchCancel={() => {
+              console.log('[NAME] touchcancel dragging:', nameTickerDragRef.current.dragging)
               const d = nameTickerDragRef.current
               if (!d.dragging) return
               d.dragging = false
@@ -2206,6 +2212,7 @@ export default function HomePage() {
             <div
               style={{ pointerEvents: 'auto', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', marginTop: '1rem', paddingTop: 10, paddingBottom: 0, cursor: 'none' }}
               onPointerDown={e => {
+                console.log('[MTEST] pointerdown clientX:', e.clientX, 'pointerType:', e.pointerType)
                 const el = tickerTrackRef.current; if (!el) return
                 cancelAnimationFrame(tickerRafRef.current)
                 const matrix = new DOMMatrix(getComputedStyle(el).transform)
@@ -2218,6 +2225,7 @@ export default function HomePage() {
               }}
               onPointerMove={e => {
                 if (!tickerDragRef.current.dragging) return
+                console.log('[MTEST] pointermove clientX:', e.clientX, 'pointerType:', e.pointerType)
                 const d = tickerDragRef.current
                 const el = tickerTrackRef.current; if (!el) return
                 const halfW = el.offsetWidth / 2
@@ -2231,6 +2239,7 @@ export default function HomePage() {
                 el.style.transform = `translateX(${d.x}px)`
               }}
               onPointerUp={() => {
+                console.log('[MTEST] pointerup dragging:', tickerDragRef.current.dragging, 'vel:', tickerDragRef.current.vel)
                 const d = tickerDragRef.current; if (!d.dragging) return
                 d.dragging = false
                 const el = tickerTrackRef.current; if (!el) return
@@ -2255,6 +2264,7 @@ export default function HomePage() {
                 tickerRafRef.current = requestAnimationFrame(coasting)
               }}
               onPointerCancel={() => {
+                console.log('[MTEST] pointercancel dragging:', tickerDragRef.current.dragging)
                 const d = tickerDragRef.current
                 if (!d.dragging) return
                 d.dragging = false
@@ -2269,6 +2279,7 @@ export default function HomePage() {
                 el.style.transform  = ''
               }}
               onTouchEnd={() => {
+                console.log('[MTEST] touchend dragging:', tickerDragRef.current.dragging, 'vel:', tickerDragRef.current.vel)
                 const d = tickerDragRef.current; if (!d.dragging) return
                 d.dragging = false
                 const el = tickerTrackRef.current; if (!el) return
@@ -2293,6 +2304,7 @@ export default function HomePage() {
                 tickerRafRef.current = requestAnimationFrame(coasting)
               }}
               onTouchCancel={() => {
+                console.log('[MTEST] touchcancel dragging:', tickerDragRef.current.dragging)
                 const d = tickerDragRef.current
                 if (!d.dragging) return
                 d.dragging = false
