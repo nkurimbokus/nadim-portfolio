@@ -1881,8 +1881,9 @@ export default function HomePage() {
 
           {/* Zone 1 — Name ticker, pinned below the "About" / "Close" bar */}
           <div
-            style={{ position: 'absolute', top: 68, left: 0, right: 0, height: 'clamp(66px, 11vw, 132px)', zIndex: 63, overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'auto', cursor: 'none' }}
+            style={{ position: 'absolute', top: 68, left: 0, right: 0, height: 'clamp(66px, 11vw, 132px)', zIndex: 63, overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'auto', cursor: 'none', touchAction: 'none' }}
             onPointerDown={e => {
+              console.log('[name-ticker] pointerdown', { type: e.pointerType, id: e.pointerId, x: e.clientX })
               const el = nameTickerTrackRef.current; if (!el) return
               cancelAnimationFrame(nameTickerRafRef.current)
               const matrix = new DOMMatrix(getComputedStyle(el).transform)
@@ -1894,7 +1895,9 @@ export default function HomePage() {
               e.currentTarget.setPointerCapture(e.pointerId)
             }}
             onPointerMove={e => {
-              const d = nameTickerDragRef.current; if (!d.dragging) return
+              if (!nameTickerDragRef.current.dragging) return
+              console.log('[name-ticker] pointermove', { x: e.clientX })
+              const d = nameTickerDragRef.current
               const el = nameTickerTrackRef.current; if (!el) return
               const halfW = el.offsetWidth / 2
               const dt = e.timeStamp - d.lastT
@@ -1907,6 +1910,7 @@ export default function HomePage() {
               el.style.transform = `translateX(${d.x}px)`
             }}
             onPointerUp={() => {
+              console.log('[name-ticker] pointerup', { dragging: nameTickerDragRef.current.dragging })
               const d = nameTickerDragRef.current; if (!d.dragging) return
               d.dragging = false
               const el = nameTickerTrackRef.current; if (!el) return
@@ -1924,11 +1928,28 @@ export default function HomePage() {
                   const delay = -(progress * 8)
                   el.style.animation = `tickerScroll 16s linear ${delay}s infinite`
                   el.style.transform = ''
+                  console.log('[name-ticker] animation restored after coast', { delay })
                   return
                 }
                 nameTickerRafRef.current = requestAnimationFrame(coasting)
               }
               nameTickerRafRef.current = requestAnimationFrame(coasting)
+            }}
+            onPointerCancel={() => {
+              console.log('[name-ticker] pointercancel', { dragging: nameTickerDragRef.current.dragging })
+              const d = nameTickerDragRef.current
+              if (!d.dragging) return
+              d.dragging = false
+              cancelAnimationFrame(nameTickerRafRef.current)
+              const el = nameTickerTrackRef.current; if (!el) return
+              const halfW = el.offsetWidth / 2
+              let x = d.x % -halfW
+              if (x > 0) x -= halfW
+              const progress = Math.abs(x) / halfW
+              const delay = -(progress * 8)
+              el.style.animation = `tickerScroll 16s linear ${delay}s infinite`
+              el.style.transform = ''
+              console.log('[name-ticker] animation restored after cancel', { delay })
             }}
           >
             <div
@@ -1980,8 +2001,9 @@ export default function HomePage() {
           {/* Zone 4 — Testimonial ticker, desktop only */}
           {!isMobile && (
           <div
-            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', pointerEvents: 'auto', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', paddingTop: 10, paddingBottom: 10, cursor: 'none' }}
+            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', pointerEvents: 'auto', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', paddingTop: 10, paddingBottom: 10, cursor: 'none', touchAction: 'none' }}
             onPointerDown={e => {
+              console.log('[testimonial-ticker] pointerdown', { type: e.pointerType, id: e.pointerId, x: e.clientX })
               const el = tickerTrackRef.current; if (!el) return
               cancelAnimationFrame(tickerRafRef.current)
               const matrix = new DOMMatrix(getComputedStyle(el).transform)
@@ -1993,7 +2015,9 @@ export default function HomePage() {
               e.currentTarget.setPointerCapture(e.pointerId)
             }}
             onPointerMove={e => {
-              const d = tickerDragRef.current; if (!d.dragging) return
+              if (!tickerDragRef.current.dragging) return
+              console.log('[testimonial-ticker] pointermove', { x: e.clientX })
+              const d = tickerDragRef.current
               const el = tickerTrackRef.current; if (!el) return
               const halfW = el.offsetWidth / 2
               const dt = e.timeStamp - d.lastT
@@ -2006,6 +2030,7 @@ export default function HomePage() {
               el.style.transform = `translateX(${d.x}px)`
             }}
             onPointerUp={() => {
+              console.log('[testimonial-ticker] pointerup', { dragging: tickerDragRef.current.dragging })
               const d = tickerDragRef.current; if (!d.dragging) return
               d.dragging = false
               const el = tickerTrackRef.current; if (!el) return
@@ -2023,11 +2048,28 @@ export default function HomePage() {
                   const delay    = -(progress * 60)
                   el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
                   el.style.transform  = ''
+                  console.log('[testimonial-ticker] animation restored after coast', { delay })
                   return
                 }
                 tickerRafRef.current = requestAnimationFrame(coasting)
               }
               tickerRafRef.current = requestAnimationFrame(coasting)
+            }}
+            onPointerCancel={() => {
+              console.log('[testimonial-ticker] pointercancel', { dragging: tickerDragRef.current.dragging })
+              const d = tickerDragRef.current
+              if (!d.dragging) return
+              d.dragging = false
+              cancelAnimationFrame(tickerRafRef.current)
+              const el = tickerTrackRef.current; if (!el) return
+              const halfW = el.offsetWidth / 2
+              let x = d.x % -halfW
+              if (x > 0) x -= halfW
+              const progress = Math.abs(x) / halfW
+              const delay    = -(progress * 60)
+              el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
+              el.style.transform  = ''
+              console.log('[testimonial-ticker] animation restored after cancel', { delay })
             }}
           >
             <div ref={tickerTrackRef} style={{ display: 'inline-block', animation: 'tickerScroll 60s linear infinite' }}>
@@ -2098,8 +2140,9 @@ export default function HomePage() {
 
             {/* Testimonial ticker */}
             <div
-              style={{ pointerEvents: 'auto', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', marginTop: '1rem', paddingTop: 10, paddingBottom: 0, cursor: 'none' }}
+              style={{ pointerEvents: 'auto', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', marginTop: '1rem', paddingTop: 10, paddingBottom: 0, cursor: 'none', touchAction: 'none' }}
               onPointerDown={e => {
+                console.log('[mobile-testimonial-ticker] pointerdown', { type: e.pointerType, id: e.pointerId, x: e.clientX })
                 const el = tickerTrackRef.current; if (!el) return
                 cancelAnimationFrame(tickerRafRef.current)
                 const matrix = new DOMMatrix(getComputedStyle(el).transform)
@@ -2111,7 +2154,9 @@ export default function HomePage() {
                 e.currentTarget.setPointerCapture(e.pointerId)
               }}
               onPointerMove={e => {
-                const d = tickerDragRef.current; if (!d.dragging) return
+                if (!tickerDragRef.current.dragging) return
+                console.log('[mobile-testimonial-ticker] pointermove', { x: e.clientX })
+                const d = tickerDragRef.current
                 const el = tickerTrackRef.current; if (!el) return
                 const halfW = el.offsetWidth / 2
                 const dt = e.timeStamp - d.lastT
@@ -2124,6 +2169,7 @@ export default function HomePage() {
                 el.style.transform = `translateX(${d.x}px)`
               }}
               onPointerUp={() => {
+                console.log('[mobile-testimonial-ticker] pointerup', { dragging: tickerDragRef.current.dragging })
                 const d = tickerDragRef.current; if (!d.dragging) return
                 d.dragging = false
                 const el = tickerTrackRef.current; if (!el) return
@@ -2141,11 +2187,28 @@ export default function HomePage() {
                     const delay    = -(progress * 60)
                     el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
                     el.style.transform  = ''
+                    console.log('[mobile-testimonial-ticker] animation restored after coast', { delay })
                     return
                   }
                   tickerRafRef.current = requestAnimationFrame(coasting)
                 }
                 tickerRafRef.current = requestAnimationFrame(coasting)
+              }}
+              onPointerCancel={() => {
+                console.log('[mobile-testimonial-ticker] pointercancel', { dragging: tickerDragRef.current.dragging })
+                const d = tickerDragRef.current
+                if (!d.dragging) return
+                d.dragging = false
+                cancelAnimationFrame(tickerRafRef.current)
+                const el = tickerTrackRef.current; if (!el) return
+                const halfW = el.offsetWidth / 2
+                let x = d.x % -halfW
+                if (x > 0) x -= halfW
+                const progress = Math.abs(x) / halfW
+                const delay    = -(progress * 60)
+                el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
+                el.style.transform  = ''
+                console.log('[mobile-testimonial-ticker] animation restored after cancel', { delay })
               }}
             >
               <div ref={tickerTrackRef} style={{ display: 'inline-block', animation: 'tickerScroll 60s linear infinite' }}>
