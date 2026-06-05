@@ -725,11 +725,7 @@ export default function HomePage() {
     lbPanBaseRef.current = { x: 0, y: 0 }
     applyLbTransform(1, 0, 0, false)
     lbIsClosingRef.current = false
-    if (activePhoto) {
-      setGalleryIndex(0)
-    } else {
-      setGalleryIndex(0)
-    }
+    if (!activePhoto) setGalleryIndex(0)
     // Reset crossfade state — no outgoing image when (re)opening or closing
     if (galleryTimerRef.current) { clearTimeout(galleryTimerRef.current); galleryTimerRef.current = null }
     setGalleryPrev(null)
@@ -923,6 +919,7 @@ export default function HomePage() {
     }
     setCanvasScaled(true)   // canvas starts zooming out
     lbOpenTimeRef.current = Date.now()
+    setGalleryIndex(0)
     setActivePhoto(proj)
   }, [])
 
