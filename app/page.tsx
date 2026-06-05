@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 
 /**
@@ -506,6 +506,61 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
   return s
 }
 
+// ─── Ticker drag / coast helper ─────────────────────────────────────────────
+// Pure function — no React deps. Works identically for mouse and touch.
+// Mouse events attach via JSX; touch events attach via useEffect (passive:false).
+type TickerDrag = { dragging: boolean; x: number; vel: number; lastT: number; lastX: number }
+function makeTickerHandlers(
+  dragRef:  { current: TickerDrag },
+  trackRef: { current: HTMLDivElement | null },
+  rafRef:   { current: number },
+  duration: number,
+) {
+  const start = (clientX: number, t: number) => {
+    const el = trackRef.current; if (!el) return
+    cancelAnimationFrame(rafRef.current)
+    const x = new DOMMatrix(getComputedStyle(el).transform).m41
+    el.style.animation = 'none'
+    el.style.transform = `translateX(${x}px)`
+    const d = dragRef.current
+    d.dragging = true; d.x = x; d.vel = 0; d.lastT = t; d.lastX = clientX
+  }
+  const move = (clientX: number, t: number) => {
+    const d = dragRef.current; if (!d.dragging) return
+    const el = trackRef.current; if (!el) return
+    const halfW = el.offsetWidth / 2
+    const dt = t - d.lastT; const dx = clientX - d.lastX
+    d.vel = dt > 0 ? dx / dt : 0
+    d.lastT = t; d.lastX = clientX
+    d.x += dx
+    if (d.x > 0) d.x -= halfW
+    if (d.x < -halfW) d.x += halfW
+    el.style.transform = `translateX(${d.x}px)`
+  }
+  const end = () => {
+    const d = dragRef.current; if (!d.dragging) return
+    d.dragging = false
+    const el = trackRef.current; if (!el) return
+    const halfW = el.offsetWidth / 2
+    const coast = () => {
+      d.x += d.vel * 16; d.vel *= 0.95
+      if (d.x > 0) d.x -= halfW
+      if (d.x < -halfW) d.x += halfW
+      el.style.transform = `translateX(${d.x}px)`
+      if (Math.abs(d.vel) < 0.031) {
+        let x = d.x % -halfW; if (x > 0) x -= halfW
+        const delay = -(Math.abs(x) / halfW) * duration
+        el.style.animation = `tickerScroll ${duration}s linear ${delay}s infinite`
+        el.style.transform = ''
+        return
+      }
+      rafRef.current = requestAnimationFrame(coast)
+    }
+    rafRef.current = requestAnimationFrame(coast)
+  }
+  return { start, move, end }
+}
+
 export default function HomePage() {
   // Mobile flag — drives how many tiles render and their size. Starts false so the
   // first client render matches the server (no hydration mismatch), then the effect
@@ -627,8 +682,14 @@ export default function HomePage() {
   const nameTickerTrackRef   = useRef<HTMLDivElement | null>(null)
   const nameTickerRafRef     = useRef<number>(0)
   const nameTickerDragRef    = useRef({ dragging: false, x: 0, vel: 0, lastT: 0, lastX: 0 })
-  const nameTickerWrapperRef = useRef<HTMLDivElement | null>(null)
-  const mobileTickerWrapperRef = useRef<HTMLDivElement | null>(null)
+  const nameTickerWrapperRef    = useRef<HTMLDivElement | null>(null)
+  const desktopTickerWrapperRef = useRef<HTMLDivElement | null>(null)
+  const mobileTickerWrapperRef  = useRef<HTMLDivElement | null>(null)
+  // Stable handler objects — created once, shared between JSX mouse events and native touch listeners
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const nameTickerH      = useMemo(() => makeTickerHandlers(nameTickerDragRef, nameTickerTrackRef, nameTickerRafRef, 16), [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const testimonialH     = useMemo(() => makeTickerHandlers(tickerDragRef, tickerTrackRef, tickerRafRef, 60), [])
   // Pan / drag: entirely direct DOM — no React state during gesture, zero latency
   const lbZoomLayerRef  = useRef<HTMLDivElement | null>(null)
   const lbCardRef       = useRef<HTMLDivElement | null>(null)  // photo card
@@ -972,42 +1033,35 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [activePhoto, aboutOpen, workMounted, navigate, closeLightbox, closeAbout, closeWork])
 
-  // EFFECT — passive:false touchmove on ticker wrappers so preventDefault() stops the
-  // browser stealing the gesture for scroll and so velocity is always accumulated on
-  // real Android devices (where pointermove is unreliable during touch drag).
+  // EFFECT — unified native touch listeners for all three ticker wrappers.
+  // Mouse events live on JSX directly. Touch must be native so { passive: false }
+  // lets touchmove call preventDefault() and stop the browser stealing the gesture.
   useEffect(() => {
-    const makeTouchMoveHandler = (
-      dragRef: React.MutableRefObject<{ dragging: boolean; x: number; vel: number; lastT: number; lastX: number }>,
-      trackRef: React.MutableRefObject<HTMLDivElement | null>
-    ) => (e: TouchEvent) => {
-      if (!dragRef.current.dragging) return
-      e.preventDefault()
-      const touch = e.touches[0]; if (!touch) return
-      const d = dragRef.current
-      const el = trackRef.current; if (!el) return
-      const halfW = el.offsetWidth / 2
-      const dt = e.timeStamp - d.lastT
-      const dx = touch.clientX - d.lastX
-      d.vel = dt > 0 ? dx / dt : 0
-      d.lastT = e.timeStamp; d.lastX = touch.clientX
-      d.x += dx
-      if (d.x > 0) d.x -= halfW
-      if (d.x < -halfW) d.x += halfW
-      el.style.transform = `translateX(${d.x}px)`
+    function attachTouch(
+      el: HTMLDivElement | null,
+      h: { start: (x: number, t: number) => void; move: (x: number, t: number) => void; end: () => void },
+    ) {
+      if (!el) return () => {}
+      const onStart  = (e: TouchEvent) => { const t = e.touches[0]; if (t) h.start(t.clientX, e.timeStamp) }
+      const onMove   = (e: TouchEvent) => { e.preventDefault(); const t = e.touches[0]; if (t) h.move(t.clientX, e.timeStamp) }
+      el.addEventListener('touchstart',  onStart, { passive: false })
+      el.addEventListener('touchmove',   onMove,  { passive: false })
+      el.addEventListener('touchend',    h.end)
+      el.addEventListener('touchcancel', h.end)
+      return () => {
+        el.removeEventListener('touchstart',  onStart)
+        el.removeEventListener('touchmove',   onMove)
+        el.removeEventListener('touchend',    h.end)
+        el.removeEventListener('touchcancel', h.end)
+      }
     }
-
-    const nameEl   = nameTickerWrapperRef.current
-    const mobileEl = mobileTickerWrapperRef.current
-    const nameHandler   = makeTouchMoveHandler(nameTickerDragRef, nameTickerTrackRef)
-    const mobileHandler = makeTouchMoveHandler(tickerDragRef, tickerTrackRef)
-
-    nameEl?.addEventListener('touchmove', nameHandler, { passive: false })
-    mobileEl?.addEventListener('touchmove', mobileHandler, { passive: false })
-    return () => {
-      nameEl?.removeEventListener('touchmove', nameHandler)
-      mobileEl?.removeEventListener('touchmove', mobileHandler)
-    }
-  }, [isMobile])
+    const cleanups = [
+      attachTouch(nameTickerWrapperRef.current,    nameTickerH),
+      attachTouch(desktopTickerWrapperRef.current, testimonialH),
+      attachTouch(mobileTickerWrapperRef.current,  testimonialH),
+    ]
+    return () => cleanups.forEach(c => c())
+  }, [isMobile, nameTickerH, testimonialH])
 
   // EFFECT 1 — write initial transforms synchronously before first paint
   useClientLayoutEffect(() => {
@@ -1922,118 +1976,10 @@ export default function HomePage() {
           <div
             ref={(el) => { nameTickerWrapperRef.current = el }}
             style={{ position: 'absolute', top: 68, left: 0, right: 0, height: 'clamp(66px, 11vw, 132px)', zIndex: 63, overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'auto', cursor: 'none' }}
-            onPointerDown={e => {
-              const el = nameTickerTrackRef.current; if (!el) return
-              cancelAnimationFrame(nameTickerRafRef.current)
-              const matrix = new DOMMatrix(getComputedStyle(el).transform)
-              const x = matrix.m41
-              el.style.animation = 'none'
-              el.style.transform = `translateX(${x}px)`
-              const d = nameTickerDragRef.current
-              d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
-              if (e.pointerType !== 'touch') e.currentTarget.setPointerCapture(e.pointerId)
-            }}
-            onPointerMove={e => {
-              if (!nameTickerDragRef.current.dragging) return
-              const d = nameTickerDragRef.current
-              const el = nameTickerTrackRef.current; if (!el) return
-              const halfW = el.offsetWidth / 2
-              const dt = e.timeStamp - d.lastT
-              const dx = e.clientX - d.lastX
-              d.vel = dt > 0 ? dx / dt : 0
-              d.lastT = e.timeStamp; d.lastX = e.clientX
-              d.x += dx
-              if (d.x > 0) d.x -= halfW
-              if (d.x < -halfW) d.x += halfW
-              el.style.transform = `translateX(${d.x}px)`
-            }}
-            onPointerUp={() => {
-              const d = nameTickerDragRef.current; if (!d.dragging) return
-              d.dragging = false
-              const el = nameTickerTrackRef.current; if (!el) return
-              const halfW = el.offsetWidth / 2
-              const coasting = () => {
-                d.x += d.vel * 16
-                d.vel *= 0.95
-                if (d.x > 0) d.x -= halfW
-                if (d.x < -halfW) d.x += halfW
-                el.style.transform = `translateX(${d.x}px)`
-                if (Math.abs(d.vel) < 0.031) {
-                  let x = d.x % -halfW
-                  if (x > 0) x -= halfW
-                  const progress = Math.abs(x) / halfW
-                  const delay = -(progress * 8)
-                  el.style.animation = `tickerScroll 16s linear ${delay}s infinite`
-                  el.style.transform = ''
-                  return
-                }
-                nameTickerRafRef.current = requestAnimationFrame(coasting)
-              }
-              nameTickerRafRef.current = requestAnimationFrame(coasting)
-            }}
-            onPointerCancel={() => {
-              const d = nameTickerDragRef.current
-              if (!d.dragging) return
-              d.dragging = false
-              const el = nameTickerTrackRef.current; if (!el) return
-              const halfW = el.offsetWidth / 2
-              const coasting = () => {
-                d.x += d.vel * 16
-                d.vel *= 0.95
-                if (d.x > 0) d.x -= halfW
-                if (d.x < -halfW) d.x += halfW
-                el.style.transform = `translateX(${d.x}px)`
-                if (Math.abs(d.vel) < 0.031) {
-                  let x = d.x % -halfW
-                  if (x > 0) x -= halfW
-                  const progress = Math.abs(x) / halfW
-                  const delay = -(progress * 8)
-                  el.style.animation = `tickerScroll 16s linear ${delay}s infinite`
-                  el.style.transform = ''
-                  return
-                }
-                nameTickerRafRef.current = requestAnimationFrame(coasting)
-              }
-              nameTickerRafRef.current = requestAnimationFrame(coasting)
-            }}
-            onTouchEnd={() => {
-              const d = nameTickerDragRef.current; if (!d.dragging) return
-              d.dragging = false
-              const el = nameTickerTrackRef.current; if (!el) return
-              const halfW = el.offsetWidth / 2
-              const coasting = () => {
-                d.x += d.vel * 16
-                d.vel *= 0.95
-                if (d.x > 0) d.x -= halfW
-                if (d.x < -halfW) d.x += halfW
-                el.style.transform = `translateX(${d.x}px)`
-                if (Math.abs(d.vel) < 0.031) {
-                  let x = d.x % -halfW
-                  if (x > 0) x -= halfW
-                  const progress = Math.abs(x) / halfW
-                  const delay = -(progress * 8)
-                  el.style.animation = `tickerScroll 16s linear ${delay}s infinite`
-                  el.style.transform = ''
-                  return
-                }
-                nameTickerRafRef.current = requestAnimationFrame(coasting)
-              }
-              nameTickerRafRef.current = requestAnimationFrame(coasting)
-            }}
-            onTouchCancel={() => {
-              const d = nameTickerDragRef.current
-              if (!d.dragging) return
-              d.dragging = false
-              cancelAnimationFrame(nameTickerRafRef.current)
-              const el = nameTickerTrackRef.current; if (!el) return
-              const halfW = el.offsetWidth / 2
-              let x = d.x % -halfW
-              if (x > 0) x -= halfW
-              const progress = Math.abs(x) / halfW
-              const delay = -(progress * 8)
-              el.style.animation = `tickerScroll 16s linear ${delay}s infinite`
-              el.style.transform = ''
-            }}
+            onMouseDown={e => nameTickerH.start(e.clientX, e.timeStamp)}
+            onMouseMove={e => nameTickerH.move(e.clientX, e.timeStamp)}
+            onMouseUp={nameTickerH.end}
+            onMouseLeave={nameTickerH.end}
           >
             <div
               ref={nameTickerTrackRef}
@@ -2084,119 +2030,12 @@ export default function HomePage() {
           {/* Zone 4 — Testimonial ticker, desktop only */}
           {!isMobile && (
           <div
+            ref={(el) => { desktopTickerWrapperRef.current = el }}
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', pointerEvents: 'auto', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', paddingTop: 10, paddingBottom: 10, cursor: 'none' }}
-            onPointerDown={e => {
-              const el = tickerTrackRef.current; if (!el) return
-              cancelAnimationFrame(tickerRafRef.current)
-              const matrix = new DOMMatrix(getComputedStyle(el).transform)
-              const x = matrix.m41
-              el.style.animation = 'none'
-              el.style.transform = `translateX(${x}px)`
-              const d = tickerDragRef.current
-              d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
-              if (e.pointerType !== 'touch') e.currentTarget.setPointerCapture(e.pointerId)
-            }}
-            onPointerMove={e => {
-              if (!tickerDragRef.current.dragging) return
-              const d = tickerDragRef.current
-              const el = tickerTrackRef.current; if (!el) return
-              const halfW = el.offsetWidth / 2
-              const dt = e.timeStamp - d.lastT
-              const dx = e.clientX - d.lastX
-              d.vel = dt > 0 ? dx / dt : 0
-              d.lastT = e.timeStamp; d.lastX = e.clientX
-              d.x += dx
-              if (d.x > 0) d.x -= halfW
-              if (d.x < -halfW) d.x += halfW
-              el.style.transform = `translateX(${d.x}px)`
-            }}
-            onPointerUp={() => {
-              const d = tickerDragRef.current; if (!d.dragging) return
-              d.dragging = false
-              const el = tickerTrackRef.current; if (!el) return
-              const halfW = el.offsetWidth / 2
-              const coasting = () => {
-                d.x += d.vel * 16
-                d.vel *= 0.95
-                if (d.x > 0) d.x -= halfW
-                if (d.x < -halfW) d.x += halfW
-                el.style.transform = `translateX(${d.x}px)`
-                if (Math.abs(d.vel) < 0.031) {
-                  let x = d.x % -halfW
-                  if (x > 0) x -= halfW
-                  const progress = Math.abs(x) / halfW
-                  const delay    = -(progress * 60)
-                  el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
-                  el.style.transform  = ''
-                  return
-                }
-                tickerRafRef.current = requestAnimationFrame(coasting)
-              }
-              tickerRafRef.current = requestAnimationFrame(coasting)
-            }}
-            onPointerCancel={() => {
-              const d = tickerDragRef.current
-              if (!d.dragging) return
-              d.dragging = false
-              const el = tickerTrackRef.current; if (!el) return
-              const halfW = el.offsetWidth / 2
-              const coasting = () => {
-                d.x += d.vel * 16
-                d.vel *= 0.95
-                if (d.x > 0) d.x -= halfW
-                if (d.x < -halfW) d.x += halfW
-                el.style.transform = `translateX(${d.x}px)`
-                if (Math.abs(d.vel) < 0.031) {
-                  let x = d.x % -halfW
-                  if (x > 0) x -= halfW
-                  const progress = Math.abs(x) / halfW
-                  const delay    = -(progress * 60)
-                  el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
-                  el.style.transform  = ''
-                  return
-                }
-                tickerRafRef.current = requestAnimationFrame(coasting)
-              }
-              tickerRafRef.current = requestAnimationFrame(coasting)
-            }}
-            onTouchEnd={() => {
-              const d = tickerDragRef.current; if (!d.dragging) return
-              d.dragging = false
-              const el = tickerTrackRef.current; if (!el) return
-              const halfW = el.offsetWidth / 2
-              const coasting = () => {
-                d.x += d.vel * 16
-                d.vel *= 0.95
-                if (d.x > 0) d.x -= halfW
-                if (d.x < -halfW) d.x += halfW
-                el.style.transform = `translateX(${d.x}px)`
-                if (Math.abs(d.vel) < 0.031) {
-                  let x = d.x % -halfW
-                  if (x > 0) x -= halfW
-                  const progress = Math.abs(x) / halfW
-                  const delay    = -(progress * 60)
-                  el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
-                  el.style.transform  = ''
-                  return
-                }
-                tickerRafRef.current = requestAnimationFrame(coasting)
-              }
-              tickerRafRef.current = requestAnimationFrame(coasting)
-            }}
-            onTouchCancel={() => {
-              const d = tickerDragRef.current
-              if (!d.dragging) return
-              d.dragging = false
-              cancelAnimationFrame(tickerRafRef.current)
-              const el = tickerTrackRef.current; if (!el) return
-              const halfW = el.offsetWidth / 2
-              let x = d.x % -halfW
-              if (x > 0) x -= halfW
-              const progress = Math.abs(x) / halfW
-              const delay    = -(progress * 60)
-              el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
-              el.style.transform  = ''
-            }}
+            onMouseDown={e => testimonialH.start(e.clientX, e.timeStamp)}
+            onMouseMove={e => testimonialH.move(e.clientX, e.timeStamp)}
+            onMouseUp={testimonialH.end}
+            onMouseLeave={testimonialH.end}
           >
             <div ref={tickerTrackRef} style={{ display: 'inline-block', animation: 'tickerScroll 60s linear infinite' }}>
               {[0, 1].map(i => (
@@ -2268,118 +2107,10 @@ export default function HomePage() {
             <div
               ref={(el) => { mobileTickerWrapperRef.current = el }}
               style={{ pointerEvents: 'auto', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', marginTop: '1rem', paddingTop: 10, paddingBottom: 0, cursor: 'none' }}
-              onPointerDown={e => {
-                const el = tickerTrackRef.current; if (!el) return
-                cancelAnimationFrame(tickerRafRef.current)
-                const matrix = new DOMMatrix(getComputedStyle(el).transform)
-                const x = matrix.m41
-                el.style.animation = 'none'
-                el.style.transform = `translateX(${x}px)`
-                const d = tickerDragRef.current
-                d.dragging = true; d.x = x; d.vel = 0; d.lastT = e.timeStamp; d.lastX = e.clientX
-                if (e.pointerType !== 'touch') e.currentTarget.setPointerCapture(e.pointerId)
-              }}
-              onPointerMove={e => {
-                if (!tickerDragRef.current.dragging) return
-                const d = tickerDragRef.current
-                const el = tickerTrackRef.current; if (!el) return
-                const halfW = el.offsetWidth / 2
-                const dt = e.timeStamp - d.lastT
-                const dx = e.clientX - d.lastX
-                d.vel = dt > 0 ? dx / dt : 0
-                d.lastT = e.timeStamp; d.lastX = e.clientX
-                d.x += dx
-                if (d.x > 0) d.x -= halfW
-                if (d.x < -halfW) d.x += halfW
-                el.style.transform = `translateX(${d.x}px)`
-              }}
-              onPointerUp={() => {
-                const d = tickerDragRef.current; if (!d.dragging) return
-                d.dragging = false
-                const el = tickerTrackRef.current; if (!el) return
-                const halfW = el.offsetWidth / 2
-                const coasting = () => {
-                  d.x += d.vel * 16
-                  d.vel *= 0.95
-                  if (d.x > 0) d.x -= halfW
-                  if (d.x < -halfW) d.x += halfW
-                  el.style.transform = `translateX(${d.x}px)`
-                  if (Math.abs(d.vel) < 0.031) {
-                    let x = d.x % -halfW
-                    if (x > 0) x -= halfW
-                    const progress = Math.abs(x) / halfW
-                    const delay    = -(progress * 60)
-                    el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
-                    el.style.transform  = ''
-                    return
-                  }
-                  tickerRafRef.current = requestAnimationFrame(coasting)
-                }
-                tickerRafRef.current = requestAnimationFrame(coasting)
-              }}
-              onPointerCancel={() => {
-                const d = tickerDragRef.current
-                if (!d.dragging) return
-                d.dragging = false
-                const el = tickerTrackRef.current; if (!el) return
-                const halfW = el.offsetWidth / 2
-                const coasting = () => {
-                  d.x += d.vel * 16
-                  d.vel *= 0.95
-                  if (d.x > 0) d.x -= halfW
-                  if (d.x < -halfW) d.x += halfW
-                  el.style.transform = `translateX(${d.x}px)`
-                  if (Math.abs(d.vel) < 0.031) {
-                    let x = d.x % -halfW
-                    if (x > 0) x -= halfW
-                    const progress = Math.abs(x) / halfW
-                    const delay    = -(progress * 60)
-                    el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
-                    el.style.transform  = ''
-                    return
-                  }
-                  tickerRafRef.current = requestAnimationFrame(coasting)
-                }
-                tickerRafRef.current = requestAnimationFrame(coasting)
-              }}
-              onTouchEnd={() => {
-                const d = tickerDragRef.current; if (!d.dragging) return
-                d.dragging = false
-                const el = tickerTrackRef.current; if (!el) return
-                const halfW = el.offsetWidth / 2
-                const coasting = () => {
-                  d.x += d.vel * 16
-                  d.vel *= 0.95
-                  if (d.x > 0) d.x -= halfW
-                  if (d.x < -halfW) d.x += halfW
-                  el.style.transform = `translateX(${d.x}px)`
-                  if (Math.abs(d.vel) < 0.031) {
-                    let x = d.x % -halfW
-                    if (x > 0) x -= halfW
-                    const progress = Math.abs(x) / halfW
-                    const delay    = -(progress * 60)
-                    el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
-                    el.style.transform  = ''
-                    return
-                  }
-                  tickerRafRef.current = requestAnimationFrame(coasting)
-                }
-                tickerRafRef.current = requestAnimationFrame(coasting)
-              }}
-              onTouchCancel={() => {
-                const d = tickerDragRef.current
-                if (!d.dragging) return
-                d.dragging = false
-                cancelAnimationFrame(tickerRafRef.current)
-                const el = tickerTrackRef.current; if (!el) return
-                const halfW = el.offsetWidth / 2
-                let x = d.x % -halfW
-                if (x > 0) x -= halfW
-                const progress = Math.abs(x) / halfW
-                const delay    = -(progress * 60)
-                el.style.animation = `tickerScroll 60s linear ${delay}s infinite`
-                el.style.transform  = ''
-              }}
+              onMouseDown={e => testimonialH.start(e.clientX, e.timeStamp)}
+              onMouseMove={e => testimonialH.move(e.clientX, e.timeStamp)}
+              onMouseUp={testimonialH.end}
+              onMouseLeave={testimonialH.end}
             >
               <div ref={tickerTrackRef} style={{ display: 'inline-block', animation: 'tickerScroll 60s linear infinite' }}>
                 {[0, 1].map(i => (
