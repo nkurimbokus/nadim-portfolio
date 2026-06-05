@@ -1414,6 +1414,7 @@ export default function HomePage() {
         id="canvas"
         ref={(el) => { sectionRef.current = el }}
         className="relative canvas-section bg-bg-default overflow-hidden"
+        style={{ touchAction: 'manipulation' }}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerLeave={onPointerUp}
@@ -1447,7 +1448,7 @@ export default function HomePage() {
                 style={{
                   width: tileW, height: tileH,
                   willChange: 'transform', borderRadius: 2, overflow: 'hidden',
-                  cursor: 'none', zIndex: 1,
+                  cursor: 'none', zIndex: 1, touchAction: 'manipulation',
                   // Snap invisible the moment it's picked up; snap back the instant photo lands
                   opacity: isPickedUp && canvasScaled ? 0 : 1,
                   transition: isPickedUp
