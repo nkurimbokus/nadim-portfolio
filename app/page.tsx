@@ -1262,27 +1262,7 @@ export default function HomePage() {
 
   const onLbImageClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    if (lbWasTouchRef.current) { lbWasTouchRef.current = false; return }
-    if (lbDidPanRef.current) return
-    const el = lbZoomLayerRef.current
-    if (lbZoomRef.current === 1) {
-      const newZ = 2.5
-      const rect = el?.getBoundingClientRect()
-      const cx = rect ? e.clientX - (rect.left + rect.width  / 2) : 0
-      const cy = rect ? e.clientY - (rect.top  + rect.height / 2) : 0
-      const maxPx = el ? el.offsetWidth  * (newZ - 1) / 2 : 9999
-      const maxPy = el ? el.offsetHeight * (newZ - 1) / 2 : 9999
-      const px = Math.max(-maxPx, Math.min(maxPx, cx * (1 - newZ)))
-      const py = Math.max(-maxPy, Math.min(maxPy, cy * (1 - newZ)))
-      lbZoomRef.current = newZ; setLbZoom(newZ)
-      lbPanRef.current = { x: px, y: py }; lbPanBaseRef.current = { x: px, y: py }
-      applyLbTransform(newZ, px, py, true)
-    } else {
-      lbZoomRef.current = 1; setLbZoom(1)
-      lbPanRef.current = { x: 0, y: 0 }; lbPanBaseRef.current = { x: 0, y: 0 }
-      applyLbTransform(1, 0, 0, true)
-    }
-  }, [applyLbTransform])
+  }, [])
 
   const onLbDoubleTap = useCallback((clientX: number, clientY: number) => {
     const el = lbZoomLayerRef.current
