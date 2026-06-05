@@ -1218,7 +1218,7 @@ export default function HomePage() {
     dragRef.current = null
     if (!didDragRef.current && window.innerWidth < 768 && !activePhoto) {
       const proj = PROJECTS.find(p => p.id === capturedId)
-      if (proj) openLightbox(proj)
+      if (proj) { lbWasTouchRef.current = true; openLightbox(proj) }
     }
   }, [activePhoto, openLightbox])
 
@@ -1560,7 +1560,7 @@ export default function HomePage() {
                   ? <Image src={(tileSrc[proj.id] ?? proj.src) as string} fill alt={`${proj.title} by Nadim Kurimbokus`}
                       className="object-cover" draggable={false} sizes={`${cfg.w}px`} unoptimized />
                   : <div className="w-full h-full" style={{ backgroundColor: proj.color }} />}
-                <div className="absolute inset-0" style={{ zIndex: 1 }} />
+                <div className="absolute inset-0" style={{ zIndex: 1, touchAction: 'none', pointerEvents: 'none' }} />
               </div>
             )
           })}
