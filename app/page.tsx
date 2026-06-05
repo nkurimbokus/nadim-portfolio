@@ -2360,8 +2360,8 @@ export default function HomePage() {
                   ? 'translate(0px, 0px) scale(1) rotate(0deg)'
                   : `translate(${lbSource.x}px, ${lbSource.y}px) scale(${lbSource.scale}) rotate(${lbSource.rot}deg)`,
                 transition: lbVisible
-                  ? 'transform 0.35s cubic-bezier(0, 0, 0.2, 1), opacity 0.18s ease'
-                  : 'transform 0.4s cubic-bezier(0.4, 0, 0.6, 1), opacity 0.14s ease',
+                  ? 'transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0s, aspect-ratio 0.34s cubic-bezier(0.16, 1, 0.3, 1), width 0.34s cubic-bezier(0.16, 1, 0.3, 1)'
+                  : 'transform 0.26s cubic-bezier(0.55, 0, 1, 0.45), opacity 0s ease 0.22s',
                 willChange: 'transform, opacity',
               }}
               onClick={e => e.stopPropagation()}
