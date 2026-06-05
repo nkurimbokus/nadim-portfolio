@@ -705,7 +705,7 @@ export default function HomePage() {
   const lbPinchRef    = useRef<{ dist: number; zoom: number } | null>(null)  // 2-finger start
   const lbWasTouchRef   = useRef(false)   // suppress synthetic click after touchend
   const lbDoubleTapRef  = useRef<{ time: number; x: number; y: number } | null>(null)
-  const lbOpenTimeRef   = useRef(0)
+  const lbOpenTimeRef   = useRef(Date.now())
   const prefersReducedMotionRef = useRef(false)
 
   // Smooth ease — no bounce/overshoot on zoom
