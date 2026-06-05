@@ -26,6 +26,10 @@
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
 
+* {
+  touch-action: manipulation;
+}
+
 body {
   font-family: var(--font-archivo-black), sans-serif;
   background-color: var(--color-bg-default);

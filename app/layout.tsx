@@ -80,7 +80,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={archivo.className}
-      style={{ cursor: 'none' }}
+      style={{ cursor: 'none', touchAction: 'manipulation' }}
     >
       <head>
         <style dangerouslySetInnerHTML={{ __html: `
