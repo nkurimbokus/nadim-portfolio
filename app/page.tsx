@@ -725,12 +725,8 @@ export default function HomePage() {
     lbPanBaseRef.current = { x: 0, y: 0 }
     applyLbTransform(1, 0, 0, false)
     lbIsClosingRef.current = false
-    // Seed gallery index from the tile's current image so the lightbox opens on whatever the user last saw.
-    // Read tileSrc via ref — we only want this effect firing on activePhoto changes, not tileSrc updates.
     if (activePhoto) {
-      const current = tileSrcRef.current[activePhoto.id] ?? activePhoto.src
-      const idx = current ? activePhoto.gallery.indexOf(current) : 0
-      setGalleryIndex(idx >= 0 ? idx : 0)
+      setGalleryIndex(0)
     } else {
       setGalleryIndex(0)
     }
@@ -1410,6 +1406,7 @@ export default function HomePage() {
     }
     // Swipe threshold: 50 px horizontal, more horizontal than vertical
     if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (Date.now() - lbOpenTimeRef.current < 800) return
       navigate(dx < 0 ? 1 : -1)
     }
   }, [navigate, applyLbTransform, onLbDoubleTap, lbVisible])
