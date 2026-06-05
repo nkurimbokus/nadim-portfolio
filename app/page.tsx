@@ -2170,6 +2170,7 @@ export default function HomePage() {
             className="fixed inset-0 z-[8]"
             style={{
               cursor: 'none',
+              touchAction: 'manipulation',
               backdropFilter: 'blur(3px)',
               WebkitBackdropFilter: 'blur(3px)',
               opacity: lbVisible ? 1 : 0,
@@ -2184,7 +2185,7 @@ export default function HomePage() {
               NOT on this root — so the photo stays un-inverted. */}
           <div
             className="fixed inset-0 z-[9] flex flex-col items-center justify-center p-6 gap-4 pointer-events-none"
-            style={{ backgroundColor: 'transparent' }}
+            style={{ backgroundColor: 'transparent', touchAction: 'manipulation' }}
             role="dialog" aria-modal="true"
             aria-label={`${activePhoto.title} — ${activePhoto.category}`}
           >
