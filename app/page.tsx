@@ -2016,7 +2016,7 @@ export default function HomePage() {
             {/* Row D — centred buttons */}
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginTop: '1.5rem', position: 'relative', zIndex: 66 }}>
               <a
-                href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
+                href="mailto:nkurimbokus@gmail.com?subject=Enquiry"
                 style={{ pointerEvents: 'auto' }}
                 className="px-5 py-3 border border-current text-base tracking-widest lowercase rounded-sm transition-colors focus:outline-none"
               >Email me</a>
@@ -2094,7 +2094,7 @@ export default function HomePage() {
             {/* Buttons */}
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginTop: '1rem', marginBottom: '0.5rem', padding: '0 24px' }}>
               <a
-                href="mailto:Nkurimbokus@gmail.com?subject=Enquiry"
+                href="mailto:nkurimbokus@gmail.com?subject=Enquiry"
                 style={{ pointerEvents: 'auto', padding: '6px 12px', fontSize: '13px' }}
                 className="border border-current tracking-widest lowercase rounded-sm"
               >Email me</a>
