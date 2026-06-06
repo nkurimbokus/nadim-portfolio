@@ -2310,15 +2310,15 @@ export default function HomePage() {
             aria-hidden={!lbVisible}
           >
             <div
-              className="relative flex items-center justify-between w-full max-w-2xl mx-auto"
+              className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between w-full max-w-2xl mx-auto gap-1 sm:gap-0"
               style={{ pointerEvents: lbVisible ? 'auto' : 'none' }}
               onClick={e => e.stopPropagation()}
             >
-              <div className="min-w-0 mr-4">
-                <p className="text-sm truncate">{activePhoto.title}</p>
-                <p className="text-xs mt-0.5 truncate">{activePhoto.category} &bull; {activePhoto.year}</p>
+              <div>
+                <p className="text-sm">{activePhoto.title}</p>
+                <p className="text-xs mt-0.5">{activePhoto.category} &bull; {activePhoto.year}</p>
               </div>
-              <div className="flex items-center gap-4 shrink-0">
+              <div className="flex items-center gap-4 sm:shrink-0 justify-end sm:justify-start">
                 {activePhoto.gallery.length > 1 && (
                   <span className="text-xs tabular-nums">
                     {galleryIndex + 1} / {activePhoto.gallery.length}
