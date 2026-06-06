@@ -582,7 +582,7 @@ export default function HomePage() {
 
   // Pointer type — drives zoom hint copy in lightbox caption. Default true (desktop) for SSR.
   const [isPointerFine, setIsPointerFine] = useState(true)
-  useEffect(() => { setIsPointerFine(window.matchMedia('(pointer: fine)').matches) }, [])
+  useEffect(() => { setIsPointerFine(window.matchMedia('(hover: hover)').matches) }, [])
 
   // Background colour picker — slider sweeps from black → vibrant rainbow → white.
   // The same stops table drives both the CSS gradient track and the applied bg,
