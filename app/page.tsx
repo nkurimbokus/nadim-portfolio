@@ -705,7 +705,7 @@ export default function HomePage() {
   const lbPinchRef    = useRef<{ dist: number; zoom: number } | null>(null)  // 2-finger start
   const lbWasTouchRef   = useRef(false)   // suppress synthetic click after touchend
   const lbDoubleTapRef  = useRef<{ time: number; x: number; y: number } | null>(null)
-  const lbOpenTimeRef   = useRef(Date.now())
+  const lbOpenTimeRef   = useRef(0)
   const prefersReducedMotionRef = useRef(false)
 
   // Smooth ease — no bounce/overshoot on zoom
@@ -725,7 +725,15 @@ export default function HomePage() {
     lbPanBaseRef.current = { x: 0, y: 0 }
     applyLbTransform(1, 0, 0, false)
     lbIsClosingRef.current = false
-    if (!activePhoto) setGalleryIndex(0)
+    // Seed gallery index from the tile's current image so the lightbox opens on whatever the user last saw.
+    // Read tileSrc via ref — we only want this effect firing on activePhoto changes, not tileSrc updates.
+    if (activePhoto) {
+      const current = tileSrcRef.current[activePhoto.id] ?? activePhoto.src
+      const idx = current ? activePhoto.gallery.indexOf(current) : 0
+      setGalleryIndex(idx >= 0 ? idx : 0)
+    } else {
+      setGalleryIndex(0)
+    }
     // Reset crossfade state — no outgoing image when (re)opening or closing
     if (galleryTimerRef.current) { clearTimeout(galleryTimerRef.current); galleryTimerRef.current = null }
     setGalleryPrev(null)
@@ -919,7 +927,6 @@ export default function HomePage() {
     }
     setCanvasScaled(true)   // canvas starts zooming out
     lbOpenTimeRef.current = Date.now()
-    setGalleryIndex(0)
     setActivePhoto(proj)
   }, [])
 
@@ -1255,7 +1262,27 @@ export default function HomePage() {
 
   const onLbImageClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-  }, [])
+    if (lbWasTouchRef.current) { lbWasTouchRef.current = false; return }
+    if (lbDidPanRef.current) return
+    const el = lbZoomLayerRef.current
+    if (lbZoomRef.current === 1) {
+      const newZ = 2.5
+      const rect = el?.getBoundingClientRect()
+      const cx = rect ? e.clientX - (rect.left + rect.width  / 2) : 0
+      const cy = rect ? e.clientY - (rect.top  + rect.height / 2) : 0
+      const maxPx = el ? el.offsetWidth  * (newZ - 1) / 2 : 9999
+      const maxPy = el ? el.offsetHeight * (newZ - 1) / 2 : 9999
+      const px = Math.max(-maxPx, Math.min(maxPx, cx * (1 - newZ)))
+      const py = Math.max(-maxPy, Math.min(maxPy, cy * (1 - newZ)))
+      lbZoomRef.current = newZ; setLbZoom(newZ)
+      lbPanRef.current = { x: px, y: py }; lbPanBaseRef.current = { x: px, y: py }
+      applyLbTransform(newZ, px, py, true)
+    } else {
+      lbZoomRef.current = 1; setLbZoom(1)
+      lbPanRef.current = { x: 0, y: 0 }; lbPanBaseRef.current = { x: 0, y: 0 }
+      applyLbTransform(1, 0, 0, true)
+    }
+  }, [applyLbTransform])
 
   const onLbDoubleTap = useCallback((clientX: number, clientY: number) => {
     const el = lbZoomLayerRef.current
@@ -1403,7 +1430,6 @@ export default function HomePage() {
     }
     // Swipe threshold: 50 px horizontal, more horizontal than vertical
     if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
-      if (Date.now() - lbOpenTimeRef.current < 800) return
       navigate(dx < 0 ? 1 : -1)
     }
   }, [navigate, applyLbTransform, onLbDoubleTap, lbVisible])
