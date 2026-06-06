@@ -2314,11 +2314,11 @@ export default function HomePage() {
               style={{ pointerEvents: lbVisible ? 'auto' : 'none' }}
               onClick={e => e.stopPropagation()}
             >
-              <div>
-                <p className="text-sm">{activePhoto.title}</p>
-                <p className="text-xs mt-0.5">{activePhoto.category} &bull; {activePhoto.year}</p>
+              <div className="min-w-0 mr-4">
+                <p className="text-sm truncate">{activePhoto.title}</p>
+                <p className="text-xs mt-0.5 truncate">{activePhoto.category} &bull; {activePhoto.year}</p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 shrink-0">
                 {activePhoto.gallery.length > 1 && (
                   <span className="text-xs tabular-nums">
                     {galleryIndex + 1} / {activePhoto.gallery.length}
