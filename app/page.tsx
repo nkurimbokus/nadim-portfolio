@@ -580,6 +580,10 @@ export default function HomePage() {
     }
   }, [])
 
+  // Pointer type — drives zoom hint copy in lightbox caption. Default true (desktop) for SSR.
+  const [isPointerFine, setIsPointerFine] = useState(true)
+  useEffect(() => { setIsPointerFine(window.matchMedia('(pointer: fine)').matches) }, [])
+
   // Background colour picker — slider sweeps from black → vibrant rainbow → white.
   // The same stops table drives both the CSS gradient track and the applied bg,
   // so the colour under the thumb is exactly the colour the page becomes.
@@ -2320,9 +2324,9 @@ export default function HomePage() {
                     {galleryIndex + 1} / {activePhoto.gallery.length}
                   </span>
                 )}
-                {!isMobile && (
-                  <span className="text-xs">{lbZoom === 1 ? 'click to zoom' : 'click to fit'}</span>
-                )}
+                <span className="text-xs">
+                  {isPointerFine ? (lbZoom === 1 ? 'click to zoom' : 'click to fit') : 'pinch to zoom'}
+                </span>
                 <button
                   className="text-sm tracking-widest lowercase focus:outline-none focus-visible:underline"
                   onClick={closeLightbox}
