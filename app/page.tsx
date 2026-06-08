@@ -1778,6 +1778,7 @@ export default function HomePage() {
           className="fixed inset-0 z-[55]"
           style={{
             cursor: 'none',
+            backgroundColor: bgColour,
             backdropFilter: 'blur(3px)',
             WebkitBackdropFilter: 'blur(3px)',
             opacity: aboutVisible ? 1 : 0,
