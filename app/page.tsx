@@ -1778,7 +1778,6 @@ export default function HomePage() {
           className="fixed inset-0 z-[55]"
           style={{
             cursor: 'none',
-            backgroundColor: bgColour,
             backdropFilter: 'blur(3px)',
             WebkitBackdropFilter: 'blur(3px)',
             opacity: aboutVisible ? 1 : 0,
@@ -1799,7 +1798,8 @@ export default function HomePage() {
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             opacity: 1,
             willChange: 'transform',
-            color: '#1a1a1a',
+            mixBlendMode: 'difference',
+            color: '#ffffff',
           }}
           role="dialog"
           aria-modal={aboutVisible ? 'true' : 'false'}
