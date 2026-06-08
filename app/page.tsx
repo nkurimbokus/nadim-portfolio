@@ -1706,10 +1706,10 @@ export default function HomePage() {
             }}
             onClick={closeWork}
           />
-          {/* Content — slides, no background. Outer is pointer-events:none so clicks
-              fall through to the backdrop; the inner panel turns events back on. */}
+          {/* Content — slides, no background. Outer needs to receive touch/pointer
+              events itself so iOS Safari attaches scroll behaviour to it. */}
           <div
-            className="fixed inset-0 z-[60] overflow-y-auto pointer-events-none"
+            className="fixed inset-0 z-[60] overflow-y-auto"
             style={{
               transform: workVisible ? 'translateY(0)' : 'translateY(100%)',
               transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
@@ -1719,6 +1719,8 @@ export default function HomePage() {
               mixBlendMode: 'difference',
               color: '#ffffff',
               opacity: 1,
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain',
             }}
             role="dialog"
             aria-modal="true"
