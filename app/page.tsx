@@ -682,16 +682,9 @@ export default function HomePage() {
   const tickerTrackRef = useRef<HTMLDivElement | null>(null)
   const tickerRafRef   = useRef<number>(0)
   const tickerDragRef  = useRef({ dragging: false, x: 0, vel: 0, lastT: 0, lastX: 0 })
-  // About panel — name ticker
-  const nameTickerTrackRef   = useRef<HTMLDivElement | null>(null)
-  const nameTickerRafRef     = useRef<number>(0)
-  const nameTickerDragRef    = useRef({ dragging: false, x: 0, vel: 0, lastT: 0, lastX: 0 })
-  const nameTickerWrapperRef    = useRef<HTMLDivElement | null>(null)
   const desktopTickerWrapperRef = useRef<HTMLDivElement | null>(null)
   const mobileTickerWrapperRef  = useRef<HTMLDivElement | null>(null)
   // Stable handler objects — created once, shared between JSX mouse events and native touch listeners
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const nameTickerH      = useMemo(() => makeTickerHandlers(nameTickerDragRef, nameTickerTrackRef, nameTickerRafRef, 16), [])
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const testimonialH     = useMemo(() => makeTickerHandlers(tickerDragRef, tickerTrackRef, tickerRafRef, 60), [])
   // Pan / drag: entirely direct DOM — no React state during gesture, zero latency
@@ -890,12 +883,6 @@ export default function HomePage() {
       if (lel) lel.style.transform = t
       if (lelv) lelv.style.transform = t
     }
-    // Reset name ticker to the start of the string on every open so it never
-    // resumes mid-name from a stale transform left by a previous drag interaction.
-    if (nameTickerTrackRef.current) {
-      nameTickerTrackRef.current.style.transform = ''
-      nameTickerTrackRef.current.style.animation = 'tickerScroll 16s linear infinite'
-    }
   }, [aboutOpen])
 
   const openLightbox = useCallback((proj: Project) => {
@@ -1060,12 +1047,11 @@ export default function HomePage() {
       }
     }
     const cleanups = [
-      attachTouch(nameTickerWrapperRef.current,    nameTickerH),
       attachTouch(desktopTickerWrapperRef.current, testimonialH),
       attachTouch(mobileTickerWrapperRef.current,  testimonialH),
     ]
     return () => cleanups.forEach(c => c())
-  }, [isMobile, nameTickerH, testimonialH])
+  }, [isMobile, testimonialH])
 
   // EFFECT 1 — write initial transforms synchronously before first paint
   useClientLayoutEffect(() => {
@@ -1977,24 +1963,6 @@ export default function HomePage() {
         >
           <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 55% !important; bottom: 120px !important; } }`}</style>
 
-          {/* Zone 1 — Name ticker, pinned below the "About" / "Close" bar */}
-          <div
-            ref={(el) => { nameTickerWrapperRef.current = el }}
-            style={{ position: 'absolute', top: 68, left: 0, right: 0, height: 'clamp(66px, 11vw, 132px)', zIndex: 63, overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'auto', cursor: 'none' }}
-            onMouseDown={e => nameTickerH.start(e.clientX, e.timeStamp)}
-            onMouseMove={e => nameTickerH.move(e.clientX, e.timeStamp)}
-            onMouseUp={nameTickerH.end}
-            onMouseLeave={nameTickerH.end}
-          >
-            <div
-              ref={nameTickerTrackRef}
-              style={{ display: 'inline-block', animation: 'tickerScroll 16s linear infinite', fontSize: 'clamp(60px, 10vw, 120px)', lineHeight: 1.1 }}
-            >
-              {[0, 1, 2, 3].map(i => (
-                <span key={i} style={{ display: 'inline-block', paddingRight: '4rem' }}>Nadim Kurimbokus</span>
-              ))}
-            </div>
-          </div>
 
           {/* Zone 3 — Static text block, desktop only (mobile gets its own scrollable layer) */}
           {!isMobile && (
