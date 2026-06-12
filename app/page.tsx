@@ -1714,10 +1714,8 @@ export default function HomePage() {
               transform: workVisible ? 'translateY(0)' : 'translateY(100%)',
               transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
               willChange: 'transform',
-              // Work index is text-only — applying blend at the stacking-context
-              // root inverts white text against whatever sits behind (canvas bg + photos).
-              mixBlendMode: 'difference',
-              color: '#ffffff',
+              backgroundColor: bgColour,
+              color: '#1a1a1a',
               opacity: 1,
               WebkitOverflowScrolling: 'touch',
               overscrollBehavior: 'contain',
@@ -1780,6 +1778,7 @@ export default function HomePage() {
           className="fixed inset-0 z-[55]"
           style={{
             cursor: 'none',
+            backgroundColor: bgColour,
             backdropFilter: 'blur(3px)',
             WebkitBackdropFilter: 'blur(3px)',
             opacity: aboutVisible ? 1 : 0,
