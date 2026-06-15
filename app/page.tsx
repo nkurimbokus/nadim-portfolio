@@ -439,40 +439,13 @@ function getDims(id: string): { w: number; h: number } {
 // Velocity ramps from 0 to (base * VELOCITY_SCALE) over the first second via physics damping.
 const VELOCITY_SCALE = 0.5
 
-// Colour stops shared by the bg-hue slider's CSS gradient AND the applied background.
-// Sweeps black → deep violet → blue → teal → lime → yellow → orange → red → pink → white.
-const BG_HUE_STOPS: { pct: number; rgb: [number, number, number] }[] = [
-  { pct:   0, rgb: [  0,   0,   0] },   // black
-  { pct:   8, rgb: [ 42,   0,  80] },   // deep violet
-  { pct:  16, rgb: [  0,  25, 168] },   // indigo
-  { pct:  25, rgb: [  0, 153, 255] },   // bright blue
-  { pct:  35, rgb: [  0, 255, 204] },   // teal
-  { pct:  45, rgb: [102, 255,   0] },   // lime
-  { pct:  52, rgb: [255, 255,   0] },   // yellow
-  { pct:  60, rgb: [255, 170,   0] },   // orange
-  { pct:  68, rgb: [255,  51,   0] },   // red
-  { pct:  76, rgb: [255,   0, 153] },   // magenta
-  { pct:  84, rgb: [255, 102, 204] },   // pink
-  { pct:  92, rgb: [255, 204, 238] },   // light pink
-  { pct: 100, rgb: [255, 255, 255] },   // white
-]
+const SWATCHES = ['#C8432A', '#2E7D32', '#1565C0', '#F2B800', '#000000', '#ffffff']
 
-// Linear RGB interpolation between adjacent stops — matches what the CSS gradient
-// renders, so the colour the user sees under the thumb is the colour the page gets.
-function interpolateBgStops(v: number): string {
-  if (v <= 0) return `rgb(${BG_HUE_STOPS[0].rgb.join(',')})`
-  if (v >= 100) return `rgb(${BG_HUE_STOPS[BG_HUE_STOPS.length - 1].rgb.join(',')})`
-  for (let i = 0; i < BG_HUE_STOPS.length - 1; i++) {
-    const a = BG_HUE_STOPS[i], b = BG_HUE_STOPS[i + 1]
-    if (v <= b.pct) {
-      const t = (v - a.pct) / (b.pct - a.pct)
-      const r = Math.round(a.rgb[0] + (b.rgb[0] - a.rgb[0]) * t)
-      const g = Math.round(a.rgb[1] + (b.rgb[1] - a.rgb[1]) * t)
-      const bl = Math.round(a.rgb[2] + (b.rgb[2] - a.rgb[2]) * t)
-      return `rgb(${r}, ${g}, ${bl})`
-    }
-  }
-  return `rgb(${BG_HUE_STOPS[BG_HUE_STOPS.length - 1].rgb.join(',')})`
+function hexToRgb(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgb(${r}, ${g}, ${b})`
 }
 
 function buildInitialState(vw: number, vh: number): Record<string, PhysicsState> {
@@ -584,16 +557,11 @@ export default function HomePage() {
   const [isPointerFine, setIsPointerFine] = useState(true)
   useEffect(() => { setIsPointerFine(window.matchMedia('(hover: hover)').matches) }, [])
 
-  // Background colour picker — slider sweeps from black → vibrant rainbow → white.
-  // The same stops table drives both the CSS gradient track and the applied bg,
-  // so the colour under the thumb is exactly the colour the page becomes.
-  // Default value = 100 (right end = white), matching the original cream/white bg.
-  const [bgHue, setBgHue] = useState(100)
-
-  // Compute the bg colour and its inverse for the dot in one pass — used both
-  // for the page background variable AND inline-set on the dot element itself
-  // (inline wins specificity so the dot is always the inverse colour).
-  const bgColour = interpolateBgStops(bgHue)
+  // Background colour — driven by swatch selection. Default white matches the original bg.
+  const [bgColour, setBgColour] = useState('rgb(255, 255, 255)')
+  // Swatch panel open state — toggled by tap on mobile; CSS :hover handles desktop.
+  const [swatchOpen, setSwatchOpen] = useState(false)
+  const cpickerRef = useRef<HTMLDivElement | null>(null)
   const dotColour = (() => {
     const m = bgColour.match(/\d+/g)
     if (!m || m.length < 3) return '#0a0a0a'
@@ -810,9 +778,17 @@ export default function HomePage() {
     setTimeout(() => setMenuOpen(false), 320)
   }, [])
 
-  // Hue picker — close when the user taps outside on mobile.
-  // We use `capture: true` so the pointerdown is caught before any other handler
-  // (e.g. canvas drag) can swallow it. The check is quick and bails immediately
+  // Close swatch panel when tapping outside the picker on mobile
+  useEffect(() => {
+    if (!swatchOpen) return
+    const close = (e: PointerEvent) => {
+      if (cpickerRef.current?.contains(e.target as Node)) return
+      setSwatchOpen(false)
+    }
+    document.addEventListener('pointerdown', close, { capture: true })
+    return () => document.removeEventListener('pointerdown', close, { capture: true })
+  }, [swatchOpen])
+
   // Mount/unmount lifecycle for about panel (mirrors activePhoto useEffect)
   useEffect(() => {
     if (aboutOpen) requestAnimationFrame(() => setAboutVisible(true))
@@ -1590,11 +1566,11 @@ export default function HomePage() {
 
       </section>
 
-      {/* ─── Background colour picker — bottom-left corner, horizontal ────
-          Anchored bottom:24 left:24; strip emerges to the right on hover.
-          Desktop: :hover expands the strip (pure CSS).
-          Mobile:  always expanded via @media — drag to pick, no JS needed. */}
+      {/* ─── Background colour picker — bottom-left corner ──────────────
+          Trigger: the existing circle dot. Desktop: CSS :hover reveals swatches.
+          Mobile: tap the dot to toggle the panel open/closed. */}
       <div
+        ref={cpickerRef}
         className="cpicker"
         style={{
           position: 'fixed',
@@ -1605,21 +1581,32 @@ export default function HomePage() {
           pointerEvents: (workMounted || aboutOpen || !!activePhoto) ? 'none' : 'auto',
           transition: 'opacity 0.2s ease',
         }}
-        title={`Background colour ${bgHue}%`}
       >
-        <div className="cpicker-strip">
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={1}
-            value={bgHue}
-            onChange={e => setBgHue(Number(e.target.value))}
-            className="cpicker-input"
-            aria-label="Background colour"
-          />
+        <div className={`cpicker-swatches${swatchOpen ? ' cpicker-swatches--open' : ''}`}>
+          {SWATCHES.map(hex => (
+            <button
+              key={hex}
+              onClick={() => { setBgColour(hexToRgb(hex)); setSwatchOpen(false) }}
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: '50%',
+                background: hex,
+                border: hex.toLowerCase() === '#ffffff' ? '1.5px solid rgba(0,0,0,0.25)' : 'none',
+                padding: 0,
+                display: 'block',
+                flexShrink: 0,
+              }}
+              aria-label={`Background: ${hex}`}
+            />
+          ))}
         </div>
-        <div className="cpicker-dot" aria-hidden style={{ background: dotColour }} />
+        <div
+          className="cpicker-dot"
+          aria-hidden
+          style={{ background: dotColour }}
+          onClick={() => setSwatchOpen(prev => !prev)}
+        />
       </div>
 
       {/* ─── Mobile menu — hamburger overlay, md:hidden equivalent ────────
