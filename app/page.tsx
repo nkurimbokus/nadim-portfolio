@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import Image from 'next/image'
 
 /**
@@ -422,6 +422,24 @@ function parseAspect(a: string): number {
 // is unchanged — only the tile dimensions are scaled.
 const TILE_SIZE_SCALE = 1
 
+const TESTIMONIALS = [
+  {
+    id: 'q1',
+    quote: 'Nadim was prompt, great to work with, and really understood what pics we were after. He nailed the vibe perfectly, and we absolutely loved the photos.',
+    attribution: 'Alicia Grimshaw · Tamil Prince',
+  },
+  {
+    id: 'q2',
+    quote: 'Working with Nadim is an absolute pleasure, he consistently understands the brief and delivers exceptional results for every show. He is incredibly versatile, works seamlessly with artists, and always manages to capture the true, lively energy of the Roundhouse.',
+    attribution: 'Saskia Burrows · Roundhouse',
+  },
+  {
+    id: 'q3',
+    quote: 'Nadim has captured wonderful memories at our events for many years, always bringing vibrant energy to our spaces and his images.',
+    attribution: 'Mark Norton · The Photography Foundation',
+  },
+]
+
 function getDims(id: string): { w: number; h: number } {
   const mobile = typeof window !== 'undefined' && window.innerWidth < 768
   const s = mobile ? 0.65 : 1
@@ -430,6 +448,7 @@ function getDims(id: string): { w: number; h: number } {
   // tune them independently of the general 0.65 photo scale.
   if (id === 'aboutPortrait') { const w = mobile ? 200 : 340; return { w, h: Math.round(w * 4 / 3) } }
   if (id === 'aboutLogo')     { return mobile ? { w: 155, h: 155 } : { w: 280, h: 280 } }
+  if (id === 'q1' || id === 'q2' || id === 'q3') { return { w: mobile ? 180 : 220, h: mobile ? 110 : 140 } }
   const cfg = PHOTO_CFG[id]
   if (!cfg) return { w: Math.round(200 * s), h: Math.round(200 * s) }
   const w = cfg.w * TILE_SIZE_SCALE * s
@@ -479,60 +498,6 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
   return s
 }
 
-// ─── Ticker drag / coast helper ─────────────────────────────────────────────
-// Pure function — no React deps. Works identically for mouse and touch.
-// Mouse events attach via JSX; touch events attach via useEffect (passive:false).
-type TickerDrag = { dragging: boolean; x: number; vel: number; lastT: number; lastX: number }
-function makeTickerHandlers(
-  dragRef:  { current: TickerDrag },
-  trackRef: { current: HTMLDivElement | null },
-  rafRef:   { current: number },
-  duration: number,
-) {
-  const start = (clientX: number, t: number) => {
-    const el = trackRef.current; if (!el) return
-    cancelAnimationFrame(rafRef.current)
-    const x = new DOMMatrix(getComputedStyle(el).transform).m41
-    el.style.animation = 'none'
-    el.style.transform = `translateX(${x}px)`
-    const d = dragRef.current
-    d.dragging = true; d.x = x; d.vel = 0; d.lastT = t; d.lastX = clientX
-  }
-  const move = (clientX: number, t: number) => {
-    const d = dragRef.current; if (!d.dragging) return
-    const el = trackRef.current; if (!el) return
-    const halfW = el.offsetWidth / 2
-    const dt = t - d.lastT; const dx = clientX - d.lastX
-    d.vel = dt > 0 ? dx / dt : 0
-    d.lastT = t; d.lastX = clientX
-    d.x += dx
-    if (d.x > 0) d.x -= halfW
-    if (d.x < -halfW) d.x += halfW
-    el.style.transform = `translateX(${d.x}px)`
-  }
-  const end = () => {
-    const d = dragRef.current; if (!d.dragging) return
-    d.dragging = false
-    const el = trackRef.current; if (!el) return
-    const halfW = el.offsetWidth / 2
-    const coast = () => {
-      d.x += d.vel * 16; d.vel *= 0.95
-      if (d.x > 0) d.x -= halfW
-      if (d.x < -halfW) d.x += halfW
-      el.style.transform = `translateX(${d.x}px)`
-      if (Math.abs(d.vel) < 0.031) {
-        let x = d.x % -halfW; if (x > 0) x -= halfW
-        const delay = -(Math.abs(x) / halfW) * duration
-        el.style.animation = `tickerScroll ${duration}s linear ${delay}s infinite`
-        el.style.transform = ''
-        return
-      }
-      rafRef.current = requestAnimationFrame(coast)
-    }
-    rafRef.current = requestAnimationFrame(coast)
-  }
-  return { start, move, end }
-}
 
 export default function HomePage() {
   // Mobile flag — drives how many tiles render and their size. Starts false so the
@@ -644,14 +609,6 @@ export default function HomePage() {
   const sectionRef = useRef<HTMLElement | null>(null)
   const dragRef    = useRef<DragState | null>(null)
   const didDragRef     = useRef(false)
-  const tickerTrackRef = useRef<HTMLDivElement | null>(null)
-  const tickerRafRef   = useRef<number>(0)
-  const tickerDragRef  = useRef({ dragging: false, x: 0, vel: 0, lastT: 0, lastX: 0 })
-  const desktopTickerWrapperRef = useRef<HTMLDivElement | null>(null)
-  const mobileTickerWrapperRef  = useRef<HTMLDivElement | null>(null)
-  // Stable handler objects — created once, shared between JSX mouse events and native touch listeners
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const testimonialH     = useMemo(() => makeTickerHandlers(tickerDragRef, tickerTrackRef, tickerRafRef, 60), [])
   // Pan / drag: entirely direct DOM — no React state during gesture, zero latency
   const lbZoomLayerRef  = useRef<HTMLDivElement | null>(null)
   const lbCardRef       = useRef<HTMLDivElement | null>(null)  // photo card
@@ -799,6 +756,7 @@ export default function HomePage() {
     if (!aboutOpen) {
       delete posRef.current['aboutPortrait']
       delete posRef.current['aboutLogo']
+      TESTIMONIALS.forEach(({ id }) => { delete posRef.current[id] })
       return
     }
     const vw = window.innerWidth, vh = window.innerHeight
@@ -807,7 +765,7 @@ export default function HomePage() {
     const { w: pW, h: pH } = getDims('aboutPortrait')
     const { w: lW, h: lH } = getDims('aboutLogo')
 
-    // Portrait: horizontally centred, upper middle between ticker and text block.
+    // Portrait: horizontally centred, upper-middle of the about panel.
     const pX = Math.round(isMob ? vw * 0.5 - 100 : vw * 0.5 - 130)
     const pY = Math.round(isMob ? vh * 0.20 : vh * 0.17)
 
@@ -845,6 +803,20 @@ export default function HomePage() {
       if (lel) lel.style.transform = t
       if (lelv) lelv.style.transform = t
     }
+
+    // Quote cards — scattered in the lower-middle area, avoiding the portrait and bio text.
+    // Fixed rotations (no Math.random), zero base velocity so they sit still until dragged.
+    const cardW = isMob ? 180 : 220
+    const cardConfigs = [
+      { id: 'q1', x: isMob ? 8        : 40,                            y: Math.round(vh * (isMob ? 0.56 : 0.53)), rot: -3 },
+      { id: 'q2', x: isMob ? Math.max(8, vw - cardW - 10) : Math.round(vw * 0.62), y: Math.round(vh * (isMob ? 0.62 : 0.57)), rot: 1.5 },
+      { id: 'q3', x: isMob ? 24       : Math.round(vw * 0.28),         y: Math.round(vh * 0.77),                  rot: -2.5 },
+    ]
+    cardConfigs.forEach(({ id, x, y, rot }) => {
+      posRef.current[id] = { x, y, rot, vx: 0, vy: 0, vrot: 0, baseVx: 0, baseVy: 0, baseVrot: 0 }
+      const el = elRefs.current[id]
+      if (el) el.style.transform = `translate3d(${x}px,${y}px,0) rotate(${rot}deg)`
+    })
   }, [aboutOpen])
 
   const openLightbox = useCallback((proj: Project) => {
@@ -986,34 +958,6 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [activePhoto, aboutOpen, workMounted, navigate, closeLightbox, closeAbout, closeWork])
 
-  // EFFECT — unified native touch listeners for all three ticker wrappers.
-  // Mouse events live on JSX directly. Touch must be native so { passive: false }
-  // lets touchmove call preventDefault() and stop the browser stealing the gesture.
-  useEffect(() => {
-    function attachTouch(
-      el: HTMLDivElement | null,
-      h: { start: (x: number, t: number) => void; move: (x: number, t: number) => void; end: () => void },
-    ) {
-      if (!el) return () => {}
-      const onStart  = (e: TouchEvent) => { const t = e.touches[0]; if (t) h.start(t.clientX, e.timeStamp) }
-      const onMove   = (e: TouchEvent) => { e.preventDefault(); const t = e.touches[0]; if (t) h.move(t.clientX, e.timeStamp) }
-      el.addEventListener('touchstart',  onStart, { passive: false })
-      el.addEventListener('touchmove',   onMove,  { passive: false })
-      el.addEventListener('touchend',    h.end)
-      el.addEventListener('touchcancel', h.end)
-      return () => {
-        el.removeEventListener('touchstart',  onStart)
-        el.removeEventListener('touchmove',   onMove)
-        el.removeEventListener('touchend',    h.end)
-        el.removeEventListener('touchcancel', h.end)
-      }
-    }
-    const cleanups = [
-      attachTouch(desktopTickerWrapperRef.current, testimonialH),
-      attachTouch(mobileTickerWrapperRef.current,  testimonialH),
-    ]
-    return () => cleanups.forEach(c => c())
-  }, [isMobile, testimonialH])
 
   // EFFECT 1 — write initial transforms synchronously before first paint
   useClientLayoutEffect(() => {
@@ -1857,6 +1801,47 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* ── Quote cards — z:58, always in DOM, slide with the about panel ── */}
+        <div
+          className="fixed inset-0 z-[58]"
+          style={{
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        >
+          {TESTIMONIALS.map(({ id, quote, attribution }) => (
+            <div
+              key={id}
+              ref={el => { elRefs.current[id] = el as HTMLElement | null }}
+              className="absolute top-0 left-0 touch-none"
+              style={{
+                width: isMobile ? 180 : 220,
+                willChange: 'transform',
+                pointerEvents: 'auto',
+                cursor: 'none',
+                background: '#ffffff',
+                borderRadius: 2,
+                padding: isMobile ? '10px 12px' : '14px 16px',
+                boxShadow: '0 2px 16px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04)',
+                userSelect: 'none',
+              }}
+              onPointerDown={e => onPointerDown(e, id)}
+              onPointerUp={onPointerUp}
+              onContextMenu={e => e.preventDefault()}
+            >
+              <p style={{ fontSize: isMobile ? 10 : 11, lineHeight: 1.55, margin: 0, color: '#1a1a1a', mixBlendMode: 'normal' }}>
+                &ldquo;{quote}&rdquo;
+              </p>
+              <p style={{ fontSize: isMobile ? 9 : 10, margin: '8px 0 0', color: '#888', mixBlendMode: 'normal' }}>
+                — {attribution}
+              </p>
+            </div>
+          ))}
+        </div>
+
         {/* ── About PORTRAIT hitbox — z:64, invisible, handles drag ─────────── */}
         <div
           className="fixed inset-0 z-[64]"
@@ -1918,7 +1903,7 @@ export default function HomePage() {
 
         {/* ── About TEXT layer — z:61, SEPARATE container ──────────────────
             Mix-blend-mode: difference on all text. Opacity hardcoded to 1.
-            Contains Zone 1 (name ticker), Zone 3 (static text), Zone 4 (testimonial ticker). */}
+            Contains Zone 1 (name ticker), Zone 3 (static text). */}
         <div
           className="fixed inset-0 z-[61]"
           style={{
@@ -1932,7 +1917,7 @@ export default function HomePage() {
           }}
           aria-hidden={!aboutVisible}
         >
-          <style>{`@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (max-width: 767px) { .about-text-block { top: 55% !important; bottom: 120px !important; } }`}</style>
+          <style>{`@media (max-width: 767px) { .about-text-block { top: 55% !important; bottom: 120px !important; } }`}</style>
 
 
           {/* Zone 3 — Static text block, desktop only (mobile gets its own scrollable layer) */}
@@ -1971,27 +1956,6 @@ export default function HomePage() {
           </div>
           )}
 
-          {/* Zone 4 — Testimonial ticker, desktop only */}
-          {!isMobile && (
-          <div
-            ref={(el) => { desktopTickerWrapperRef.current = el }}
-            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', pointerEvents: 'auto', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', paddingTop: 10, paddingBottom: 10, cursor: 'none' }}
-            onMouseDown={e => testimonialH.start(e.clientX, e.timeStamp)}
-            onMouseMove={e => testimonialH.move(e.clientX, e.timeStamp)}
-            onMouseUp={testimonialH.end}
-            onMouseLeave={testimonialH.end}
-          >
-            <div ref={tickerTrackRef} style={{ display: 'inline-block', animation: 'tickerScroll 60s linear infinite' }}>
-              {[0, 1].map(i => (
-                <span key={i} style={{ display: 'inline-block' }}>
-                  <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Nadim was prompt, great to work with, and really understood what pics we were after. He nailed the vibe perfectly, and we absolutely loved the photos.&rdquo; — Alicia Grimshaw, Tamil Prince</span>
-                  <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Working with Nadim is an absolute pleasure, he consistently understands the brief and delivers exceptional results for every show. He is incredibly versatile, works seamlessly with artists, and always manages to capture the true, lively energy of the Roundhouse.&rdquo; — Saskia Burrows, Roundhouse</span>
-                  <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Nadim has captured wonderful memories at our events for many years, always bringing vibrant energy to our spaces and his images.&rdquo; — Mark Norton, The Photography Foundation</span>
-                </span>
-              ))}
-            </div>
-          </div>
-          )}
         </div>
 
         {/* Mobile — scrollable text layer: z:[66], above physics hitboxes (z:[64]/[65]).
@@ -2047,25 +2011,6 @@ export default function HomePage() {
               >Instagram</a>
             </div>
 
-            {/* Testimonial ticker */}
-            <div
-              ref={(el) => { mobileTickerWrapperRef.current = el }}
-              style={{ pointerEvents: 'auto', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', mixBlendMode: 'difference', color: '#ffffff', fontSize: '1.5rem', letterSpacing: '0.02em', marginTop: '1rem', paddingTop: 10, paddingBottom: 0, cursor: 'none' }}
-              onMouseDown={e => testimonialH.start(e.clientX, e.timeStamp)}
-              onMouseMove={e => testimonialH.move(e.clientX, e.timeStamp)}
-              onMouseUp={testimonialH.end}
-              onMouseLeave={testimonialH.end}
-            >
-              <div ref={tickerTrackRef} style={{ display: 'inline-block', animation: 'tickerScroll 60s linear infinite' }}>
-                {[0, 1].map(i => (
-                  <span key={i} style={{ display: 'inline-block' }}>
-                    <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Nadim was prompt, great to work with, and really understood what pics we were after. He nailed the vibe perfectly, and we absolutely loved the photos.&rdquo; — Alicia Grimshaw, Tamil Prince</span>
-                    <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Working with Nadim is an absolute pleasure, he consistently understands the brief and delivers exceptional results for every show. He is incredibly versatile, works seamlessly with artists, and always manages to capture the true, lively energy of the Roundhouse.&rdquo; — Saskia Burrows, Roundhouse</span>
-                    <span style={{ display: 'inline-block', paddingRight: '6rem' }}>&ldquo;Nadim has captured wonderful memories at our events for many years, always bringing vibrant energy to our spaces and his images.&rdquo; — Mark Norton, The Photography Foundation</span>
-                  </span>
-                ))}
-              </div>
-            </div>
           </div>
         )}
         </>
