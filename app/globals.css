@@ -69,7 +69,7 @@ body {
   bottom: calc(100% + 8px);
   left: -2px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 6px;
   opacity: 0;
@@ -77,8 +77,7 @@ body {
   transition: opacity 0.18s ease;
 }
 .cpicker:hover .cpicker-swatches,
-.cpicker:focus-within .cpicker-swatches,
-.cpicker-swatches--open {
+.cpicker:focus-within .cpicker-swatches {
   opacity: 1;
   pointer-events: auto;
 }

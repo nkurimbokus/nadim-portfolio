@@ -559,9 +559,6 @@ export default function HomePage() {
 
   // Background colour — driven by swatch selection. Default white matches the original bg.
   const [bgColour, setBgColour] = useState('rgb(255, 255, 255)')
-  // Swatch panel open state — toggled by tap on mobile; CSS :hover handles desktop.
-  const [swatchOpen, setSwatchOpen] = useState(false)
-  const cpickerRef = useRef<HTMLDivElement | null>(null)
   const dotColour = (() => {
     const m = bgColour.match(/\d+/g)
     if (!m || m.length < 3) return '#0a0a0a'
@@ -777,17 +774,6 @@ export default function HomePage() {
     // Delay unmount until the 320ms slide-down on the menu content finishes.
     setTimeout(() => setMenuOpen(false), 320)
   }, [])
-
-  // Close swatch panel when tapping outside the picker on mobile
-  useEffect(() => {
-    if (!swatchOpen) return
-    const close = (e: PointerEvent) => {
-      if (cpickerRef.current?.contains(e.target as Node)) return
-      setSwatchOpen(false)
-    }
-    document.addEventListener('pointerdown', close, { capture: true })
-    return () => document.removeEventListener('pointerdown', close, { capture: true })
-  }, [swatchOpen])
 
   // Mount/unmount lifecycle for about panel (mirrors activePhoto useEffect)
   useEffect(() => {
@@ -1570,7 +1556,6 @@ export default function HomePage() {
           Trigger: the existing circle dot. Desktop: CSS :hover reveals swatches.
           Mobile: tap the dot to toggle the panel open/closed. */}
       <div
-        ref={cpickerRef}
         className="cpicker"
         style={{
           position: 'fixed',
@@ -1582,11 +1567,11 @@ export default function HomePage() {
           transition: 'opacity 0.2s ease',
         }}
       >
-        <div className={`cpicker-swatches${swatchOpen ? ' cpicker-swatches--open' : ''}`}>
+        <div className="cpicker-swatches">
           {SWATCHES.map(hex => (
             <button
               key={hex}
-              onClick={() => { setBgColour(hexToRgb(hex)); setSwatchOpen(false) }}
+              onClick={() => setBgColour(hexToRgb(hex))}
               style={{
                 width: 22,
                 height: 22,
@@ -1605,7 +1590,6 @@ export default function HomePage() {
           className="cpicker-dot"
           aria-hidden
           style={{ background: dotColour }}
-          onClick={() => setSwatchOpen(prev => !prev)}
         />
       </div>
 
