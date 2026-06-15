@@ -65,9 +65,10 @@ body {
 /* Swatch panel — horizontal row of circles that expands to the right of the trigger dot. */
 .cpicker-swatches {
   position: absolute;
-  left: calc(100% + 8px);
+  left: 100%;
   top: 50%;
   transform: translateY(-50%);
+  padding-left: 8px;
   display: flex;
   flex-direction: row;
   align-items: center;
