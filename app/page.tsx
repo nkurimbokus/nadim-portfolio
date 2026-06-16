@@ -1966,8 +1966,39 @@ export default function HomePage() {
             <p className="text-base md:text-xl" style={{ textAlign: 'center' }}>
               <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.</span>
             </p>
-            {/* Row D — centred buttons */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginTop: '1.5rem', position: 'relative', zIndex: 66 }}>
+          </div>
+          )}
+
+        </div>
+
+        {/* ── Desktop CTA buttons — z:68, above card hitboxes (z:66) ─────────
+            Pulled out of z-[61] so they escape its stacking context and sit
+            above the card hitboxes at z-[66] which would otherwise block clicks. */}
+        {!isMobile && (
+          <div
+            className="fixed inset-0 z-[68]"
+            style={{
+              transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+              transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+              pointerEvents: 'none',
+              mixBlendMode: 'difference',
+              color: '#ffffff',
+            }}
+            aria-hidden={!aboutVisible}
+          >
+            <div style={{
+              position: 'absolute',
+              bottom: '140px',
+              left: 0,
+              right: 0,
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '1rem',
+              pointerEvents: 'auto',
+              padding: '0 48px',
+            }}>
               <a
                 href="mailto:nkurimbokus@gmail.com?subject=Enquiry"
                 style={{ pointerEvents: 'auto' }}
@@ -1982,9 +2013,7 @@ export default function HomePage() {
               >Instagram</a>
             </div>
           </div>
-          )}
-
-        </div>
+        )}
 
         {/* Mobile — scrollable text layer: z:[66], above physics hitboxes (z:[64]/[65]).
             Container: pointer-events:none so touches on empty space reach the physics hitboxes below.
