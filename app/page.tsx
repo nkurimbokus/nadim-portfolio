@@ -1841,7 +1841,7 @@ export default function HomePage() {
 
         {/* ── Quote card hitboxes — z:63, invisible, handles drag ──────────── */}
         <div
-          className="fixed inset-0 z-[63]"
+          className="fixed inset-0 z-[66]"
           style={{
             transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
