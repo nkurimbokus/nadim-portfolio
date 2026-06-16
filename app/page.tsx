@@ -814,8 +814,9 @@ export default function HomePage() {
     ]
     cardConfigs.forEach(({ id, x, y, rot }) => {
       posRef.current[id] = { x, y, rot, vx: 0, vy: 0, vrot: 0, baseVx: 0, baseVy: 0, baseVrot: 0 }
-      const el = elRefs.current[id]
-      if (el) el.style.transform = `translate3d(${x}px,${y}px,0) rotate(${rot}deg)`
+      const t = `translate3d(${x}px,${y}px,0) rotate(${rot}deg)`
+      const el  = elRefs.current[id];          if (el)  el.style.transform  = t
+      const vel = visualElRefs.current[id];    if (vel) vel.style.transform = t
     })
   }, [aboutOpen])
 
@@ -1801,7 +1802,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* ── Quote cards — z:58, always in DOM, slide with the about panel ── */}
+        {/* ── Quote card visuals — z:58, renders content, no pointer events ── */}
         <div
           className="fixed inset-0 z-[58]"
           style={{
@@ -1815,23 +1816,18 @@ export default function HomePage() {
           {TESTIMONIALS.map(({ id, quote, attribution }) => (
             <div
               key={id}
-              ref={el => { elRefs.current[id] = el as HTMLElement | null }}
+              ref={el => { visualElRefs.current[id] = el as HTMLElement | null }}
               className="absolute top-0 left-0 touch-none"
               style={{
                 width: isMobile ? 180 : 220,
                 willChange: 'transform',
-                pointerEvents: 'auto',
-                cursor: 'none',
+                pointerEvents: 'none',
                 background: '#ffffff',
                 borderRadius: 2,
                 padding: isMobile ? '10px 12px' : '14px 16px',
                 boxShadow: '0 2px 16px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04)',
                 userSelect: 'none',
               }}
-              onPointerDown={e => onPointerDown(e, id)}
-              onPointerUp={onPointerUp}
-              onPointerMove={aboutSettled ? onPointerMove : undefined}
-              onContextMenu={e => e.preventDefault()}
             >
               <p style={{ fontSize: isMobile ? 10 : 11, lineHeight: 1.55, margin: 0, color: '#1a1a1a', mixBlendMode: 'normal' }}>
                 &ldquo;{quote}&rdquo;
@@ -1840,6 +1836,37 @@ export default function HomePage() {
                 — {attribution}
               </p>
             </div>
+          ))}
+        </div>
+
+        {/* ── Quote card hitboxes — z:63, invisible, handles drag ──────────── */}
+        <div
+          className="fixed inset-0 z-[63]"
+          style={{
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        >
+          {TESTIMONIALS.map(({ id }) => (
+            <div
+              key={id}
+              ref={el => { elRefs.current[id] = el as HTMLElement | null }}
+              className="absolute top-0 left-0 touch-none"
+              style={{
+                width:         isMobile ? 180 : 220,
+                height:        isMobile ? 110 : 140,
+                willChange:    'transform',
+                cursor:        'none',
+                pointerEvents: 'auto',
+              }}
+              onPointerDown={e => onPointerDown(e, id)}
+              onPointerUp={onPointerUp}
+              onPointerMove={aboutSettled ? onPointerMove : undefined}
+              onContextMenu={e => e.preventDefault()}
+            />
           ))}
         </div>
 
