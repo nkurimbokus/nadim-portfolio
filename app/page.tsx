@@ -1830,6 +1830,7 @@ export default function HomePage() {
               }}
               onPointerDown={e => onPointerDown(e, id)}
               onPointerUp={onPointerUp}
+              onPointerMove={aboutSettled ? onPointerMove : undefined}
               onContextMenu={e => e.preventDefault()}
             >
               <p style={{ fontSize: isMobile ? 10 : 11, lineHeight: 1.55, margin: 0, color: '#1a1a1a', mixBlendMode: 'normal' }}>
