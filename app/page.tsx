@@ -808,12 +808,12 @@ export default function HomePage() {
     // Fixed rotations (no Math.random), zero base velocity so they sit still until dragged.
     const cardW = isMob ? 180 : 220
     const cardConfigs = [
-      { id: 'q1', x: isMob ? 8        : 40,                            y: Math.round(vh * (isMob ? 0.56 : 0.53)), rot: -3 },
-      { id: 'q2', x: isMob ? Math.max(8, vw - cardW - 10) : Math.round(vw * 0.62), y: Math.round(vh * (isMob ? 0.62 : 0.57)), rot: 1.5 },
-      { id: 'q3', x: isMob ? 24       : Math.round(vw * 0.28),         y: Math.round(vh * 0.77),                  rot: -2.5 },
+      { id: 'q1', x: isMob ? 8        : 40,                             y: Math.round(vh * (isMob ? 0.56 : 0.53)), rot: -3,   baseVx: -5 * vScale, baseVy: -4 * vScale, baseVrot:  0.15 * vScale },
+      { id: 'q2', x: isMob ? Math.max(8, vw - cardW - 10) : Math.round(vw * 0.62), y: Math.round(vh * (isMob ? 0.62 : 0.57)), rot: 1.5,  baseVx:  6 * vScale, baseVy:  5 * vScale, baseVrot: -0.18 * vScale },
+      { id: 'q3', x: isMob ? 24       : Math.round(vw * 0.28),          y: Math.round(vh * 0.77),                  rot: -2.5, baseVx:  4 * vScale, baseVy: -6 * vScale, baseVrot:  0.20 * vScale },
     ]
-    cardConfigs.forEach(({ id, x, y, rot }) => {
-      posRef.current[id] = { x, y, rot, vx: 0, vy: 0, vrot: 0, baseVx: 0, baseVy: 0, baseVrot: 0 }
+    cardConfigs.forEach(({ id, x, y, rot, baseVx, baseVy, baseVrot }) => {
+      posRef.current[id] = { x, y, rot, vx: 0, vy: 0, vrot: 0, baseVx, baseVy, baseVrot }
       const t = `translate3d(${x}px,${y}px,0) rotate(${rot}deg)`
       const el  = elRefs.current[id];          if (el)  el.style.transform  = t
       const vel = visualElRefs.current[id];    if (vel) vel.style.transform = t
