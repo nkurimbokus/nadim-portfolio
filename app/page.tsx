@@ -609,6 +609,13 @@ export default function HomePage() {
   const sectionRef = useRef<HTMLElement | null>(null)
   const dragRef    = useRef<DragState | null>(null)
   const didDragRef     = useRef(false)
+  // About keep-out zones — bounding rects of the panel's fixed content (bio,
+  // client list, CTA row). The physics loop softly repels the testimonial
+  // cards out of these rects so they can never cover readable text or buttons.
+  const keepOutElsRef      = useRef<Record<string, HTMLElement | null>>({})
+  const keepOutZonesRef    = useRef<Array<{ left: number; top: number; right: number; bottom: number }>>([])
+  const keepOutMeasuredRef = useRef(0)
+  const aboutSettledRef    = useRef(false)
   // Pan / drag: entirely direct DOM — no React state during gesture, zero latency
   const lbZoomLayerRef  = useRef<HTMLDivElement | null>(null)
   const lbCardRef       = useRef<HTMLDivElement | null>(null)  // photo card
@@ -749,6 +756,14 @@ export default function HomePage() {
     setAboutSettled(false)
   }, [aboutVisible])
 
+  // Mirror `aboutSettled` into a ref for the physics loop (created once, so it
+  // can't take state as a dep). Zones are cleared on close so stale rects can't
+  // repel cards while the panel is off-screen.
+  useEffect(() => {
+    aboutSettledRef.current = aboutSettled
+    if (!aboutSettled) { keepOutZonesRef.current = []; keepOutMeasuredRef.current = 0 }
+  }, [aboutSettled])
+
   // Physics init for about panel — portrait + logo start in a deliberate scrapbook
   // arrangement (portrait centred near the top, logo overlapping its bottom), then
   // drift apart very slowly so the layout feels settled, not chaotic.
@@ -804,13 +819,14 @@ export default function HomePage() {
       if (lelv) lelv.style.transform = t
     }
 
-    // Quote cards — scattered in the lower-middle area, avoiding the portrait and bio text.
-    // Fixed rotations (no Math.random), zero base velocity so they sit still until dragged.
+    // Quote cards — scattered in the middle band, above the bio text / client
+    // list / CTA keep-out zones (the physics loop repels them if they drift or
+    // are dropped inside one). Fixed rotations (no Math.random).
     const cardW = isMob ? 180 : 220
     const cardConfigs = [
-      { id: 'q1', x: isMob ? 8        : 40,                             y: Math.round(vh * (isMob ? 0.56 : 0.53)), rot: -3,   baseVx: -5 * vScale, baseVy: -4 * vScale, baseVrot:  0.15 * vScale },
-      { id: 'q2', x: isMob ? Math.max(8, vw - cardW - 10) : Math.round(vw * 0.62), y: Math.round(vh * (isMob ? 0.62 : 0.57)), rot: 1.5,  baseVx:  6 * vScale, baseVy:  5 * vScale, baseVrot: -0.18 * vScale },
-      { id: 'q3', x: isMob ? 24       : Math.round(vw * 0.28),          y: Math.round(vh * 0.77),                  rot: -2.5, baseVx:  4 * vScale, baseVy: -6 * vScale, baseVrot:  0.20 * vScale },
+      { id: 'q1', x: isMob ? 8        : 40,                             y: Math.round(vh * (isMob ? 0.30 : 0.38)), rot: -3,   baseVx: -5 * vScale, baseVy: -4 * vScale, baseVrot:  0.15 * vScale },
+      { id: 'q2', x: isMob ? Math.max(8, vw - cardW - 10) : Math.round(vw * 0.62), y: Math.round(vh * (isMob ? 0.36 : 0.42)), rot: 1.5,  baseVx:  6 * vScale, baseVy:  5 * vScale, baseVrot: -0.18 * vScale },
+      { id: 'q3', x: isMob ? 24       : Math.round(vw * 0.28),          y: Math.round(vh * (isMob ? 0.24 : 0.46)), rot: -2.5, baseVx:  4 * vScale, baseVy: -6 * vScale, baseVrot:  0.20 * vScale },
     ]
     cardConfigs.forEach(({ id, x, y, rot, baseVx, baseVy, baseVrot }) => {
       posRef.current[id] = { x, y, rot, vx: 0, vy: 0, vrot: 0, baseVx, baseVy, baseVrot }
@@ -986,6 +1002,20 @@ export default function HomePage() {
       prev = now
       if (dt === 0) { rafRef.current = requestAnimationFrame(tick); return }
       const vw = window.innerWidth; const vh = window.innerHeight
+      // Measure About keep-out zones (throttled to ~4×/s) — re-measuring here
+      // tracks resize and the mobile layer's scroll without extra listeners.
+      // Only measured once the panel has settled, so the rects are at their
+      // final translateY(0) positions.
+      if (aboutSettledRef.current && now - keepOutMeasuredRef.current > 250) {
+        keepOutMeasuredRef.current = now
+        const zones: Array<{ left: number; top: number; right: number; bottom: number }> = []
+        for (const zel of Object.values(keepOutElsRef.current)) {
+          if (!zel) continue
+          const r = zel.getBoundingClientRect()
+          if (r.width > 0 && r.height > 0) zones.push({ left: r.left, top: r.top, right: r.right, bottom: r.bottom })
+        }
+        keepOutZonesRef.current = zones
+      }
       for (const id of Object.keys(posRef.current)) {
         const pos = posRef.current[id]
         if (!pos || dragRef.current?.id === id) continue
@@ -1014,6 +1044,28 @@ export default function HomePage() {
         if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
         if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
+        // Soft keep-out repulsion — testimonial cards may not cover the About
+        // panel's fixed content. Every zone spans the panel's full width, so
+        // the push is vertical only (a horizontal push would wrap around the
+        // viewport edge and re-enter the zone from the other side).
+        if ((id === 'q1' || id === 'q2' || id === 'q3') && aboutSettledRef.current) {
+          // Use the visual card's real rendered size — its height is
+          // content-driven (long quotes run past the nominal 140px), so
+          // getDims would under-report and let the card visually overlap.
+          const cardEl = visualElRefs.current[id]
+          const cw = cardEl ? cardEl.offsetWidth  : w
+          const ch = cardEl ? cardEl.offsetHeight : h
+          for (const z of keepOutZonesRef.current) {
+            const M = 12
+            const ox = Math.min(pos.x + cw, z.right + M) - Math.max(pos.x, z.left - M)
+            const oy = Math.min(pos.y + ch, z.bottom + M) - Math.max(pos.y, z.top - M)
+            if (ox > 0 && oy > 0) {
+              const dir = pos.y + ch / 2 < (z.top + z.bottom) / 2 ? -1 : 1
+              pos.vy = dir * Math.max(Math.abs(pos.vy), Math.min(220, 40 + oy))
+              pos.baseVy = dir * Math.abs(pos.baseVy)
+            }
+          }
+        }
         if (pos.x >  vw + 60) pos.x = -w
         if (pos.x < -w)       pos.x =  vw + 60
         if (pos.y >  vh + 60) pos.y = -h
@@ -1952,6 +2004,7 @@ export default function HomePage() {
           {!isMobile && (
           <div
             className="about-text-block"
+            ref={el => { keepOutElsRef.current['bio'] = el }}
             style={{ position: 'absolute', top: '65%', bottom: '140px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}
           >
             {/* Row A — centred */}
@@ -1986,7 +2039,7 @@ export default function HomePage() {
             }}
             aria-hidden={!aboutVisible}
           >
-            <div style={{
+            <div ref={el => { keepOutElsRef.current['cta'] = el }} style={{
               position: 'absolute',
               bottom: '140px',
               left: 0,
@@ -2038,22 +2091,22 @@ export default function HomePage() {
             <div style={{ height: '52vh', pointerEvents: 'none' }} />
 
             {/* Bio */}
-            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(11px, 3vw, 14px)', lineHeight: '1.75', marginBottom: '0.5rem' }}>
+            <p ref={el => { keepOutElsRef.current['mBio'] = el }} style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(11px, 3vw, 14px)', lineHeight: '1.75', marginBottom: '0.5rem' }}>
               Nadim Kurimbokus is a British-Mauritian photographer based in London. He shoots live music, brand and cultural events for venues, labels, brands and artists across the UK and Europe. His work spans gigs, festivals, club nights, artist portraits and brand campaigns.
             </p>
 
             {/* Client list */}
-            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.75', marginBottom: '0.5rem' }}>
+            <p ref={el => { keepOutElsRef.current['mClients'] = el }} style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.75', marginBottom: '0.5rem' }}>
               BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home
             </p>
 
             {/* Availability */}
-            <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.5', marginBottom: '0.5rem' }}>
+            <p ref={el => { keepOutElsRef.current['mAvail'] = el }} style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.5', marginBottom: '0.5rem' }}>
               Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.
             </p>
 
             {/* Buttons */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginTop: '1rem', marginBottom: '0.5rem', padding: '0 24px' }}>
+            <div ref={el => { keepOutElsRef.current['mBtns'] = el }} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', pointerEvents: 'auto', marginTop: '1rem', marginBottom: '0.5rem', padding: '0 24px' }}>
               <a
                 href="mailto:nkurimbokus@gmail.com"
                 style={{ pointerEvents: 'auto', padding: '6px 12px', fontSize: '13px' }}
