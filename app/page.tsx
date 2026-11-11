@@ -1923,7 +1923,7 @@ export default function HomePage() {
           {!isMobile && (
           <div
             className="about-text-block"
-            style={{ position: 'absolute', top: '65%', bottom: '140px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}
+            style={{ position: 'absolute', top: '35%', bottom: '120px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.375rem' }}
           >
             {/* Row A — centred */}
             <p className="about-bio text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
@@ -1959,7 +1959,7 @@ export default function HomePage() {
           >
             <div style={{
               position: 'absolute',
-              bottom: '140px',
+              bottom: '48px',
               left: 0,
               right: 0,
               display: 'flex',
