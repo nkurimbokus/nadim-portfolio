@@ -458,7 +458,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
   const vScale = isMobile ? VELOCITY_SCALE * 0.5 : VELOCITY_SCALE
   const logoSz = isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE
   s['logo'] = {
-    x: (vw - logoSz) / 2,
+    x: isMobile ? vw * 0.06 : (vw - logoSz) / 2,
     y: -logoSz * 0.30,
     rot: 0,
     vx: 0, vy: 0, vrot: 0,
@@ -1343,19 +1343,19 @@ export default function HomePage() {
           {/* Desktop: text buttons */}
           <button
             onClick={openWork}
-            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
+            className="blend-text flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: btnPE }}
           >Work</button>
           <button
             onClick={openAbout}
-            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
+            className="blend-text flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: btnPE }}
           >About</button>
 
           {/* Mobile: hamburger */}
           <button
             onClick={openMenu}
-            className="flex md:hidden items-center justify-center min-h-[44px] min-w-[44px] bg-transparent text-white/60 hover:text-white transition-colors focus:outline-none"
+            className="hidden items-center justify-center min-h-[44px] min-w-[44px] bg-transparent text-white/60 hover:text-white transition-colors focus:outline-none"
             style={{ pointerEvents: btnPE }}
             aria-label="Open menu"
           >
@@ -1443,7 +1443,7 @@ export default function HomePage() {
               willChange: 'transform', zIndex: 5,
               opacity: aboutOpen ? (aboutVisible ? 0 : 1) : 1,
               transition: aboutOpen
-                ? (aboutVisible ? 'opacity 0s' : 'opacity 0s ease 0.22s')
+                ? (aboutVisible ? 'opacity 0s ease 0.32s' : 'opacity 0s ease 0.22s')
                 : 'none',
             }}
           >
@@ -1652,11 +1652,10 @@ export default function HomePage() {
           style={{
             cursor: 'none',
             backgroundColor: bgColour,
-            backdropFilter: 'blur(3px)',
-            WebkitBackdropFilter: 'blur(3px)',
-            opacity: aboutVisible ? 1 : 0,
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
             pointerEvents: aboutVisible ? 'auto' : 'none',
-            transition: 'opacity 0.3s ease-in-out',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
           }}
           onClick={closeAbout}
         />
