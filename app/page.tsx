@@ -1518,10 +1518,10 @@ export default function HomePage() {
           <div
             className="fixed inset-0 z-[68] md:hidden"
             style={{
-              backdropFilter: 'blur(3px)',
-              WebkitBackdropFilter: 'blur(3px)',
-              opacity: menuVisible ? 1 : 0,
-              transition: 'opacity 0.22s ease',
+              background: '#ffffff',
+              transform: menuVisible ? 'translateY(0)' : 'translateY(100%)',
+              transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+              willChange: 'transform',
             }}
             onClick={closeMenu}
           />
