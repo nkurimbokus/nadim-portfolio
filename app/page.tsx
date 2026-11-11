@@ -422,23 +422,9 @@ function parseAspect(a: string): number {
 // is unchanged — only the tile dimensions are scaled.
 const TILE_SIZE_SCALE = 1
 
-const TESTIMONIALS = [
-  {
-    id: 'q1',
-    quote: 'Nadim was prompt, great to work with, and really understood what pics we were after. He nailed the vibe perfectly, and we absolutely loved the photos.',
-    attribution: 'Alicia Grimshaw · Tamil Prince',
-  },
-  {
-    id: 'q2',
-    quote: 'Working with Nadim is an absolute pleasure, he consistently understands the brief and delivers exceptional results for every show. He is incredibly versatile, works seamlessly with artists, and always manages to capture the true, lively energy of the Roundhouse.',
-    attribution: 'Saskia Burrows · Roundhouse',
-  },
-  {
-    id: 'q3',
-    quote: 'Nadim has captured wonderful memories at our events for many years, always bringing vibrant energy to our spaces and his images.',
-    attribution: 'Mark Norton · The Photography Foundation',
-  },
-]
+// Testimonials removed from the About panel (Nov 2026). Kept as an empty list so the
+// render and physics loops below stay valid; re-add entries here to bring them back.
+const TESTIMONIALS: { id: string; quote: string; attribution: string }[] = []
 
 function getDims(id: string): { w: number; h: number } {
   const mobile = typeof window !== 'undefined' && window.innerWidth < 768
@@ -448,7 +434,6 @@ function getDims(id: string): { w: number; h: number } {
   // tune them independently of the general 0.65 photo scale.
   if (id === 'aboutPortrait') { const w = mobile ? 200 : 340; return { w, h: Math.round(w * 4 / 3) } }
   if (id === 'aboutLogo')     { return mobile ? { w: 155, h: 155 } : { w: 280, h: 280 } }
-  if (id === 'q1' || id === 'q2' || id === 'q3') { return { w: mobile ? 180 : 220, h: mobile ? 110 : 140 } }
   const cfg = PHOTO_CFG[id]
   if (!cfg) return { w: Math.round(200 * s), h: Math.round(200 * s) }
   const w = cfg.w * TILE_SIZE_SCALE * s
@@ -804,20 +789,6 @@ export default function HomePage() {
       if (lelv) lelv.style.transform = t
     }
 
-    // Quote cards — scattered in the lower-middle area, avoiding the portrait and bio text.
-    // Fixed rotations (no Math.random), zero base velocity so they sit still until dragged.
-    const cardW = isMob ? 180 : 220
-    const cardConfigs = [
-      { id: 'q1', x: isMob ? 8        : 40,                             y: Math.round(vh * (isMob ? 0.56 : 0.53)), rot: -3,   baseVx: -5 * vScale, baseVy: -4 * vScale, baseVrot:  0.15 * vScale },
-      { id: 'q2', x: isMob ? Math.max(8, vw - cardW - 10) : Math.round(vw * 0.62), y: Math.round(vh * (isMob ? 0.62 : 0.57)), rot: 1.5,  baseVx:  6 * vScale, baseVy:  5 * vScale, baseVrot: -0.18 * vScale },
-      { id: 'q3', x: isMob ? 24       : Math.round(vw * 0.28),          y: Math.round(vh * 0.77),                  rot: -2.5, baseVx:  4 * vScale, baseVy: -6 * vScale, baseVrot:  0.20 * vScale },
-    ]
-    cardConfigs.forEach(({ id, x, y, rot, baseVx, baseVy, baseVrot }) => {
-      posRef.current[id] = { x, y, rot, vx: 0, vy: 0, vrot: 0, baseVx, baseVy, baseVrot }
-      const t = `translate3d(${x}px,${y}px,0) rotate(${rot}deg)`
-      const el  = elRefs.current[id];          if (el)  el.style.transform  = t
-      const vel = visualElRefs.current[id];    if (vel) vel.style.transform = t
-    })
   }, [aboutOpen])
 
   const openLightbox = useCallback((proj: Project) => {
