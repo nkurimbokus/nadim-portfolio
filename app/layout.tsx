@@ -30,16 +30,16 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Nadim Kurimbokus — Music & Event Photographer, London',
-    template: '%s — Nadim Kurimbokus',
+    default: 'Nadim Kurimbokus · Music & Event Photographer, London',
+    template: '%s · Nadim Kurimbokus',
   },
   description:
-    'London-based music and event photographer Nadim Kurimbokus. Live music, festivals, portraits and cultural commissions for the BBC, BAPE, Jazz Cafe and more.',
+    'London-based music and event photographer Nadim Kurimbokus. Live music, festivals, portraits and cultural commissions for the BBC, Jazz Cafe and more.',
   metadataBase: new URL('https://nadimkurimbokus.com'),
   openGraph: {
-    title: 'Nadim Kurimbokus — Music & Event Photographer, London',
+    title: 'Nadim Kurimbokus · Music & Event Photographer, London',
     description:
-      'London-based music and event photographer Nadim Kurimbokus. Live music, festivals, portraits and cultural commissions for the BBC, BAPE, Jazz Cafe and more.',
+      'London-based music and event photographer Nadim Kurimbokus. Live music, festivals, portraits and cultural commissions for the BBC, Jazz Cafe and more.',
     url: 'https://nadimkurimbokus.com',
     siteName: 'Nadim Kurimbokus',
     images: [
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Nadim Kurimbokus — Music & Event Photographer',
+        alt: 'Nadim Kurimbokus · Music & Event Photographer',
       },
     ],
     locale: 'en_GB',
@@ -55,9 +55,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Nadim Kurimbokus — Music & Event Photographer, London',
+    title: 'Nadim Kurimbokus · Music & Event Photographer, London',
     description:
-      'London-based music and event photographer Nadim Kurimbokus. Live music, festivals, portraits and cultural commissions for the BBC, BAPE, Jazz Cafe and more.',
+      'London-based music and event photographer Nadim Kurimbokus. Live music, festivals, portraits and cultural commissions for the BBC, Jazz Cafe and more.',
     images: ['/og-image.jpg'],
   },
   robots: {

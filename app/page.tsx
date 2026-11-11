@@ -303,7 +303,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l3', kind: 'photo', title: 'Reyven Lenae · Roundhouse', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l3', kind: 'photo', title: 'Ravyn Lenae · Roundhouse', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_001_standard.jpg',
     gallery: [
       '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_001_standard.jpg',
@@ -1421,7 +1421,7 @@ export default function HomePage() {
                 onPointerUp={onPointerUp}
                 onContextMenu={e => e.preventDefault()}
                 onClick={() => { if (!didDragRef.current && !activePhoto) openLightbox(proj) }}
-                role="button" tabIndex={0} aria-label={`${proj.title} — ${proj.category}`}
+                role="button" tabIndex={0} aria-label={`${proj.title} · ${proj.category}`}
                 onKeyDown={e => { if (e.key === 'Enter' && !activePhoto) openLightbox(proj) }}
               >
                 {(tileSrc[proj.id] ?? proj.src)
@@ -1931,11 +1931,11 @@ export default function HomePage() {
             </p>
             {/* Row B — centred */}
             <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center', marginTop: '2rem' }}>
-              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
+              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>BBC · Roundhouse · Jazz Cafe · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
             </p>
             {/* Row C — centred */}
             <p className="text-base md:text-xl" style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.</span>
+              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>Available for live coverage, tour and press work, brand campaigns and cultural commissions, UK and Europe.</span>
             </p>
           </div>
           )}
@@ -2015,12 +2015,12 @@ export default function HomePage() {
 
             {/* Client list */}
             <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.75', marginBottom: '0.5rem' }}>
-              BBC · Roundhouse · Jazz Cafe · BAPE · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home
+              BBC · Roundhouse · Jazz Cafe · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home
             </p>
 
             {/* Availability */}
             <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.5', marginBottom: '0.5rem' }}>
-              Available for live coverage, tour and press work, brand campaigns and cultural commissions — UK and Europe.
+              Available for live coverage, tour and press work, brand campaigns and cultural commissions, UK and Europe.
             </p>
 
             {/* Buttons */}
@@ -2067,7 +2067,7 @@ export default function HomePage() {
             className="fixed inset-0 z-[9] flex flex-col items-center justify-center p-6 gap-4 pointer-events-none"
             style={{ backgroundColor: 'transparent' }}
             role="dialog" aria-modal="true"
-            aria-label={`${activePhoto.title} — ${activePhoto.category}`}
+            aria-label={`${activePhoto.title} · ${activePhoto.category}`}
           >
             {/* Selected photo — rises from below on open, drifts upward on close */}
             <div

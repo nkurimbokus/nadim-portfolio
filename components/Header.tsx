@@ -50,7 +50,7 @@ export default function Header() {
         <div className="mx-auto max-w-screen-xl px-6 md:px-10 h-16 flex items-center justify-between">
 
           {/* Logo — TODO: replace with fridge-magnet PNG once exported */}
-          <Link href="/" aria-label="Nadim Kurimbokus — return to home" className="group focus-visible:outline-none">
+          <Link href="/" aria-label="Nadim Kurimbokus, return to home" className="group focus-visible:outline-none">
             <span className="font-display font-semibold text-fg-default text-sm tracking-[0.22em] uppercase group-focus-visible:text-accent transition-colors duration-150">
               Nadim Kurimbokus
             </span>
