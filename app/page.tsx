@@ -2195,13 +2195,23 @@ export default function HomePage() {
                           }}
                         >
                           {activePhoto.gallery[galleryIndex]
-                            ? <Image
-                                src={activePhoto.gallery[galleryIndex]}
-                                fill alt={activePhoto.title}
-                                className="object-contain" draggable={false}
-                                sizes="(max-width: 768px) 100vw, 1600px"
-                                priority unoptimized
-                              />
+                            ? <>
+                                {/* Small thumb sits underneath so something shows instantly while the full-size image loads over it */}
+                                <Image
+                                  src={toThumb(activePhoto.gallery[galleryIndex])}
+                                  fill alt="" aria-hidden="true"
+                                  className="object-contain" draggable={false}
+                                  sizes="(max-width: 768px) 100vw, 1600px"
+                                  unoptimized
+                                />
+                                <Image
+                                  src={activePhoto.gallery[galleryIndex]}
+                                  fill alt={activePhoto.title}
+                                  className="object-contain" draggable={false}
+                                  sizes="(max-width: 768px) 100vw, 1600px"
+                                  priority unoptimized
+                                />
+                              </>
                             : <div className="w-full h-full" style={{ backgroundColor: activePhoto.color }} />}
                         </div>
                       </>
