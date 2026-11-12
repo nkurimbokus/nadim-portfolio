@@ -242,7 +242,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_010_standard.jpg': '1600/1067',
   '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_011_standard.jpg': '1600/1067',
   '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_012_standard.jpg': '1074/1600',
-  '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.jpg': '1600/1525',
+  '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.webp': '1600/1525',
   '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_002_standard.jpg': '1079/1600',
   '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_013_standard.jpg': '1600/1067',
   '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg': '1067/1600',
@@ -516,7 +516,7 @@ const SINGLES: Project[] = [
   { id: 's22', kind: 'photo', single: true, title: 'Notting Hill Carnival', category: 'Carnival', year: '2026', color: '#222222',
     src: '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg', gallery: ['/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg'] },
   { id: 's23', kind: 'photo', single: true, title: 'Redveil · O2 Brixton', category: 'Live', year: '2026', color: '#222222',
-    src: '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.jpg', gallery: ['/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.jpg'] },
+    src: '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.webp', gallery: ['/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.webp'] },
   { id: 's12', kind: 'photo', single: true, title: 'Rome Streetz · The Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
     src: '/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg'] },
   { id: 's20', kind: 'photo', single: true, title: '22impact · Model shoot', category: 'Brand', year: '2025', color: '#222222',
@@ -542,7 +542,7 @@ const ALL_ITEMS: Project[] = [...PROJECTS, ...SINGLES]
 const CANVAS_ITEMS: Project[] = POC_SINGLES ? SINGLES : PROJECTS
 
 // Home-canvas tiles use the small _thumb version (about 70 KB); the lightbox keeps _standard.
-const toThumb = (src: string): string => src.replace(/_standard\.jpg$/i, '_thumb.jpg').replace(/_standard\.png$/i, '_thumb.webp')
+const toThumb = (src: string): string => src.replace(/_standard\.jpg$/i, '_thumb.jpg').replace(/_standard\.png$/i, '_thumb.webp').replace(/_standard\.webp$/i, '_thumb.webp')
 
 // Fetch an image into the browser cache ahead of time so the lightbox never waits on it.
 const preloaded = new Set<string>()
