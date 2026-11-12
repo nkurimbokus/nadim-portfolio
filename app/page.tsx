@@ -1479,7 +1479,7 @@ export default function HomePage() {
                 : 'none',
             }}
           >
-            <Image src="/logo.png" fill alt="Nadim Kurimbokus" style={{ objectFit: 'contain', pointerEvents: 'none' }} draggable={false} unoptimized />
+            <Image src="/logo.webp" fill alt="Nadim Kurimbokus" style={{ objectFit: 'contain', pointerEvents: 'none' }} draggable={false} unoptimized />
             {/* Hit pad — sits over just the visible logo strip (~36% of the square's height) */}
             <div
               className="absolute left-0 touch-none"
@@ -1761,7 +1761,7 @@ export default function HomePage() {
             aria-hidden="true"
           >
             <Image
-              src="/images/portrait.jpg"
+              src="/images/portrait-1080.jpg"
               width={1080}
               height={1440}
               priority
@@ -1795,7 +1795,7 @@ export default function HomePage() {
             aria-hidden="true"
           >
             <Image
-              src="/logo.png"
+              src="/logo.webp"
               fill
               alt=""
               style={{ objectFit: 'contain', pointerEvents: 'none' }}
