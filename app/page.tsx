@@ -723,12 +723,14 @@ export default function HomePage() {
     }, 350)
   }, [activePhoto, applyLbTransform])
 
-  // Preload the next three and previous one so flipping never waits on the network
+  // Preload so flipping never waits: small thumbs far ahead (cheap, they show instantly under the
+  // full image), then full-size only a couple ahead so they don't crowd out the one you want next.
   useEffect(() => {
     if (!activePhoto || activePhoto.gallery.length <= 1) return
     const len = activePhoto.gallery.length
-    const wanted = [1, 2, 3, -1].map(d => activePhoto.gallery[(galleryIndex + d + len * 4) % len])
-    wanted.forEach(preloadImage)
+    const at = (d: number) => activePhoto.gallery[(galleryIndex + d + len * 8) % len]
+    ;[1, 2, 3, 4, 5, 6, -1, -2].forEach(d => { const u = at(d); if (u) preloadImage(toThumb(u)) })
+    ;[1, 2, -1].forEach(d => preloadImage(at(d)))
   }, [activePhoto, galleryIndex])
 
   const openAbout = useCallback(() => {
