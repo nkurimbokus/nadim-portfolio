@@ -501,38 +501,38 @@ const PROJECTS: Project[] = [
 // ── POC: canvas singles. Set POC_SINGLES=false to restore the story-tile canvas. ──
 const POC_SINGLES = true
 const SINGLES: Project[] = [
-  { id: 's1', kind: 'photo', single: true, title: 'DaFly Hooligan', category: 'Portrait', year: '2024', color: '#222222',
-    src: '/images/portfolio/candidate_2024_dafly-hooligan_001_standard.jpg', gallery: ['/images/portfolio/candidate_2024_dafly-hooligan_001_standard.jpg'] },
-  { id: 's2', kind: 'photo', single: true, title: 'Notting Hill Carnival', category: 'Carnival', year: '2024', color: '#222222',
-    src: '/images/portfolio/candidate_2024_notting-hill-carnival_001_standard.jpg', gallery: ['/images/portfolio/candidate_2024_notting-hill-carnival_001_standard.jpg'] },
-  { id: 's4', kind: 'photo', single: true, title: 'DJ Koco', category: 'Live', year: '2025', color: '#222222',
-    src: '/images/portfolio/candidate_2025_dj-koco_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_dj-koco_001_standard.jpg'] },
-  { id: 's5', kind: 'photo', single: true, title: 'Evidence', category: 'Live', year: '2025', color: '#222222',
-    src: '/images/portfolio/candidate_2025_evidence_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_evidence_001_standard.jpg'] },
-  { id: 's10', kind: 'photo', single: true, title: 'The Pharcyde', category: 'Live', year: '2025', color: '#222222',
-    src: '/images/portfolio/candidate_2025_pharcyde_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_pharcyde_001_standard.jpg'] },
-  { id: 's11', kind: 'photo', single: true, title: 'Rayan Lanji · Pride Party', category: 'Live', year: '2025', color: '#222222',
-    src: '/images/portfolio/candidate_2025_rayan-lanji-pride-party_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_rayan-lanji-pride-party_001_standard.jpg'] },
-  { id: 's12', kind: 'photo', single: true, title: 'Rome Streetz · Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
-    src: '/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg'] },
-  { id: 's13', kind: 'photo', single: true, title: 'Schoolboy Q', category: 'Live', year: '2025', color: '#222222',
-    src: '/images/portfolio/candidate_2025_schoolboyq_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_schoolboyq_001_standard.jpg'] },
-  { id: 's14', kind: 'photo', single: true, title: 'Souls of Mischief', category: 'Live', year: '2025', color: '#222222',
-    src: '/images/portfolio/candidate_2025_souls-of-mistif_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_souls-of-mistif_001_standard.jpg'] },
-  { id: 's15', kind: 'photo', single: true, title: 'Jacob Alon', category: 'Live', year: '2026', color: '#222222',
-    src: '/images/portfolio/candidate_2026_jacob-alon_001_standard.jpg', gallery: ['/images/portfolio/candidate_2026_jacob-alon_001_standard.jpg'] },
-  { id: 's16', kind: 'photo', single: true, title: 'Plaqueboy Max and Skepta', category: 'Live', year: '2026', color: '#222222',
-    src: '/images/portfolio/candidate_2026_plaqueboy-max-and-skepta_001_standard.jpg', gallery: ['/images/portfolio/candidate_2026_plaqueboy-max-and-skepta_001_standard.jpg'] },
-  { id: 's17', kind: 'photo', single: true, title: 'Yungmorpehius', category: 'Portrait', year: '2026', color: '#222222',
-    src: '/images/portfolio/candidate_2026_yungmorpehius_001_standard.jpg', gallery: ['/images/portfolio/candidate_2026_yungmorpehius_001_standard.jpg'] },
   { id: 's18', kind: 'photo', single: true, title: 'Westside Gunn · Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
     src: '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg', gallery: ['/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg'] },
+  { id: 's10', kind: 'photo', single: true, title: 'The Pharcyde', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_pharcyde_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_pharcyde_001_standard.jpg'] },
+  { id: 's17', kind: 'photo', single: true, title: 'Yungmorpehius', category: 'Portrait', year: '2026', color: '#222222',
+    src: '/images/portfolio/candidate_2026_yungmorpehius_001_standard.jpg', gallery: ['/images/portfolio/candidate_2026_yungmorpehius_001_standard.jpg'] },
+  { id: 's16', kind: 'photo', single: true, title: 'Plaqueboy Max and Skepta', category: 'Live', year: '2026', color: '#222222',
+    src: '/images/portfolio/candidate_2026_plaqueboy-max-and-skepta_001_standard.jpg', gallery: ['/images/portfolio/candidate_2026_plaqueboy-max-and-skepta_001_standard.jpg'] },
   { id: 's19', kind: 'photo', single: true, title: 'The Alchemist · Jazz Cafe Festival', category: 'Live', year: '2024', color: '#222222',
     src: '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_005_standard.jpg', gallery: ['/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_005_standard.jpg'] },
+  { id: 's2', kind: 'photo', single: true, title: 'Notting Hill Carnival', category: 'Carnival', year: '2024', color: '#222222',
+    src: '/images/portfolio/candidate_2024_notting-hill-carnival_001_standard.jpg', gallery: ['/images/portfolio/candidate_2024_notting-hill-carnival_001_standard.jpg'] },
+  { id: 's12', kind: 'photo', single: true, title: 'Rome Streetz · Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg'] },
   { id: 's20', kind: 'photo', single: true, title: '22impact · Model shoot', category: 'Brand', year: '2025', color: '#222222',
     src: '/images/brand/22impact/brand_2025_22impact_005_standard.jpg', gallery: ['/images/brand/22impact/brand_2025_22impact_005_standard.jpg'] },
+  { id: 's5', kind: 'photo', single: true, title: 'Evidence', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_evidence_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_evidence_001_standard.jpg'] },
+  { id: 's13', kind: 'photo', single: true, title: 'Schoolboy Q', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_schoolboyq_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_schoolboyq_001_standard.jpg'] },
+  { id: 's1', kind: 'photo', single: true, title: 'DaFly Hooligan', category: 'Portrait', year: '2024', color: '#222222',
+    src: '/images/portfolio/candidate_2024_dafly-hooligan_001_standard.jpg', gallery: ['/images/portfolio/candidate_2024_dafly-hooligan_001_standard.jpg'] },
   { id: 's21', kind: 'photo', single: true, title: 'Sonnyjim · Hootananny Brixton', category: 'Live', year: '2025', color: '#222222',
     src: '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_006_standard.jpg', gallery: ['/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_006_standard.jpg'] },
+  { id: 's15', kind: 'photo', single: true, title: 'Jacob Alon', category: 'Live', year: '2026', color: '#222222',
+    src: '/images/portfolio/candidate_2026_jacob-alon_001_standard.jpg', gallery: ['/images/portfolio/candidate_2026_jacob-alon_001_standard.jpg'] },
+  { id: 's14', kind: 'photo', single: true, title: 'Souls of Mischief', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_souls-of-mistif_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_souls-of-mistif_001_standard.jpg'] },
+  { id: 's11', kind: 'photo', single: true, title: 'Rayan Lanji · Pride Party', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_rayan-lanji-pride-party_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_rayan-lanji-pride-party_001_standard.jpg'] },
+  { id: 's4', kind: 'photo', single: true, title: 'DJ Koco', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_dj-koco_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_dj-koco_001_standard.jpg'] },
 ]
 const ALL_ITEMS: Project[] = [...PROJECTS, ...SINGLES]
 const CANVAS_ITEMS: Project[] = POC_SINGLES ? SINGLES : PROJECTS
@@ -577,7 +577,7 @@ function getDims(id: string): { w: number; h: number } {
 }
 // Single dial for how fast everything drifts at steady state. Lower = slower.
 // Velocity ramps from 0 to (base * VELOCITY_SCALE) over the first second via physics damping.
-const VELOCITY_SCALE = 0.5
+const VELOCITY_SCALE = 0.35
 
 const SWATCHES = ['#C8432A', '#2E7D32', '#1565C0', '#F2B800', '#000000', '#ffffff']
 
