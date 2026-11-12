@@ -779,6 +779,13 @@ export default function HomePage() {
   // pointermove adds main-thread work that compounds with the panel's
   // mix-blend-mode repaints, causing jitter).
   const [aboutSettled, setAboutSettled] = useState(false)
+  // About page: portrait and logo sit behind the text until grabbed, then stay above it until About closes
+  const [aboutFront, setAboutFront] = useState<Record<string, boolean>>({})
+  useEffect(() => {
+    if (aboutVisible) return
+    const t = setTimeout(() => setAboutFront({}), 500)
+    return () => clearTimeout(t)
+  }, [aboutVisible])
   const [logoSource,   setLogoSource]   = useState({ x: 0, y: 0, scale: 1, rot: 0 })
   const [activePhoto,  setActivePhoto]  = useState<Project | null>(null)
   // Which canvas tile the lightbox is currently showing (differs from activePhoto.id for single reels)
@@ -1339,6 +1346,7 @@ export default function HomePage() {
   const onPointerDown = useCallback((e: React.PointerEvent, id: string) => {
     e.stopPropagation()
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    if (id === 'aboutPortrait' || id === 'aboutLogo') setAboutFront(p => p[id] ? p : { ...p, [id]: true })
     const pos = posRef.current[id]; if (!pos) return
     didDragRef.current = false
     const pr = ALL_ITEMS.find(p => p.id === id)
@@ -1997,8 +2005,9 @@ export default function HomePage() {
             up with the panel on open and away on close. */}
         {/* ── About PORTRAIT visual — z:56, renders image, no pointer events ── */}
         <div
-          className="fixed inset-0 z-[56]"
+          className="fixed inset-0"
           style={{
+            zIndex: aboutFront.aboutPortrait ? 62 : 56,
             transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             willChange: 'transform',
@@ -2033,8 +2042,9 @@ export default function HomePage() {
 
         {/* ── About LOGO visual — z:57, renders image, no pointer events ────── */}
         <div
-          className="fixed inset-0 z-[57]"
+          className="fixed inset-0"
           style={{
+            zIndex: aboutFront.aboutLogo ? 63 : 57,
             transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             willChange: 'transform',
