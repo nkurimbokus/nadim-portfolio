@@ -1580,13 +1580,9 @@ export default function HomePage() {
     }
 
     if (lbZoomRef.current > 1) {
-      // Tap while zoomed (tiny movement) → reset to 1×
-      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
-        lbZoomRef.current = 1; setLbZoom(1)
-        lbPanRef.current = { x: 0, y: 0 }; lbPanBaseRef.current = { x: 0, y: 0 }
-        applyLbTransform(1, 0, 0, true)
-      }
-      // Otherwise the finger was panning — already committed live in onLbTouchMove
+      // Zoomed: a single tap does nothing. Zooming out is a double-tap (handled above),
+      // so tap twice to zoom in and tap twice to zoom out. Pan is already committed live
+      // in onLbTouchMove.
       return
     }
     // Swipe threshold: 50 px horizontal, more horizontal than vertical
