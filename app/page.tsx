@@ -615,17 +615,20 @@ function stripLimit(vw: number, vh: number): number {
 // When a drifting photo wraps round to the other edge, pick the height where it
 // overlaps the fewest photos (and the logo) already sitting near that edge.
 function pickClearY(all: Record<string, PhysicsState>, selfId: string, w: number, h: number, edgeX: number, vh: number): number {
-  const inset = 24
+  // A photo wrapping round to the right edge takes the emptiest height there, so the
+  // flow keeps filling the screen evenly (no clumps, no bare patches).
+  const inset = Math.min(24, vh * 0.02)
   const span = Math.max(0, vh - h - inset * 2)
+  const pad = 36
   let best = inset + span / 2, bestScore = Infinity
-  for (let k = 0; k <= 12; k++) {
-    const y = inset + span * k / 12
+  for (let k = 0; k <= 16; k++) {
+    const y = inset + span * k / 16
     let score = 0
     for (const oid of Object.keys(all)) {
       if (oid === selfId || !(PHOTO_CFG[oid] || oid === 'logo')) continue
       const o = all[oid]; const d = getDims(oid)
-      const ox = Math.max(0, Math.min(edgeX + w, o.x + d.w) - Math.max(edgeX, o.x))
-      const oy = Math.max(0, Math.min(y + h, o.y + d.h) - Math.max(y, o.y))
+      const ox = Math.max(0, Math.min(edgeX + w + pad, o.x + d.w) - Math.max(edgeX - pad, o.x))
+      const oy = Math.max(0, Math.min(y + h + pad, o.y + d.h) - Math.max(y - pad, o.y))
       score += ox * oy
     }
     if (score < bestScore) { bestScore = score; best = y }
@@ -649,45 +652,50 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
   }
   const layout = getLayout()
   if (layout === 'strip') {
-    // Film strip: reel order left to right, everything drifting left at one speed.
-    // Uses the normal canvas wrap-around (off any edge, back in from the opposite one).
-    // Each photo's height is chosen to overlap the fewest photos placed so far (and the logo),
-    // so the screen fills evenly: no heavy pile-ups and no lone photos.
+    // Film strip: a constant flow that fills the whole screen. Photos sit in rows that run the
+    // full height; each photo, in reel order, joins the emptiest row, so every row is evenly
+    // filled and the whole thing drifts left at one speed. Rows are set by the screen height,
+    // so phones and desktops both fill up. The logo's patch is kept clear at the start only.
     const ids = CANVAS_ITEMS.map(i => i.id).filter(id => PHOTO_CFG[id])   // every photo is in the carousel
     const n = ids.length
-    const avgW = ids.reduce((sum, id) => sum + getDims(id).w, 0) / n
-    // Spacing is set by how many should be on screen at once; the rest wait off the right edge
-    const visible = Math.max(2, Math.min(n, stripLimit(vw, vh)))
-    const step = (vw + 50 + avgW * 0.5) / (visible - 1)
-    STRIP_LEN = n * step
-    const inset = Math.min(60, vh * 0.06)
+    const dimsAll = ids.map(id => getDims(id))
+    const avgW = dimsAll.reduce((sum, d) => sum + d.w, 0) / n
+    const avgH = dimsAll.reduce((sum, d) => sum + d.h, 0) / n
+    const inset = isMobile ? 8 : Math.min(36, vh * 0.04)
+    const lanes = Math.max(2, Math.round((vh - inset * 2) / (avgH * 0.95)))
+    const laneH = (vh - inset * 2) / lanes
     const jit = (i: number) => Math.sin(i * 78.233)
     const speed = isMobile ? 7 : 11
     const lg = s['logo']
-    const keepOut = { x0: lg.x - 30, x1: lg.x + logoSz + 30, y0: lg.y, y1: lg.y + logoSz + 28 }
-    const placed: { x: number; y: number; w: number; h: number }[] = []
-    const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
-      Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
-    let prevY = vh / 2
+    const keepOut = { x0: lg.x - 24, x1: lg.x + logoSz + 24, y0: lg.y, y1: lg.y + logoSz + 24 }
+    const startX = -avgW * 0.5
+    const laneRight: number[] = new Array(lanes).fill(startX)
+    // Row order that spreads neighbours apart: 0, 2, 4, ..., 1, 3, 5, ...
+    const laneOrder: number[] = []
+    for (let l = 0; l < lanes; l += 2) laneOrder.push(l)
+    for (let l = 1; l < lanes; l += 2) laneOrder.push(l)
+    const hitsLogo = (x: number, y: number, w: number, h: number) =>
+      x < keepOut.x1 && x + w > keepOut.x0 && y < keepOut.y1 && y + h > keepOut.y0
     ids.forEach((id, i) => {
-      const cfg = PHOTO_CFG[id]; const { w, h } = getDims(id)
-      const x = -avgW * 0.5 + i * step + jit(i + 9) * 12
-      const span = Math.max(0, vh - h - inset * 2)
-      let bestY = inset + span / 2, bestScore = Infinity
-      for (let k = 0; k <= 20; k++) {
-        const y = inset + span * k / 20
-        let score = 0
-        for (const o of placed) score += rectOverlap(x - 8, y - 8, w + 16, h + 16, o.x, o.y, o.w, o.h)
-        score += 4 * rectOverlap(x, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
-        // gentle pull away from the previous photo's height so neighbours alternate
-        score += Math.max(0, h * 0.6 - Math.abs(y - prevY)) * 40
-        if (score < bestScore) { bestScore = score; bestY = y }
+      const cfg = PHOTO_CFG[id]; const { w, h } = dimsAll[i]
+      // emptiest row (ties broken by the spread-out order)
+      let lane = laneOrder[0], bestR = Infinity
+      for (const l of laneOrder) { if (laneRight[l] < bestR - 1) { bestR = laneRight[l]; lane = l } }
+      const y0 = Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5,
+        inset + lane * laneH + (laneH - h) / 2 + jit(i + 3) * laneH * 0.12))
+      let y = y0
+      let x = laneRight[lane] - w * (0.06 + 0.06 * (jit(i + 9) + 1) / 2)   // slight overlap, like a scrapbook
+      if (hitsLogo(x, y, w, h)) {
+        // keep the logo clear at the start: slip just below it if there's room, else start right of it
+        const below = keepOut.y1 + 2
+        if (below - y0 <= laneH * 0.6 && below + h <= vh - inset * 0.5) y = below
+        else x = Math.max(x, keepOut.x1)
       }
-      prevY = bestY
-      placed.push({ x, y: bestY, w, h })
-      STRIP_HOME_Y[id] = bestY
-      s[id] = { x, y: bestY, rot: cfg.rot, vx: 0, vy: 0, vrot: 0, baseVx: -speed, baseVy: 0, baseVrot: 0 }
+      laneRight[lane] = x + w
+      STRIP_HOME_Y[id] = y
+      s[id] = { x, y, rot: cfg.rot, vx: 0, vy: 0, vrot: 0, baseVx: -speed, baseVy: 0, baseVrot: 0 }
     })
+    STRIP_LEN = Math.max(...laneRight) - startX
     return s
   }
   let photoCount = 0
