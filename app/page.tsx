@@ -240,6 +240,10 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_010_standard.jpg': '1600/1067',
   '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_011_standard.jpg': '1600/1067',
   '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_012_standard.jpg': '1074/1600',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_013_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg': '1067/1600',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_015_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_016_standard.jpg': '1600/1067',
   '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_001_standard.jpg': '1067/1600',
   '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_002_standard.jpg': '1600/1067',
   '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_003_standard.jpg': '1600/1067',
@@ -332,26 +336,23 @@ const PROJECTS: Project[] = [
     id: 'c2', kind: 'photo', title: 'Notting Hill Carnival', category: 'Cultural', year: '2026', yearLabel: '2024 to 2026', color: '#F2B800',
     src: '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_001_standard.jpg',
     gallery: [
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_013_standard.jpg',
       '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_001_standard.jpg',
       '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_002_standard.jpg',
       '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_003_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg',
       '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_004_standard.jpg',
       '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_005_standard.jpg',
       '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_006_standard.jpg',
-      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_007_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_015_standard.jpg',
       '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_008_standard.jpg',
       '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_009_standard.jpg',
       '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_010_standard.jpg',
-      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_011_standard.jpg',
-      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_012_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_016_standard.jpg',
       '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_001_standard.jpg',
-      '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_002_standard.jpg',
       '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_003_standard.jpg',
       '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_004_standard.jpg',
-      '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_005_standard.jpg',
       '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_006_standard.jpg',
-      '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_007_standard.jpg',
-      '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_008_standard.jpg',
     ],
   },
   {
@@ -503,7 +504,7 @@ const POC_SINGLES = true
 const SINGLES: Project[] = [
   { id: 's18', kind: 'photo', single: true, title: 'Westside Gunn · Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
     src: '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg', gallery: ['/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg'] },
-  { id: 's10', kind: 'photo', single: true, title: 'The Pharcyde', category: 'Live', year: '2025', color: '#222222',
+  { id: 's10', kind: 'photo', single: true, title: 'The Pharcyde · O2 Kentish Town', category: 'Live', year: '2025', color: '#222222',
     src: '/images/portfolio/candidate_2025_pharcyde_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_pharcyde_001_standard.jpg'] },
   { id: 's17', kind: 'photo', single: true, title: 'Yungmorpehius', category: 'Portrait', year: '2026', color: '#222222',
     src: '/images/portfolio/candidate_2026_yungmorpehius_001_standard.jpg', gallery: ['/images/portfolio/candidate_2026_yungmorpehius_001_standard.jpg'] },
@@ -519,7 +520,7 @@ const SINGLES: Project[] = [
     src: '/images/brand/22impact/brand_2025_22impact_005_standard.jpg', gallery: ['/images/brand/22impact/brand_2025_22impact_005_standard.jpg'] },
   { id: 's5', kind: 'photo', single: true, title: 'Evidence', category: 'Live', year: '2025', color: '#222222',
     src: '/images/portfolio/candidate_2025_evidence_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_evidence_001_standard.jpg'] },
-  { id: 's13', kind: 'photo', single: true, title: 'Schoolboy Q', category: 'Live', year: '2025', color: '#222222',
+  { id: 's13', kind: 'photo', single: true, title: 'Schoolboy Q · Roundhouse', category: 'Live', year: '2025', color: '#222222',
     src: '/images/portfolio/candidate_2025_schoolboyq_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_schoolboyq_001_standard.jpg'] },
   { id: 's1', kind: 'photo', single: true, title: 'DaFly Hooligan', category: 'Portrait', year: '2024', color: '#222222',
     src: '/images/portfolio/candidate_2024_dafly-hooligan_001_standard.jpg', gallery: ['/images/portfolio/candidate_2024_dafly-hooligan_001_standard.jpg'] },
@@ -579,7 +580,7 @@ function getDims(id: string): { w: number; h: number } {
 // Velocity ramps from 0 to (base * VELOCITY_SCALE) over the first second via physics damping.
 const VELOCITY_SCALE = 0.35
 
-const SWATCHES = ['#C8432A', '#2E7D32', '#1565C0', '#F2B800', '#000000', '#ffffff']
+const SWATCHES = ['#FF2A1A', '#1F4DFF', '#FFD400', '#00B34A', '#000000', '#ffffff']   // red, blue, yellow, green, black, white
 
 function hexToRgb(hex: string): string {
   const r = parseInt(hex.slice(1, 3), 16)
