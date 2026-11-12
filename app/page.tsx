@@ -39,6 +39,8 @@ interface Project {
   color: string
   src: string | null        // cover shown on canvas tile
   gallery: string[]         // all images for this job — flip through in viewer
+  yearLabel?: string        // display override, e.g. '2024 to 2026' (year stays numeric for sorting)
+  single?: boolean          // canvas single: lightbox flips through ALL singles (a reel), not one story
 }
 
 const LOGO_SIZE        = 180
@@ -56,21 +58,36 @@ const PHOTO_CFG: Record<string, {
   // Brand 2025 — featured images are portrait (~1080x1600); galleries mix portrait + landscape
   b1: { w: 240, aspect: '1060/1600', rot:  1.5, xPct: 0.38, yPct: 0.22, baseVx:  -7, baseVy:   8, baseVrot:  0.22 },
   b2: { w: 240, aspect: '1082/1600', rot: -2,   xPct: 0.62, yPct: 0.45, baseVx:   8, baseVy:  -7, baseVrot: -0.28 },
-  b3: { w: 240, aspect: '1079/1600', rot:  2.5, xPct: 0.22, yPct: 0.38, baseVx:  -9, baseVy:   6, baseVrot:  0.20 },
-  // Cultural 2025 — Voice of Mauritius, mixed portrait + landscape gallery (8 images)
-  c1: { w: 250, aspect: '1083/1600', rot: -2.5, xPct: 0.45, yPct: 0.85, baseVx:  11, baseVy:  -7, baseVrot: -0.24 },
   // Live — Julies Top 5 (landscape feature), Jazz Cafe Festival (landscape), Reyven Lenae @ Roundhouse (portrait)
   l1: { w: 360, aspect: '1600/1067', rot: -1.5, xPct: 0.82, yPct: 0.72, baseVx:  -8, baseVy:  -9, baseVrot:  0.22 },
-  l2: { w: 340, aspect: '1600/1113', rot:  2,   xPct: 0.05, yPct: 0.42, baseVx: -10, baseVy:  11, baseVrot: -0.24 },
   l3: { w: 240, aspect: '1067/1600', rot: -2.5, xPct: 0.92, yPct: 0.20, baseVx:  12, baseVy:  -8, baseVrot:  0.25 },
   // New live 2025 shoots
   l4: { w: 240, aspect: '1078/1600', rot:  2.0, xPct: 0.18, yPct: 0.08, baseVx:  -9, baseVy:   7, baseVrot: -0.22 },
-  l5: { w: 240, aspect: '1076/1600', rot: -1.5, xPct: 0.58, yPct: 0.15, baseVx:  10, baseVy:  -8, baseVrot:  0.26 },
   l6: { w: 240, aspect: '1077/1600', rot:  2.5, xPct: 0.72, yPct: 0.60, baseVx:  -8, baseVy:   9, baseVrot: -0.20 },
   l7: { w: 340, aspect: '1600/1080', rot: -2.0, xPct: 0.30, yPct: 0.55, baseVx:  11, baseVy:  10, baseVrot:  0.18 },
   l8: { w: 240, aspect: '1076/1600', rot:  1.5, xPct: 0.50, yPct: 0.35, baseVx:  -7, baseVy:  -9, baseVrot: -0.24 },
   l9: { w: 250, aspect: '1078/1600', rot: -3.0, xPct: 0.08, yPct: 0.78, baseVx:   9, baseVy:  -7, baseVrot:  0.23 },
   // Live 2026 — Ezra Collective @ Roundhouse (landscape cover)
+  // POC singles (one standout frame per tile)
+  s1: { w: 240, aspect: '1067/1600', rot: 2.0, xPct: 0.36, yPct: 0.81, baseVx: -7, baseVy: -10, baseVrot: 0.18 },
+  s2: { w: 330, aspect: '1600/1067', rot: -2.2, xPct: 0.38, yPct: 0.18, baseVx: 7, baseVy: -10, baseVrot: 0.24 },
+  s4: { w: 330, aspect: '1600/1067', rot: 0.2, xPct: 0.77, yPct: 0.83, baseVx: 9, baseVy: 8, baseVrot: 0.2 },
+  s5: { w: 240, aspect: '1067/1600', rot: -2.5, xPct: 0.21, yPct: 0.57, baseVx: 10, baseVy: 8, baseVrot: 0.21 },
+  s10: { w: 330, aspect: '1600/1058', rot: -1.7, xPct: 0.93, yPct: 0.16, baseVx: 7, baseVy: -9, baseVrot: 0.27 },
+  s11: { w: 330, aspect: '1600/1067', rot: -0.6, xPct: 0.58, yPct: 0.74, baseVx: 7, baseVy: 10, baseVrot: 0.25 },
+  s12: { w: 240, aspect: '1067/1600', rot: -0.7, xPct: 0.48, yPct: 0.55, baseVx: -7, baseVy: -7, baseVrot: -0.2 },
+  s13: { w: 330, aspect: '1600/1077', rot: 0.5, xPct: 0.21, yPct: 0.16, baseVx: 8, baseVy: -7, baseVrot: 0.23 },
+  s14: { w: 330, aspect: '1600/1076', rot: -2.2, xPct: 0.1, yPct: 0.12, baseVx: -9, baseVy: 9, baseVrot: 0.22 },
+  s15: { w: 240, aspect: '1067/1600', rot: -1.9, xPct: 0.91, yPct: 0.81, baseVx: -9, baseVy: -6, baseVrot: 0.24 },
+  s16: { w: 330, aspect: '1600/1067', rot: 0.2, xPct: 0.03, yPct: 0.85, baseVx: 10, baseVy: -6, baseVrot: -0.24 },
+  s17: { w: 240, aspect: '1067/1600', rot: -0.9, xPct: 0.7, yPct: 0.1, baseVx: 9, baseVy: -6, baseVrot: 0.28 },
+  s18: { w: 240, aspect: '1076/1600', rot: -1.5, xPct: 0.45, yPct: 0.3, baseVx: 8, baseVy: -8, baseVrot: 0.22 },
+  s19: { w: 240, aspect: '1112/1600', rot: 2, xPct: 0.68, yPct: 0.6, baseVx: -9, baseVy: 7, baseVrot: -0.24 },
+  s20: { w: 330, aspect: '1600/1070', rot: -1.2, xPct: 0.56, yPct: 0.52, baseVx: 8, baseVy: 7, baseVrot: 0.22 },
+  s21: { w: 330, aspect: '1600/1073', rot: 1.4, xPct: 0.86, yPct: 0.45, baseVx: -8, baseVy: 8, baseVrot: -0.22 },
+  s22: { w: 240, aspect: '1067/1600', rot: 1.8, xPct: 0.62, yPct: 0.84, baseVx: -8, baseVy: -7, baseVrot: 0.22 },
+  s23: { w: 290, aspect: '1600/1525', rot: -1.6, xPct: 0.14, yPct: 0.5, baseVx: 8, baseVy: 8, baseVrot: -0.2 },
+  s25: { w: 240, aspect: '1143/1600', rot: -1.4, xPct: 0.78, yPct: 0.3, baseVx: -8, baseVy: 7, baseVrot: 0.21 },
   l10: { w: 340, aspect: '1600/1074', rot:  1.5, xPct: 0.85, yPct: 0.45, baseVx:  -9, baseVy:   8, baseVrot: -0.21 },
 }
 
@@ -207,7 +224,56 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_011_standard.jpg': '1600/1077',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_012_standard.jpg': '1600/1075',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_013_standard.png': '1600/1525',
-  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.png': '1600/1067',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.webp': '1600/1067',
+  '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_001_standard.jpg': '1600/1067',
+  '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_002_standard.jpg': '1600/1067',
+  '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_003_standard.jpg': '1067/1600',
+  '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_004_standard.jpg': '1067/1600',
+  '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_005_standard.jpg': '1600/1067',
+  '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_006_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_001_standard.jpg': '1200/1600',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_002_standard.jpg': '1067/1600',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_003_standard.jpg': '1067/1600',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_004_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_005_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_006_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_007_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_008_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_009_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_010_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_011_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_012_standard.jpg': '1074/1600',
+  '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.webp': '1600/1525',
+  '/images/portfolio/candidate_2026_concept-2_001_standard.webp': '1143/1600',
+  '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_002_standard.jpg': '1079/1600',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_013_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg': '1067/1600',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_015_standard.jpg': '1600/1067',
+  '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_016_standard.jpg': '1600/1067',
+  '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_001_standard.jpg': '1067/1600',
+  '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_002_standard.jpg': '1600/1067',
+  '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_003_standard.jpg': '1600/1067',
+  '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_004_standard.jpg': '1600/1067',
+  '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_005_standard.jpg': '1600/1067',
+  '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_006_standard.jpg': '1600/1067',
+  '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_007_standard.jpg': '1600/1067',
+  '/images/portfolio/candidate_2024_dafly-hooligan_001_standard.jpg': '1067/1600',
+  '/images/portfolio/candidate_2024_notting-hill-carnival_001_standard.jpg': '1600/1067',
+  '/images/portfolio/candidate_2024_notting-hill-carnival_002_standard.jpg': '1076/1600',
+  '/images/portfolio/candidate_2025_dj-koco_001_standard.jpg': '1600/1067',
+  '/images/portfolio/candidate_2025_evidence_001_standard.jpg': '1067/1600',
+  '/images/portfolio/candidate_2025_france_001_standard.jpg': '1600/1067',
+  '/images/portfolio/candidate_2025_france_002_standard.jpg': '1600/1067',
+  '/images/portfolio/candidate_2025_mauritius_001_standard.jpg': '1067/1600',
+  '/images/portfolio/candidate_2025_mauritius_002_standard.jpg': '1067/1600',
+  '/images/portfolio/candidate_2025_pharcyde_001_standard.jpg': '1600/1058',
+  '/images/portfolio/candidate_2025_rayan-lanji-pride-party_001_standard.jpg': '1600/1067',
+  '/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg': '1067/1600',
+  '/images/portfolio/candidate_2025_schoolboyq_001_standard.jpg': '1600/1077',
+  '/images/portfolio/candidate_2025_souls-of-mistif_001_standard.jpg': '1600/1076',
+  '/images/portfolio/candidate_2026_jacob-alon_001_standard.jpg': '1067/1600',
+  '/images/portfolio/candidate_2026_plaqueboy-max-and-skepta_001_standard.jpg': '1600/1067',
+  '/images/portfolio/candidate_2026_yungmorpehius_001_standard.jpg': '1067/1600',
 }
 
 function getSrcAspect(src: string | null | undefined, fallback: string): string {
@@ -258,30 +324,54 @@ const PROJECTS: Project[] = [
       '/images/brand/yosqi/brand_2025_yosqi_006_standard.jpg',
     ],
   },
+  // Brand — new
   {
-    id: 'b3', kind: 'photo', title: '22impact · Model shoot', category: 'Brand', year: '2025', color: '#1A2B3C',
-    src: '/images/brand/22impact/brand_2025_22impact_005_standard.jpg',
+    id: 'b4', kind: 'photo', title: 'Tamila · Roti Wrap pop-up', category: 'Brand', year: '2026', color: '#E8A317',
+    src: '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_001_standard.jpg',
     gallery: [
-      '/images/brand/22impact/brand_2025_22impact_001_standard.jpg',
-      '/images/brand/22impact/brand_2025_22impact_002_standard.jpg',
-      '/images/brand/22impact/brand_2025_22impact_003_standard.jpg',
-      '/images/brand/22impact/brand_2025_22impact_004_standard.jpg',
-      '/images/brand/22impact/brand_2025_22impact_005_standard.jpg',
+      '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_001_standard.jpg',
+      '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_002_standard.jpg',
+      '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_003_standard.jpg',
+      '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_004_standard.jpg',
+      '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_005_standard.jpg',
+      '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_006_standard.jpg',
     ],
   },
-  // Cultural 2025
+  // Cultural — more sets
   {
-    id: 'c1', kind: 'photo', title: 'voice of Mauritius · Notting Hill Carnival', category: 'Cultural', year: '2025', color: '#F2B800',
-    src: '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_001_standard.jpg',
+    id: 'c2', kind: 'photo', title: 'Notting Hill Carnival', category: 'Cultural', year: '2026', yearLabel: '2024 to 2026', color: '#F2B800',
+    src: '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_001_standard.jpg',
     gallery: [
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_013_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_001_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_002_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_003_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_004_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_005_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_006_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_015_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_008_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_009_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_010_standard.jpg',
+      '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_016_standard.jpg',
       '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_001_standard.jpg',
-      '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_002_standard.jpg',
       '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_003_standard.jpg',
       '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_004_standard.jpg',
-      '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_005_standard.jpg',
       '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_006_standard.jpg',
-      '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_007_standard.jpg',
-      '/images/cultural/voice-of-mauritius/cultural_2025_voice-of-mauritius_008_standard.jpg',
+    ],
+  },
+  {
+    id: 'c3', kind: 'photo', title: 'Lion Dance · Chinese New Year', category: 'Cultural', year: '2025', color: '#B3202A',
+    src: '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_001_standard.jpg',
+    gallery: [
+      '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_001_standard.jpg',
+      '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_002_standard.jpg',
+      '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_003_standard.jpg',
+      '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_004_standard.jpg',
+      '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_005_standard.jpg',
+      '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_006_standard.jpg',
+      '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_007_standard.jpg',
     ],
   },
   // Live 2024–2026
@@ -300,22 +390,6 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l2', kind: 'photo', title: 'Jazz Cafe Festival', category: 'Live', year: '2024', color: '#C8432A',
-    src: '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_005_standard.jpg',
-    gallery: [
-      '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_001_standard.jpg',
-      '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_002_standard.jpg',
-      '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_003_standard.jpg',
-      '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_004_standard.jpg',
-      '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_005_standard.jpg',
-      '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_006_standard.jpg',
-      '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_007_standard.jpg',
-      '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_008_standard.jpg',
-      '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_009_standard.jpg',
-      '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_010_standard.jpg',
-    ],
-  },
-  {
     id: 'l3', kind: 'photo', title: 'Ravyn Lenae · Roundhouse', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/reyven-lenae-roundhouse/live_2025_reyven-lenae-roundhouse_001_standard.jpg',
     gallery: [
@@ -329,7 +403,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l4', kind: 'photo', title: 'Busta Rhymes · South Facing Festival', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l4', kind: 'photo', title: 'South Facing Festival', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
     gallery: [
       '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_001_standard.jpg',
@@ -342,18 +416,6 @@ const PROJECTS: Project[] = [
       '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_008_standard.jpg',
       '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_009_standard.jpg',
       '/images/live/southfacing-festival-hiphop-back-in-the-day/live_2025_southfacing-festival_hiphop-back-in-the-day_010_standard.jpg',
-    ],
-  },
-  {
-    id: 'l5', kind: 'photo', title: 'Sonnyjim · Hootananny Brixton', category: 'Live', year: '2025', color: '#C8432A',
-    src: '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_006_standard.jpg',
-    gallery: [
-      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_001_standard.jpg',
-      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_002_standard.jpg',
-      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_003_standard.jpg',
-      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_004_standard.jpg',
-      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_005_standard.jpg',
-      '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_006_standard.jpg',
     ],
   },
   {
@@ -392,7 +454,7 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: 'l8', kind: 'photo', title: 'Westside Gunn · Jazz Cafe', category: 'Live', year: '2025', color: '#C8432A',
+    id: 'l8', kind: 'photo', title: 'Westside Gunn · The Jazz Cafe', category: 'Live', year: '2025', color: '#C8432A',
     src: '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg',
     gallery: [
       '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg',
@@ -407,22 +469,17 @@ const PROJECTS: Project[] = [
   },
   {
     id: 'l9', kind: 'photo', title: 'Freddie Gibbs · O2 Brixton', category: 'Live', year: '2026', color: '#C8432A',
-    src: '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.png',
+    src: '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.webp',
     gallery: [
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_001_standard.jpg',
-      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_002_standard.jpg',
-      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_003_standard.jpg',
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_004_standard.jpg',
-      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_005_standard.jpg',
-      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_006_standard.jpg',
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_007_standard.jpg',
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_008_standard.jpg',
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_009_standard.jpg',
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_010_standard.jpg',
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_011_standard.jpg',
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_012_standard.jpg',
-      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_013_standard.png',
-      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.png',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.webp',
     ],
   },
   {
@@ -443,8 +500,53 @@ const PROJECTS: Project[] = [
   },
 ]
 
+// ── POC: canvas singles. Set POC_SINGLES=false to restore the story-tile canvas. ──
+const POC_SINGLES = true
+const SINGLES: Project[] = [
+  { id: 's18', kind: 'photo', single: true, title: 'Westside Gunn · The Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg', gallery: ['/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_001_standard.jpg'] },
+  { id: 's10', kind: 'photo', single: true, title: 'The Pharcyde · O2 Kentish Town', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_pharcyde_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_pharcyde_001_standard.jpg'] },
+  { id: 's17', kind: 'photo', single: true, title: 'Yungmorpehius · Hootananny Brixton', category: 'Portrait', year: '2026', color: '#222222',
+    src: '/images/portfolio/candidate_2026_yungmorpehius_001_standard.jpg', gallery: ['/images/portfolio/candidate_2026_yungmorpehius_001_standard.jpg'] },
+  { id: 's16', kind: 'photo', single: true, title: 'Plaqueboy Max and Skepta · Camden Assembly', category: 'Live', year: '2026', color: '#222222',
+    src: '/images/portfolio/candidate_2026_plaqueboy-max-and-skepta_001_standard.jpg', gallery: ['/images/portfolio/candidate_2026_plaqueboy-max-and-skepta_001_standard.jpg'] },
+  { id: 's19', kind: 'photo', single: true, title: 'The Alchemist · Jazz Cafe Festival', category: 'Live', year: '2024', color: '#222222',
+    src: '/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_005_standard.jpg', gallery: ['/images/live/jazzcafe-festival/live_2024_jazzcafe-festival_005_standard.jpg'] },
+  { id: 's2', kind: 'photo', single: true, title: 'Notting Hill Carnival', category: 'Carnival', year: '2024', color: '#222222',
+    src: '/images/portfolio/candidate_2024_notting-hill-carnival_001_standard.jpg', gallery: ['/images/portfolio/candidate_2024_notting-hill-carnival_001_standard.jpg'] },
+  { id: 's22', kind: 'photo', single: true, title: 'Notting Hill Carnival', category: 'Carnival', year: '2026', color: '#222222',
+    src: '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg', gallery: ['/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg'] },
+  { id: 's23', kind: 'photo', single: true, title: 'Redveil · O2 Brixton', category: 'Live', year: '2026', color: '#222222',
+    src: '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.webp', gallery: ['/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.webp'] },
+  { id: 's25', kind: 'photo', single: true, title: 'Ella Collage', category: 'Portrait', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2026_concept-2_001_standard.webp', gallery: ['/images/portfolio/candidate_2026_concept-2_001_standard.webp'] },
+  { id: 's12', kind: 'photo', single: true, title: 'Rome Streetz · The Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg'] },
+  { id: 's20', kind: 'photo', single: true, title: '22impact · Model shoot', category: 'Brand', year: '2025', color: '#222222',
+    src: '/images/brand/22impact/brand_2025_22impact_005_standard.jpg', gallery: ['/images/brand/22impact/brand_2025_22impact_005_standard.jpg'] },
+  { id: 's5', kind: 'photo', single: true, title: 'Evidence · The Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_evidence_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_evidence_001_standard.jpg'] },
+  { id: 's13', kind: 'photo', single: true, title: 'Schoolboy Q · Roundhouse', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_schoolboyq_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_schoolboyq_001_standard.jpg'] },
+  { id: 's1', kind: 'photo', single: true, title: 'Da Flyy Hooligan', category: 'Portrait', year: '2024', color: '#222222',
+    src: '/images/portfolio/candidate_2024_dafly-hooligan_001_standard.jpg', gallery: ['/images/portfolio/candidate_2024_dafly-hooligan_001_standard.jpg'] },
+  { id: 's21', kind: 'photo', single: true, title: 'Sonnyjim · Hootananny Brixton', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_006_standard.jpg', gallery: ['/images/live/sonnyjim-hootananny-brixton/live_2025_sonnyjim-hootananny-brixton_006_standard.jpg'] },
+  { id: 's15', kind: 'photo', single: true, title: 'Jacob Alon · Roundhouse', category: 'Live', year: '2026', color: '#222222',
+    src: '/images/portfolio/candidate_2026_jacob-alon_001_standard.jpg', gallery: ['/images/portfolio/candidate_2026_jacob-alon_001_standard.jpg'] },
+  { id: 's14', kind: 'photo', single: true, title: 'Souls of Mischief · O2 Kentish Town', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_souls-of-mistif_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_souls-of-mistif_001_standard.jpg'] },
+  { id: 's11', kind: 'photo', single: true, title: 'Rayan Lanji · Pride Party', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_rayan-lanji-pride-party_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_rayan-lanji-pride-party_001_standard.jpg'] },
+  { id: 's4', kind: 'photo', single: true, title: 'DJ Koco · The Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
+    src: '/images/portfolio/candidate_2025_dj-koco_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_dj-koco_001_standard.jpg'] },
+]
+const ALL_ITEMS: Project[] = [...PROJECTS, ...SINGLES]
+const CANVAS_ITEMS: Project[] = POC_SINGLES ? SINGLES : PROJECTS
+
 // Home-canvas tiles use the small _thumb version (about 70 KB); the lightbox keeps _standard.
-const toThumb = (src: string): string => src.replace(/_standard\.jpg$/i, '_thumb.jpg').replace(/_standard\.png$/i, '_thumb.webp')
+const toThumb = (src: string): string => src.replace(/_standard\.jpg$/i, '_thumb.jpg').replace(/_standard\.png$/i, '_thumb.webp').replace(/_standard\.webp$/i, '_thumb.webp')
 
 // Fetch an image into the browser cache ahead of time so the lightbox never waits on it.
 const preloaded = new Set<string>()
@@ -483,15 +585,52 @@ function getDims(id: string): { w: number; h: number } {
 }
 // Single dial for how fast everything drifts at steady state. Lower = slower.
 // Velocity ramps from 0 to (base * VELOCITY_SCALE) over the first second via physics damping.
-const VELOCITY_SCALE = 0.5
+const VELOCITY_SCALE = 0.35
 
-const SWATCHES = ['#C8432A', '#2E7D32', '#1565C0', '#F2B800', '#000000', '#ffffff']
+const SWATCHES = ['#FF2A1A', '#1F4DFF', '#FFD400', '#00B34A', '#000000', '#ffffff']   // red, blue, yellow, green, black, white
 
 function hexToRgb(hex: string): string {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
   const b = parseInt(hex.slice(5, 7), 16)
   return `rgb(${r}, ${g}, ${b})`
+}
+
+// Canvas layout: the film strip is the default. Add ?layout=float for the original floating pile.
+type CanvasLayout = 'float' | 'strip'
+function getLayout(): CanvasLayout {
+  if (typeof window === 'undefined') return 'float'
+  const q = new URLSearchParams(window.location.search).get('layout')
+  return q === 'float' ? 'float' : 'strip'   // strip is the default; ?layout=float is the original pile
+}
+const STRIP_HOME_Y: Record<string, number> = {}   // strip: each photo's resting height
+let STRIP_LEN = 0                                  // strip: length of the whole carousel loop (all photos)
+// How many photos the strip shows on screen at once (the rest queue off the right edge), by screen width (fewer on small screens = more room)
+function stripLimit(vw: number, vh: number): number {
+  if (vw < 768) return 9
+  if (vw < 1100) return Math.max(6, Math.min(12, Math.round(0.55 * vw * vh / 71000)))   // about half the screen covered
+  return 99
+}
+
+// When a drifting photo wraps round to the other edge, pick the height where it
+// overlaps the fewest photos (and the logo) already sitting near that edge.
+function pickClearY(all: Record<string, PhysicsState>, selfId: string, w: number, h: number, edgeX: number, vh: number): number {
+  const inset = 24
+  const span = Math.max(0, vh - h - inset * 2)
+  let best = inset + span / 2, bestScore = Infinity
+  for (let k = 0; k <= 12; k++) {
+    const y = inset + span * k / 12
+    let score = 0
+    for (const oid of Object.keys(all)) {
+      if (oid === selfId || !(PHOTO_CFG[oid] || oid === 'logo')) continue
+      const o = all[oid]; const d = getDims(oid)
+      const ox = Math.max(0, Math.min(edgeX + w, o.x + d.w) - Math.max(edgeX, o.x))
+      const oy = Math.max(0, Math.min(y + h, o.y + d.h) - Math.max(y, o.y))
+      score += ox * oy
+    }
+    if (score < bestScore) { bestScore = score; best = y }
+  }
+  return best
 }
 
 function buildInitialState(vw: number, vh: number): Record<string, PhysicsState> {
@@ -508,8 +647,51 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     baseVy: LOGO_INIT.baseVy * vScale,
     baseVrot: LOGO_INIT.baseVrot * vScale,
   }
+  const layout = getLayout()
+  if (layout === 'strip') {
+    // Film strip: reel order left to right, everything drifting left at one speed.
+    // Uses the normal canvas wrap-around (off any edge, back in from the opposite one).
+    // Each photo's height is chosen to overlap the fewest photos placed so far (and the logo),
+    // so the screen fills evenly: no heavy pile-ups and no lone photos.
+    const ids = CANVAS_ITEMS.map(i => i.id).filter(id => PHOTO_CFG[id])   // every photo is in the carousel
+    const n = ids.length
+    const avgW = ids.reduce((sum, id) => sum + getDims(id).w, 0) / n
+    // Spacing is set by how many should be on screen at once; the rest wait off the right edge
+    const visible = Math.max(2, Math.min(n, stripLimit(vw, vh)))
+    const step = (vw + 50 + avgW * 0.5) / (visible - 1)
+    STRIP_LEN = n * step
+    const inset = Math.min(60, vh * 0.06)
+    const jit = (i: number) => Math.sin(i * 78.233)
+    const speed = isMobile ? 7 : 11
+    const lg = s['logo']
+    const keepOut = { x0: lg.x - 30, x1: lg.x + logoSz + 30, y0: lg.y, y1: lg.y + logoSz + 28 }
+    const placed: { x: number; y: number; w: number; h: number }[] = []
+    const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
+      Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
+    let prevY = vh / 2
+    ids.forEach((id, i) => {
+      const cfg = PHOTO_CFG[id]; const { w, h } = getDims(id)
+      const x = -avgW * 0.5 + i * step + jit(i + 9) * 12
+      const span = Math.max(0, vh - h - inset * 2)
+      let bestY = inset + span / 2, bestScore = Infinity
+      for (let k = 0; k <= 20; k++) {
+        const y = inset + span * k / 20
+        let score = 0
+        for (const o of placed) score += rectOverlap(x - 8, y - 8, w + 16, h + 16, o.x, o.y, o.w, o.h)
+        score += 4 * rectOverlap(x, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
+        // gentle pull away from the previous photo's height so neighbours alternate
+        score += Math.max(0, h * 0.6 - Math.abs(y - prevY)) * 40
+        if (score < bestScore) { bestScore = score; bestY = y }
+      }
+      prevY = bestY
+      placed.push({ x, y: bestY, w, h })
+      STRIP_HOME_Y[id] = bestY
+      s[id] = { x, y: bestY, rot: cfg.rot, vx: 0, vy: 0, vrot: 0, baseVx: -speed, baseVy: 0, baseVrot: 0 }
+    })
+    return s
+  }
   let photoCount = 0
-  PROJECTS.forEach(({ id }) => {
+  CANVAS_ITEMS.forEach(({ id }) => {
     const cfg = PHOTO_CFG[id]; if (!cfg) return
     if (isMobile && photoCount >= 6) return
     photoCount++
@@ -584,6 +766,9 @@ export default function HomePage() {
   // Tracks whether the currently-open lightbox was launched from the work index.
   // If yes, closing the lightbox returns to work instead of back to the canvas.
   const cameFromWorkRef = useRef(false)
+  const lbOpenedIdRef = useRef<string | null>(null)   // tile the viewer was opened from
+  const lbFromWorkRef = useRef(false)   // lightbox opened over the Work sheet: slides up/down like the sheet
+  const [lbFromWork, setLbFromWork] = useState(false)
 
   // About panel — same FLIP pick-up/put-down system as photo viewer
   const [aboutOpen,    setAboutOpen]    = useState(false)   // mounted
@@ -596,6 +781,10 @@ export default function HomePage() {
   const [aboutSettled, setAboutSettled] = useState(false)
   const [logoSource,   setLogoSource]   = useState({ x: 0, y: 0, scale: 1, rot: 0 })
   const [activePhoto,  setActivePhoto]  = useState<Project | null>(null)
+  // Which canvas tile the lightbox is currently showing (differs from activePhoto.id for single reels)
+  const [lbTileId,     setLbTileId]     = useState<string | null>(null)
+  const lbTileIdRef = useRef<string | null>(null)
+  useEffect(() => { lbTileIdRef.current = lbTileId }, [lbTileId])
   const [lbZoom,       setLbZoom]       = useState(1)
   const [lbVisible,    setLbVisible]    = useState(false)
   // FLIP source — where the photo starts (canvas position) and ends (canvas position on close)
@@ -615,7 +804,7 @@ export default function HomePage() {
   const galleryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Tile image per project — defaults to proj.src, updates to whatever was last viewed in the lightbox
   const [tileSrc, setTileSrc] = useState<Record<string, string | null>>(
-    () => Object.fromEntries(PROJECTS.map(p => [p.id, p.src]))
+    () => Object.fromEntries(ALL_ITEMS.map(p => [p.id, p.src]))
   )
   // Refs so the open/close effects can read latest values without taking them as deps
   // (deps churn here would re-fire the visibility effect mid-close and break the FLIP transition)
@@ -711,7 +900,9 @@ export default function HomePage() {
     const oldIdx = galleryIndexRef.current
     setGalleryDir(dir)
     setGalleryPrev(oldIdx)
-    setGalleryIndex((oldIdx + dir + photo.gallery.length) % photo.gallery.length)
+    const newIdx = (oldIdx + dir + photo.gallery.length) % photo.gallery.length
+    setGalleryIndex(newIdx)
+    if (photo.single) { setLbTileId(SINGLES[newIdx].id); lbTileIdRef.current = SINGLES[newIdx].id }
     setGalleryPhase('start')
     // Two rAFs — first ensures the browser paints the 'start' frame, second flips to 'end'
     requestAnimationFrame(() => {
@@ -828,9 +1019,15 @@ export default function HomePage() {
 
   }, [aboutOpen])
 
-  const openLightbox = useCallback((proj: Project) => {
+  const openLightbox = useCallback((projIn: Project, fromWork = false) => {
+    // Singles open as a reel: the gallery is every single, in canvas order
+    const proj: Project = projIn.single ? { ...projIn, gallery: SINGLES.map(x => x.src as string) } : projIn
+    setLbTileId(projIn.id)
+    lbTileIdRef.current = projIn.id
+    lbOpenedIdRef.current = projIn.id
     // FLIP source — capture canvas tile rect at scale(1) (viewer not yet open)
-    const el = elRefs.current[proj.id]
+    const el = fromWork ? null : elRefs.current[proj.id]
+    if (fromWork) setLbSource({ x: 0, y: window.innerHeight, scale: 1, rot: 0 })   // slide up from the bottom, like the Work sheet
     if (el) {
       const rect = el.getBoundingClientRect()
       const vw   = window.innerWidth; const vh = window.innerHeight
@@ -886,52 +1083,88 @@ export default function HomePage() {
   // Don't unscale the canvas — openLightbox keeps it scaled so the FLIP lands cleanly.
   // Mark the launch source so closing the lightbox returns to the work index, not the canvas.
   const openFromWork = useCallback((proj: Project) => {
-    cameFromWorkRef.current = true
-    setWorkVisible(false)
-    setTimeout(() => openLightbox(proj), 160)   // start lightbox while sheet is halfway off
-    setTimeout(() => setWorkMounted(false), 320)
+    // The Work sheet stays mounted underneath. The viewer slides up over it and
+    // slides back down on close, revealing the list exactly as the user left it.
+    lbFromWorkRef.current = true
+    setLbFromWork(true)
+    openLightbox(proj, true)
   }, [openLightbox])
 
   const closeLightbox = useCallback(() => {
+    if (lbFromWorkRef.current) {
+      setLbSource({ x: 0, y: window.innerHeight, scale: 1, rot: 0 })   // slide back down
+      lbIsClosingRef.current = true
+      setLbVisible(false)
+      setTimeout(() => {
+        setActivePhoto(null)
+        setLbTileId(null)
+        lbIsClosingRef.current = false
+        lbFromWorkRef.current = false
+        setLbFromWork(false)
+      }, 340)
+      return
+    }
     // Remember the image the user last saw so the canvas tile reflects it.
     // Also re-centre the tile's position so reshaping (portrait→landscape or back) doesn't make it jump.
+    const tid = lbTileIdRef.current ?? activePhoto?.id ?? ''
     if (activePhoto) {
       const lastSrc = activePhoto.gallery[galleryIndexRef.current] ?? activePhoto.src
-      const cfg = PHOTO_CFG[activePhoto.id]
-      const pos = posRef.current[activePhoto.id]
+      const cfg = PHOTO_CFG[tid]
+      const pos = posRef.current[tid]
       if (lastSrc && cfg && pos) {
-        const oldSrc = tileSrcRef.current[activePhoto.id] ?? activePhoto.src
-        const oldDims = getTileDims(activePhoto.id, oldSrc)
-        const newDims = getTileDims(activePhoto.id, lastSrc)
+        const oldSrc = tileSrcRef.current[tid] ?? activePhoto.src
+        const oldDims = getTileDims(tid, oldSrc)
+        const newDims = getTileDims(tid, lastSrc)
         // Keep the tile's centre stable as it changes shape
         pos.x += (oldDims.w - newDims.w) / 2
         pos.y += (oldDims.h - newDims.h) / 2
       }
-      if (lastSrc) setTileSrc(prev => ({ ...prev, [activePhoto.id]: lastSrc }))
+      if (lastSrc) setTileSrc(prev => ({ ...prev, [tid]: lastSrc }))
     }
     // FLIP target — use the raw physics position (scale(1) equivalent),
     // because we're zooming the canvas back to scale(1) at the same moment.
     // The viewer photo and the canvas tile arrive at the same spot simultaneously.
     if (activePhoto) {
-      const pos = posRef.current[activePhoto.id]
-      const cfg = PHOTO_CFG[activePhoto.id]
+      const pos = posRef.current[tid]
+      const cfg = PHOTO_CFG[tid]
       if (pos && cfg) {
         const vw = window.innerWidth; const vh = window.innerHeight
         // Use the gallery image the user just had open — both the tile (now resized to match) and the lightbox use this aspect
         const lastSrc2 = activePhoto.gallery[galleryIndexRef.current] ?? activePhoto.src
         const aspect = getSrcAspect(lastSrc2, cfg.aspect)
         const [aw, ah] = aspect.split('/').map(Number)
-        const { w, h } = getTileDims(activePhoto.id, lastSrc2)
+        const { w, h } = getTileDims(tid, lastSrc2)
         const viewerW  = Math.min(vw - 48, vh * 0.8 * (aw / ah))
+        // Only when the tile is mostly off-screen (e.g. you flipped to a photo whose tile has
+        // drifted away): bring it back inside the screen, at the clearest spot, so the photo
+        // lands in view. A tile that is mostly visible lands exactly where it is.
+        {
+          const m = 14
+          const rw = vw < 768 ? w * 0.65 : w, rh = vw < 768 ? h * 0.65 : h
+          const visW = Math.max(0, Math.min(pos.x + rw, vw) - Math.max(pos.x, 0))
+          const visH = Math.max(0, Math.min(pos.y + rh, vh) - Math.max(pos.y, 0))
+          const fullyInside = pos.x >= 0 && pos.y >= 0 && pos.x + rw <= vw && pos.y + rh <= vh
+          // Flipped to a different photo than the one opened? Its tile can be anywhere,
+          // so always place it fully inside the screen. Otherwise only fix mostly-off-screen tiles.
+          const flipped = tid !== lbOpenedIdRef.current
+          if ((visW * visH) / (rw * rh) < 0.55 || (flipped && !fullyInside)) {
+            pos.x = Math.max(m, Math.min(pos.x, vw - rw - m))
+            pos.y = pickClearY(posRef.current, tid, rw, rh, pos.x, vh)
+          }
+        }
         // Freeze the tile at this exact position so it can't drift while the
         // viewer photo is in flight — they'll land at exactly the same spot
-        frozenPhotoRef.current = { id: activePhoto.id, x: pos.x, y: pos.y, rot: pos.rot }
+        frozenPhotoRef.current = { id: tid, x: pos.x, y: pos.y, rot: pos.rot }
         setLbSource({
           x: pos.x + w / 2 - vw / 2,
           y: pos.y + h / 2 - vh / 2,
           scale: Math.max(0.08, w / viewerW),
           rot: pos.rot,  // photo tilts back to its canvas angle as it lands
         })
+      } else {
+        // This photo has no tile on the canvas (small screens show fewer than the full reel):
+        // slide the viewer down and away instead of flying to a tile that is not there.
+        setLbSource({ x: 0, y: window.innerHeight, scale: 1, rot: 0 })
       }
     }
     // If the lightbox was launched from the work index, KEEP the canvas scaled —
@@ -941,6 +1174,7 @@ export default function HomePage() {
     setLbVisible(false)
     setTimeout(() => {
       setActivePhoto(null)
+      setLbTileId(null)
       lbIsClosingRef.current = false
       frozenPhotoRef.current = null  // unfreeze — physics resumes
       // Hand back to the work index if that's where this lightbox came from
@@ -957,7 +1191,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!activePhoto && !aboutOpen && !workMounted) return
     const onKey = (e: KeyboardEvent) => {
-      if (workMounted) { if (e.key === 'Escape') closeWork(); return }
+      if (workMounted && !activePhoto) { if (e.key === 'Escape') closeWork(); return }
       if (aboutOpen)   { if (e.key === 'Escape') closeAbout(); return }
       if (e.key === 'ArrowRight') navigate(1)
       if (e.key === 'ArrowLeft')  navigate(-1)
@@ -981,6 +1215,13 @@ export default function HomePage() {
     setIsMobile(vw < 768)
   }, [])
 
+  // The Work sheet fully covers the canvas, so stop moving the tiles while it is open.
+  // Saves a lot of work during the slide-in and while reading the list.
+  const pausePhysicsRef = useRef(false)
+  const layoutRef = useRef<CanvasLayout>('strip')
+  useEffect(() => { layoutRef.current = getLayout() }, [])
+  useEffect(() => { pausePhysicsRef.current = workMounted }, [workMounted])
+
   // EFFECT 2 — physics loop
   useEffect(() => {
     let prev = performance.now()
@@ -989,6 +1230,7 @@ export default function HomePage() {
         rafRef.current = requestAnimationFrame(tick)
         return
       }
+      if (pausePhysicsRef.current) { prev = now; rafRef.current = requestAnimationFrame(tick); return }
       const rawDt = now - prev
       const dt = Math.min(Math.max(rawDt, 0), 100) / 1000
       prev = now
@@ -1022,10 +1264,22 @@ export default function HomePage() {
         if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
         if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
-        if (pos.x >  vw + 60) pos.x = -w
-        if (pos.x < -w)       pos.x =  vw + 60
+        if (layoutRef.current === 'strip' && STRIP_LEN > 0 && PHOTO_CFG[id]) {
+          // Carousel: wrap round the whole loop. A photo leaving the left joins the back of the
+          // queue off the right edge, at the clearest height, and slides in again later.
+          const lo = -w - 60
+          const nx = lo + (((pos.x - lo) % STRIP_LEN) + STRIP_LEN) % STRIP_LEN
+          if (Math.abs(nx - pos.x) > 1) { pos.x = nx; pos.y = pickClearY(posRef.current, id, w, h, pos.x, vh) }
+        } else {
+          if (pos.x > vw + 60) pos.x = -w
+          if (pos.x < -w)      pos.x = vw + 60
+        }
         if (pos.y >  vh + 60) pos.y = -h
         if (pos.y < -h)       pos.y =  vh + 60
+        // Strip only: a photo thrown off the top or bottom eases back in to its resting height
+        if (layoutRef.current === 'strip' && STRIP_HOME_Y[id] !== undefined && (pos.y + h < 60 || pos.y > vh - 60)) {
+          pos.y += (STRIP_HOME_Y[id] - pos.y) * Math.min(1, dt * 1.5)
+        }
         const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
         const el = elRefs.current[id]; if (el) el.style.transform = t
         const vel = visualElRefs.current[id]; if (vel) vel.style.transform = t
@@ -1087,7 +1341,7 @@ export default function HomePage() {
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
     const pos = posRef.current[id]; if (!pos) return
     didDragRef.current = false
-    const pr = PROJECTS.find(p => p.id === id)
+    const pr = ALL_ITEMS.find(p => p.id === id)
     if (pr) { preloadImage(tileSrcRef.current[id] ?? pr.src); pr.gallery.slice(0, 2).forEach(preloadImage) }
     const sRect = sectionRef.current?.getBoundingClientRect()
     dragRef.current = {
@@ -1124,7 +1378,7 @@ export default function HomePage() {
     const capturedId = d.id
     dragRef.current = null
     if (!didDragRef.current && window.innerWidth < 768 && !activePhoto) {
-      const proj = PROJECTS.find(p => p.id === capturedId)
+      const proj = ALL_ITEMS.find(p => p.id === capturedId)
       if (proj) { lbWasTouchRef.current = true; openLightbox(proj) }
     }
   }, [activePhoto, openLightbox])
@@ -1326,13 +1580,9 @@ export default function HomePage() {
     }
 
     if (lbZoomRef.current > 1) {
-      // Tap while zoomed (tiny movement) → reset to 1×
-      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
-        lbZoomRef.current = 1; setLbZoom(1)
-        lbPanRef.current = { x: 0, y: 0 }; lbPanBaseRef.current = { x: 0, y: 0 }
-        applyLbTransform(1, 0, 0, true)
-      }
-      // Otherwise the finger was panning — already committed live in onLbTouchMove
+      // Zoomed: a single tap does nothing. Zooming out is a double-tap (handled above),
+      // so tap twice to zoom in and tap twice to zoom out. Pan is already committed live
+      // in onLbTouchMove.
       return
     }
     // Swipe threshold: 50 px horizontal, more horizontal than vertical
@@ -1342,6 +1592,8 @@ export default function HomePage() {
   }, [navigate, applyLbTransform, onLbDoubleTap, lbVisible])
 
   const lbCfg    = activePhoto ? PHOTO_CFG[activePhoto.id] : null
+  // Caption follows the frame on screen (singles reel), otherwise the story
+  const lbMeta   = activePhoto?.single ? (SINGLES[galleryIndex] ?? activePhoto) : activePhoto
   // Lightbox shape follows the current gallery image, not a fixed project aspect
   const lbCurrentSrc = activePhoto?.gallery[galleryIndex] ?? null
   const lbAspect = getSrcAspect(lbCurrentSrc, lbCfg?.aspect ?? '16/9')
@@ -1428,8 +1680,9 @@ export default function HomePage() {
           transform: canvasScaled ? 'scale(0.62)' : 'scale(1)',
           transformOrigin: 'center center',
           transition: 'transform 0.40s cubic-bezier(0.16,1,0.3,1)',
+          willChange: 'transform',
         }}>
-          {PROJECTS.filter((_, i) => !isMobile || i < 6).map(proj => {
+          {CANVAS_ITEMS.filter((_, i) => getLayout() === 'strip' || !isMobile || i < 6).map(proj => {
             const cfg = PHOTO_CFG[proj.id]; if (!cfg) return null
             // Both width AND height follow the current image's orientation, keeping the long dim
             // constant so landscape tiles aren't smaller than portrait ones from the same project.
@@ -1438,7 +1691,7 @@ export default function HomePage() {
             // Match the 0.65 mobile scale applied in getDims so rendered size and physics agree.
             const tileW = isMobile ? Math.round(dims.w * 0.65) : dims.w
             const tileH = isMobile ? Math.round(dims.h * 0.65) : dims.h
-            const isPickedUp = activePhoto?.id === proj.id
+            const isPickedUp = !!activePhoto && lbTileId === proj.id
             return (
               <div
                 key={proj.id}
@@ -1454,7 +1707,7 @@ export default function HomePage() {
                     ? (canvasScaled
                         ? 'opacity 0s'              // instant hide — photo lifts off from this spot
                         : 'opacity 0s ease 0.22s')  // snap in as viewer photo arrives (no fade)
-                    : 'none',
+                    : (activePhoto ? 'opacity 0.25s ease' : 'none'),
                 }}
                 onPointerDown={e => { if (!activePhoto) onPointerDown(e, proj.id) }}
                 onPointerUp={onPointerUp}
@@ -1611,8 +1864,6 @@ export default function HomePage() {
             className="fixed inset-0 z-[55]"
             style={{
               cursor: 'none',
-              backdropFilter: 'blur(3px)',
-              WebkitBackdropFilter: 'blur(3px)',
               opacity: workVisible ? 1 : 0,
               transition: 'opacity 0.2s ease',
             }}
@@ -1621,8 +1872,9 @@ export default function HomePage() {
           {/* Content — slides, no background. Outer needs to receive touch/pointer
               events itself so iOS Safari attaches scroll behaviour to it. */}
           <div
-            className="fixed inset-0 z-[60] overflow-y-auto"
+            className="work-sheet fixed inset-0 z-[60] overflow-y-auto"
             style={{
+              ['--work-text' as string]: textColour,
               transform: workVisible ? 'translateY(0)' : 'translateY(100%)',
               transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
               willChange: 'transform',
@@ -1670,7 +1922,7 @@ export default function HomePage() {
                       </span>
                       {/* Year — far right, always visible */}
                       <span className="text-xs tracking-widest uppercase shrink-0 self-center">
-                        {p.year}
+                        {p.yearLabel ?? p.year}
                       </span>
                     </button>
                   </li>
@@ -1982,7 +2234,8 @@ export default function HomePage() {
 
         {/* ── Desktop CTA buttons — z:68, above card hitboxes (z:66) ─────────
             Pulled out of z-[61] so they escape its stacking context and sit
-            above the card hitboxes at z-[66] which would otherwise block clicks. */}
+            above the card hitboxes at z-[66] which would otherwise block clicks.
+            The button row itself is pointer-events:none so photos can still be grabbed behind it. */}
         {!isMobile && (
           <div
             className="fixed inset-0 z-[68]"
@@ -2005,7 +2258,7 @@ export default function HomePage() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '1rem',
-              pointerEvents: 'auto',
+              pointerEvents: 'none',
               padding: '0 48px',
             }}>
               <a
@@ -2024,12 +2277,12 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Mobile — scrollable text layer: z:[66], above physics hitboxes (z:[64]/[65]).
+        {/* Mobile — scrollable text layer: z:[62], BELOW the physics hitboxes (z:[64]/[65]) so a photo or logo sitting under the text can still be grabbed.
             Container: pointer-events:none so touches on empty space reach the physics hitboxes below.
             Text children: pointer-events:auto so touch events on them trigger scroll. */}
         {isMobile && (
           <div
-            className="fixed inset-0 z-[66]"
+            className="fixed inset-0 z-[62]"
             style={{
               transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
               transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
@@ -2086,11 +2339,12 @@ export default function HomePage() {
         <>
           {/* Click-to-close backdrop + light blur on the canvas behind */}
           <div
-            className="fixed inset-0 z-[8]"
+            className={`fixed inset-0 ${lbFromWork ? 'z-[70]' : 'z-[8]'}`}
             style={{
               cursor: 'none',
-              backdropFilter: 'blur(3px)',
-              WebkitBackdropFilter: 'blur(3px)',
+              backgroundColor: lbFromWork ? bgColour : undefined,
+              backdropFilter: lbFromWork ? undefined : 'blur(3px)',
+              WebkitBackdropFilter: lbFromWork ? undefined : 'blur(3px)',
               opacity: lbVisible ? 1 : 0,
               transition: 'opacity 0.2s ease',
             }}
@@ -2102,7 +2356,7 @@ export default function HomePage() {
               Blend is applied per-text-element on the caption nodes below —
               NOT on this root — so the photo stays un-inverted. */}
           <div
-            className="fixed inset-0 z-[9] flex flex-col items-center justify-center p-6 gap-4 pointer-events-none"
+            className={`fixed inset-0 ${lbFromWork ? 'z-[71]' : 'z-[9]'} flex flex-col items-center justify-center p-6 gap-4 pointer-events-none`}
             style={{ backgroundColor: 'transparent' }}
             role="dialog" aria-modal="true"
             aria-label={`${activePhoto.title} · ${activePhoto.category}`}
@@ -2119,7 +2373,11 @@ export default function HomePage() {
                 transform: lbVisible
                   ? 'translate(0px, 0px) scale(1) rotate(0deg)'
                   : `translate(${lbSource.x}px, ${lbSource.y}px) scale(${lbSource.scale}) rotate(${lbSource.rot}deg)`,
-                transition: lbVisible
+                transition: lbFromWork
+                  ? (lbVisible
+                      ? 'transform 0.36s cubic-bezier(0.32, 0.72, 0, 1), opacity 0s, aspect-ratio 0.34s cubic-bezier(0.16, 1, 0.3, 1), width 0.34s cubic-bezier(0.16, 1, 0.3, 1)'
+                      : 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), opacity 0s ease 0.32s')
+                  : lbVisible
                   ? 'transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0s, aspect-ratio 0.34s cubic-bezier(0.16, 1, 0.3, 1), width 0.34s cubic-bezier(0.16, 1, 0.3, 1)'
                   : 'transform 0.26s cubic-bezier(0.55, 0, 1, 0.45), opacity 0s ease 0.22s',
                 willChange: 'transform, opacity',
@@ -2229,7 +2487,7 @@ export default function HomePage() {
           {activePhoto.gallery.length > 1 && lbZoom === 1 && (
             <>
               <button
-                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'none' }}
+                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: lbFromWork ? 72 : 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'none' }}
                 onClick={e => { e.stopPropagation(); navigate(-1) }}
                 aria-label="Previous image"
               >
@@ -2238,7 +2496,7 @@ export default function HomePage() {
                 </svg>
               </button>
               <button
-                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'none' }}
+                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: lbFromWork ? 72 : 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'none' }}
                 onClick={e => { e.stopPropagation(); navigate(1) }}
                 aria-label="Next image"
               >
@@ -2257,7 +2515,7 @@ export default function HomePage() {
               the inner caption wrapper turns events back on for the close
               button. */}
           <div
-            className="fixed inset-0 z-[10] flex flex-col items-end justify-end p-6"
+            className={`fixed inset-0 ${lbFromWork ? 'z-[72]' : 'z-[10]'} flex flex-col items-end justify-end p-6`}
             style={{
               // TEST (A): opacity hardcoded to 1 so the layer never enters a
               // fractional-opacity state that creates a stacking context and
@@ -2266,6 +2524,13 @@ export default function HomePage() {
               opacity: 1,
               pointerEvents: 'none',
               mixBlendMode: 'difference',
+              // Caption slides up with the photo on open, back down on close
+              transform: lbVisible ? 'translateY(0)' : 'translateY(100%)',
+              transition: lbFromWork
+                ? 'transform 0.34s cubic-bezier(0.32, 0.72, 0, 1)'
+                : lbVisible
+                  ? 'transform 0.36s cubic-bezier(0.16, 1, 0.3, 1)'
+                  : 'transform 0.26s cubic-bezier(0.55, 0, 1, 0.45)',
               color: '#ffffff',
             }}
             aria-hidden={!lbVisible}
@@ -2276,8 +2541,8 @@ export default function HomePage() {
               onClick={e => e.stopPropagation()}
             >
               <div>
-                <p className="text-sm">{activePhoto.title}</p>
-                <p className="text-xs mt-0.5">{activePhoto.category} &bull; {activePhoto.year}</p>
+                <p className="text-sm">{lbMeta?.title}</p>
+                <p className="text-xs mt-0.5">{lbMeta?.category} &bull; {lbMeta?.yearLabel ?? lbMeta?.year}</p>
               </div>
               <div className="flex items-center gap-4 sm:shrink-0 justify-end sm:justify-start">
                 {activePhoto.gallery.length > 1 && (

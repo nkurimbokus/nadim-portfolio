@@ -8,6 +8,14 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // Old Adobe Portfolio page addresses -> home, so existing links and Google results still land somewhere
+  async redirects() {
+    return ['/overview', '/commissioned', '/personal', '/about'].map(source => ({
+      source,
+      destination: '/',
+      permanent: true,
+    }))
+  },
   async headers() {
     return [
       {

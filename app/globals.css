@@ -112,6 +112,11 @@ h1, h2, h3, h4, h5, h6, p, a, button, span, li {
 /* Re-enable normal blending inside overlays that have their OWN backdrop
    (work index, about panel, lightbox caption) — those sit on a blurred layer
    and shouldn't try to blend through to the canvas underneath. */
+.work-sheet, .work-sheet * {
+  mix-blend-mode: normal !important;
+  color: var(--work-text) !important;
+}
+
 .no-blend, .no-blend * {
   mix-blend-mode: normal !important;
 }
