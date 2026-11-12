@@ -70,6 +70,8 @@ const PHOTO_CFG: Record<string, {
   l7: { w: 340, aspect: '1600/1080', rot: -2.0, xPct: 0.30, yPct: 0.55, baseVx:  11, baseVy:  10, baseVrot:  0.18 },
   l8: { w: 240, aspect: '1076/1600', rot:  1.5, xPct: 0.50, yPct: 0.35, baseVx:  -7, baseVy:  -9, baseVrot: -0.24 },
   l9: { w: 250, aspect: '1078/1600', rot: -3.0, xPct: 0.08, yPct: 0.78, baseVx:   9, baseVy:  -7, baseVrot:  0.23 },
+  // Live 2026 — Ezra Collective @ Roundhouse (landscape cover)
+  l10: { w: 340, aspect: '1600/1074', rot:  1.5, xPct: 0.85, yPct: 0.45, baseVx:  -9, baseVy:   8, baseVrot: -0.21 },
 }
 
 // Per-image aspect ratios for brand galleries — used so the tile and the lightbox container
@@ -180,6 +182,17 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_006_standard.jpg': '1600/1074',
   '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_007_standard.jpg': '1078/1600',
   '/images/live/westside-gunn-jazz-cafe/live_2025_westside-gunn-jazz-cafe_008_standard.jpg': '1081/1600',
+  // Live — Ezra Collective · Roundhouse (2026)
+  '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_001_standard.jpg': '1600/1074',
+  '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_002_standard.jpg': '1600/1071',
+  '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_003_standard.jpg': '1072/1600',
+  '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_004_standard.jpg': '1600/1072',
+  '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_005_standard.jpg': '1600/1076',
+  '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_006_standard.jpg': '1600/1076',
+  '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_007_standard.jpg': '1600/1076',
+  '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_008_standard.jpg': '1600/1079',
+  '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_009_standard.jpg': '1600/1074',
+  '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_010_standard.jpg': '1600/1075',
   // Live — Freddie Gibbs · QB NYC (2025)
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_001_standard.jpg': '1078/1600',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_002_standard.jpg': '1079/1600',
@@ -412,7 +425,26 @@ const PROJECTS: Project[] = [
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.png',
     ],
   },
+  {
+    id: 'l10', kind: 'photo', title: 'Ezra Collective · Roundhouse', category: 'Live', year: '2026', color: '#C8432A',
+    src: '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_001_standard.jpg',
+    gallery: [
+      '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_001_standard.jpg',
+      '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_002_standard.jpg',
+      '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_003_standard.jpg',
+      '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_004_standard.jpg',
+      '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_005_standard.jpg',
+      '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_006_standard.jpg',
+      '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_007_standard.jpg',
+      '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_008_standard.jpg',
+      '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_009_standard.jpg',
+      '/images/live/ezra-collective-roundhouse/live_2026_ezra-collective-roundhouse_010_standard.jpg',
+    ],
+  },
 ]
+
+// Home-canvas tiles use the small _thumb version (about 70 KB); the lightbox keeps _standard.
+const toThumb = (src: string): string => src.replace(/_standard\.jpg$/i, '_thumb.jpg').replace(/_standard\.png$/i, '_thumb.webp')
 
 function parseAspect(a: string): number {
   const [w, h] = a.split('/').map(Number); return w / h
@@ -1425,7 +1457,7 @@ export default function HomePage() {
                 onKeyDown={e => { if (e.key === 'Enter' && !activePhoto) openLightbox(proj) }}
               >
                 {(tileSrc[proj.id] ?? proj.src)
-                  ? <Image src={(tileSrc[proj.id] ?? proj.src) as string} fill alt={`${proj.title} by Nadim Kurimbokus`}
+                  ? <Image src={toThumb((tileSrc[proj.id] ?? proj.src) as string)} fill alt={`${proj.title} by Nadim Kurimbokus`}
                       className="object-cover" draggable={false} sizes={`${cfg.w}px`} unoptimized />
                   : <div className="w-full h-full" style={{ backgroundColor: proj.color }} />}
                 <div className="absolute inset-0" style={{ zIndex: 1, touchAction: 'none', pointerEvents: 'none' }} />
