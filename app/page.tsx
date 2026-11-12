@@ -519,7 +519,7 @@ const SINGLES: Project[] = [
     src: '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg', gallery: ['/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg'] },
   { id: 's23', kind: 'photo', single: true, title: 'Redveil · O2 Brixton', category: 'Live', year: '2026', color: '#222222',
     src: '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.webp', gallery: ['/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.webp'] },
-  { id: 's25', kind: 'photo', single: true, title: 'Concept 2', category: 'Portrait', year: '2026', color: '#222222',
+  { id: 's25', kind: 'photo', single: true, title: 'Ella Collage', category: 'Portrait', year: '2025', color: '#222222',
     src: '/images/portfolio/candidate_2026_concept-2_001_standard.webp', gallery: ['/images/portfolio/candidate_2026_concept-2_001_standard.webp'] },
   { id: 's12', kind: 'photo', single: true, title: 'Rome Streetz · The Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
     src: '/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg'] },
