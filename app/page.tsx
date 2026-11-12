@@ -223,7 +223,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_011_standard.jpg': '1600/1077',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_012_standard.jpg': '1600/1075',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_013_standard.png': '1600/1525',
-  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.png': '1600/1067',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.webp': '1600/1067',
   '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_001_standard.jpg': '1600/1067',
   '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_002_standard.jpg': '1600/1067',
   '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_003_standard.jpg': '1067/1600',
@@ -467,7 +467,7 @@ const PROJECTS: Project[] = [
   },
   {
     id: 'l9', kind: 'photo', title: 'Freddie Gibbs · O2 Brixton', category: 'Live', year: '2026', color: '#C8432A',
-    src: '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.png',
+    src: '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.webp',
     gallery: [
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_001_standard.jpg',
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_004_standard.jpg',
@@ -477,7 +477,7 @@ const PROJECTS: Project[] = [
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_010_standard.jpg',
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_011_standard.jpg',
       '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_012_standard.jpg',
-      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.png',
+      '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.webp',
     ],
   },
   {
