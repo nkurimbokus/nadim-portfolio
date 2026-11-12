@@ -85,6 +85,8 @@ const PHOTO_CFG: Record<string, {
   s19: { w: 240, aspect: '1112/1600', rot: 2, xPct: 0.68, yPct: 0.6, baseVx: -9, baseVy: 7, baseVrot: -0.24 },
   s20: { w: 330, aspect: '1600/1070', rot: -1.2, xPct: 0.56, yPct: 0.52, baseVx: 8, baseVy: 7, baseVrot: 0.22 },
   s21: { w: 330, aspect: '1600/1073', rot: 1.4, xPct: 0.86, yPct: 0.45, baseVx: -8, baseVy: 8, baseVrot: -0.22 },
+  s22: { w: 240, aspect: '1067/1600', rot: 1.8, xPct: 0.62, yPct: 0.84, baseVx: -8, baseVy: -7, baseVrot: 0.22 },
+  s23: { w: 290, aspect: '1600/1525', rot: -1.6, xPct: 0.14, yPct: 0.5, baseVx: 8, baseVy: 8, baseVrot: -0.2 },
   l10: { w: 340, aspect: '1600/1074', rot:  1.5, xPct: 0.85, yPct: 0.45, baseVx:  -9, baseVy:   8, baseVrot: -0.21 },
 }
 
@@ -515,8 +517,6 @@ const SINGLES: Project[] = [
     src: '/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg', gallery: ['/images/cultural/notting-hill-carnival/cultural_2024_notting-hill-carnival_014_standard.jpg'] },
   { id: 's23', kind: 'photo', single: true, title: 'Redveil · O2 Brixton', category: 'Live', year: '2026', color: '#222222',
     src: '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.jpg', gallery: ['/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_001_standard.jpg'] },
-  { id: 's24', kind: 'photo', single: true, title: 'Redveil · O2 Brixton', category: 'Live', year: '2026', color: '#222222',
-    src: '/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_002_standard.jpg', gallery: ['/images/live/redveil-o2-brixton/live_2026_redveil-o2-brixton_002_standard.jpg'] },
   { id: 's12', kind: 'photo', single: true, title: 'Rome Streetz · The Jazz Cafe', category: 'Live', year: '2025', color: '#222222',
     src: '/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg', gallery: ['/images/portfolio/candidate_2025_rome-streetz-jazz-cafe_001_standard.jpg'] },
   { id: 's20', kind: 'photo', single: true, title: '22impact · Model shoot', category: 'Brand', year: '2025', color: '#222222',
