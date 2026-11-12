@@ -596,7 +596,8 @@ function getLayout(): CanvasLayout {
   return q === 'float' ? 'float' : 'strip'   // strip is the default; ?layout=float is the original pile
 }
 const STRIP_HOME_Y: Record<string, number> = {}   // strip: each photo's resting height
-// How many photos the strip shows at once, by screen width (fewer on small screens = more room)
+let STRIP_LEN = 0                                  // strip: length of the whole carousel loop (all photos)
+// How many photos the strip shows on screen at once (the rest queue off the right edge), by screen width (fewer on small screens = more room)
 function stripLimit(vw: number, vh: number): number {
   if (vw < 768) return 9
   if (vw < 1100) return Math.max(6, Math.min(12, Math.round(0.55 * vw * vh / 71000)))   // about half the screen covered
@@ -644,10 +645,13 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     // Uses the normal canvas wrap-around (off any edge, back in from the opposite one).
     // Each photo's height is chosen to overlap the fewest photos placed so far (and the logo),
     // so the screen fills evenly: no heavy pile-ups and no lone photos.
-    const ids = CANVAS_ITEMS.map(i => i.id).filter(id => PHOTO_CFG[id]).slice(0, stripLimit(vw, vh))
+    const ids = CANVAS_ITEMS.map(i => i.id).filter(id => PHOTO_CFG[id])   // every photo is in the carousel
     const n = ids.length
     const avgW = ids.reduce((sum, id) => sum + getDims(id).w, 0) / n
-    const step = (vw + 50 + avgW * 0.5) / Math.max(1, n - 1)
+    // Spacing is set by how many should be on screen at once; the rest wait off the right edge
+    const visible = Math.max(2, Math.min(n, stripLimit(vw, vh)))
+    const step = (vw + 50 + avgW * 0.5) / (visible - 1)
+    STRIP_LEN = n * step
     const inset = Math.min(60, vh * 0.06)
     const jit = (i: number) => Math.sin(i * 78.233)
     const speed = isMobile ? 7 : 11
@@ -702,9 +706,8 @@ export default function HomePage() {
   // flips it on small screens. Kept in sync with the physics-side window.innerWidth
   // checks in getDims / buildInitialState.
   const [isMobile, setIsMobile] = useState(false)
-  const [isTablet, setIsTablet] = useState(false)   // 768 to 1099px: strip shows fewer photos
   useEffect(() => {
-    const check = () => { setIsMobile(window.innerWidth < 768); setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1100) }
+    const check = () => setIsMobile(window.innerWidth < 768)
     const setVh = () => document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`)
     check()
     setVh()
@@ -755,6 +758,7 @@ export default function HomePage() {
   // Tracks whether the currently-open lightbox was launched from the work index.
   // If yes, closing the lightbox returns to work instead of back to the canvas.
   const cameFromWorkRef = useRef(false)
+  const lbOpenedIdRef = useRef<string | null>(null)   // tile the viewer was opened from
   const lbFromWorkRef = useRef(false)   // lightbox opened over the Work sheet: slides up/down like the sheet
   const [lbFromWork, setLbFromWork] = useState(false)
 
@@ -1012,6 +1016,7 @@ export default function HomePage() {
     const proj: Project = projIn.single ? { ...projIn, gallery: SINGLES.map(x => x.src as string) } : projIn
     setLbTileId(projIn.id)
     lbTileIdRef.current = projIn.id
+    lbOpenedIdRef.current = projIn.id
     // FLIP source — capture canvas tile rect at scale(1) (viewer not yet open)
     const el = fromWork ? null : elRefs.current[proj.id]
     if (fromWork) setLbSource({ x: 0, y: window.innerHeight, scale: 1, rot: 0 })   // slide up from the bottom, like the Work sheet
@@ -1130,7 +1135,11 @@ export default function HomePage() {
           const rw = vw < 768 ? w * 0.65 : w, rh = vw < 768 ? h * 0.65 : h
           const visW = Math.max(0, Math.min(pos.x + rw, vw) - Math.max(pos.x, 0))
           const visH = Math.max(0, Math.min(pos.y + rh, vh) - Math.max(pos.y, 0))
-          if ((visW * visH) / (rw * rh) < 0.55) {
+          const fullyInside = pos.x >= 0 && pos.y >= 0 && pos.x + rw <= vw && pos.y + rh <= vh
+          // Flipped to a different photo than the one opened? Its tile can be anywhere,
+          // so always place it fully inside the screen. Otherwise only fix mostly-off-screen tiles.
+          const flipped = tid !== lbOpenedIdRef.current
+          if ((visW * visH) / (rw * rh) < 0.55 || (flipped && !fullyInside)) {
             pos.x = Math.max(m, Math.min(pos.x, vw - rw - m))
             pos.y = pickClearY(posRef.current, tid, rw, rh, pos.x, vh)
           }
@@ -1144,6 +1153,10 @@ export default function HomePage() {
           scale: Math.max(0.08, w / viewerW),
           rot: pos.rot,  // photo tilts back to its canvas angle as it lands
         })
+      } else {
+        // This photo has no tile on the canvas (small screens show fewer than the full reel):
+        // slide the viewer down and away instead of flying to a tile that is not there.
+        setLbSource({ x: 0, y: window.innerHeight, scale: 1, rot: 0 })
       }
     }
     // If the lightbox was launched from the work index, KEEP the canvas scaled —
@@ -1243,9 +1256,16 @@ export default function HomePage() {
         if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
         if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
-        const scatterWrap = layoutRef.current === 'strip' && !!PHOTO_CFG[id]   // re-enter at the clearest height
-        if (pos.x > vw + 60) { pos.x = -w;      if (scatterWrap) pos.y = pickClearY(posRef.current, id, w, h, 0, vh) }
-        if (pos.x < -w)      { pos.x = vw + 60; if (scatterWrap) pos.y = pickClearY(posRef.current, id, w, h, vw - w, vh) }
+        if (layoutRef.current === 'strip' && STRIP_LEN > 0 && PHOTO_CFG[id]) {
+          // Carousel: wrap round the whole loop. A photo leaving the left joins the back of the
+          // queue off the right edge, at the clearest height, and slides in again later.
+          const lo = -w - 60
+          const nx = lo + (((pos.x - lo) % STRIP_LEN) + STRIP_LEN) % STRIP_LEN
+          if (Math.abs(nx - pos.x) > 1) { pos.x = nx; pos.y = pickClearY(posRef.current, id, w, h, pos.x, vh) }
+        } else {
+          if (pos.x > vw + 60) pos.x = -w
+          if (pos.x < -w)      pos.x = vw + 60
+        }
         if (pos.y >  vh + 60) pos.y = -h
         if (pos.y < -h)       pos.y =  vh + 60
         // Strip only: a photo thrown off the top or bottom eases back in to its resting height
@@ -1658,7 +1678,7 @@ export default function HomePage() {
           transition: 'transform 0.40s cubic-bezier(0.16,1,0.3,1)',
           willChange: 'transform',
         }}>
-          {CANVAS_ITEMS.filter((_, i) => getLayout() === 'strip' ? i < (isMobile || isTablet ? stripLimit(window.innerWidth, window.innerHeight) : 99) : (!isMobile || i < 6)).map(proj => {
+          {CANVAS_ITEMS.filter((_, i) => getLayout() === 'strip' || !isMobile || i < 6).map(proj => {
             const cfg = PHOTO_CFG[proj.id]; if (!cfg) return null
             // Both width AND height follow the current image's orientation, keeping the long dim
             // constant so landscape tiles aren't smaller than portrait ones from the same project.
