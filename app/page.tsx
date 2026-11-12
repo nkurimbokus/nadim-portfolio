@@ -446,6 +446,16 @@ const PROJECTS: Project[] = [
 // Home-canvas tiles use the small _thumb version (about 70 KB); the lightbox keeps _standard.
 const toThumb = (src: string): string => src.replace(/_standard\.jpg$/i, '_thumb.jpg').replace(/_standard\.png$/i, '_thumb.webp')
 
+// Fetch an image into the browser cache ahead of time so the lightbox never waits on it.
+const preloaded = new Set<string>()
+function preloadImage(url?: string | null) {
+  if (!url || typeof window === 'undefined' || preloaded.has(url)) return
+  preloaded.add(url)
+  const img = new window.Image()
+  img.decoding = 'async'
+  img.src = url
+}
+
 function parseAspect(a: string): number {
   const [w, h] = a.split('/').map(Number); return w / h
 }
@@ -713,19 +723,12 @@ export default function HomePage() {
     }, 350)
   }, [activePhoto, applyLbTransform])
 
-  // Preload neighbours so the crossfade has nothing to wait for
+  // Preload the next three and previous one so flipping never waits on the network
   useEffect(() => {
     if (!activePhoto || activePhoto.gallery.length <= 1) return
     const len = activePhoto.gallery.length
-    const neighbours = [
-      activePhoto.gallery[(galleryIndex + 1) % len],
-      activePhoto.gallery[(galleryIndex - 1 + len) % len],
-    ]
-    neighbours.forEach(url => {
-      if (!url) return
-      const img = new window.Image()
-      img.src = url
-    })
+    const wanted = [1, 2, 3, -1].map(d => activePhoto.gallery[(galleryIndex + d + len * 4) % len])
+    wanted.forEach(preloadImage)
   }, [activePhoto, galleryIndex])
 
   const openAbout = useCallback(() => {
@@ -1082,6 +1085,8 @@ export default function HomePage() {
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
     const pos = posRef.current[id]; if (!pos) return
     didDragRef.current = false
+    const pr = PROJECTS.find(p => p.id === id)
+    if (pr) { preloadImage(tileSrcRef.current[id] ?? pr.src); pr.gallery.slice(0, 2).forEach(preloadImage) }
     const sRect = sectionRef.current?.getBoundingClientRect()
     dragRef.current = {
       id,
