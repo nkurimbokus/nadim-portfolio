@@ -588,6 +588,42 @@ function hexToRgb(hex: string): string {
   return `rgb(${r}, ${g}, ${b})`
 }
 
+// Canvas layout: the film strip is the default. Add ?layout=float for the original floating pile.
+type CanvasLayout = 'float' | 'strip'
+function getLayout(): CanvasLayout {
+  if (typeof window === 'undefined') return 'float'
+  const q = new URLSearchParams(window.location.search).get('layout')
+  return q === 'float' ? 'float' : 'strip'   // strip is the default; ?layout=float is the original pile
+}
+const STRIP_HOME_Y: Record<string, number> = {}   // strip: each photo's resting height
+// How many photos the strip shows at once, by screen width (fewer on small screens = more room)
+function stripLimit(vw: number, vh: number): number {
+  if (vw < 768) return 9
+  if (vw < 1100) return Math.max(6, Math.min(12, Math.round(0.55 * vw * vh / 71000)))   // about half the screen covered
+  return 99
+}
+
+// When a drifting photo wraps round to the other edge, pick the height where it
+// overlaps the fewest photos (and the logo) already sitting near that edge.
+function pickClearY(all: Record<string, PhysicsState>, selfId: string, w: number, h: number, edgeX: number, vh: number): number {
+  const inset = 24
+  const span = Math.max(0, vh - h - inset * 2)
+  let best = inset + span / 2, bestScore = Infinity
+  for (let k = 0; k <= 12; k++) {
+    const y = inset + span * k / 12
+    let score = 0
+    for (const oid of Object.keys(all)) {
+      if (oid === selfId || !(PHOTO_CFG[oid] || oid === 'logo')) continue
+      const o = all[oid]; const d = getDims(oid)
+      const ox = Math.max(0, Math.min(edgeX + w, o.x + d.w) - Math.max(edgeX, o.x))
+      const oy = Math.max(0, Math.min(y + h, o.y + d.h) - Math.max(y, o.y))
+      score += ox * oy
+    }
+    if (score < bestScore) { bestScore = score; best = y }
+  }
+  return best
+}
+
 function buildInitialState(vw: number, vh: number): Record<string, PhysicsState> {
   const s: Record<string, PhysicsState> = {}
   const isMobile = vw < 768
@@ -601,6 +637,46 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     baseVx: LOGO_INIT.baseVx * vScale,
     baseVy: LOGO_INIT.baseVy * vScale,
     baseVrot: LOGO_INIT.baseVrot * vScale,
+  }
+  const layout = getLayout()
+  if (layout === 'strip') {
+    // Film strip: reel order left to right, everything drifting left at one speed.
+    // Uses the normal canvas wrap-around (off any edge, back in from the opposite one).
+    // Each photo's height is chosen to overlap the fewest photos placed so far (and the logo),
+    // so the screen fills evenly: no heavy pile-ups and no lone photos.
+    const ids = CANVAS_ITEMS.map(i => i.id).filter(id => PHOTO_CFG[id]).slice(0, stripLimit(vw, vh))
+    const n = ids.length
+    const avgW = ids.reduce((sum, id) => sum + getDims(id).w, 0) / n
+    const step = (vw + 50 + avgW * 0.5) / Math.max(1, n - 1)
+    const inset = Math.min(60, vh * 0.06)
+    const jit = (i: number) => Math.sin(i * 78.233)
+    const speed = isMobile ? 7 : 11
+    const lg = s['logo']
+    const keepOut = { x0: lg.x - 30, x1: lg.x + logoSz + 30, y0: lg.y, y1: lg.y + logoSz + 28 }
+    const placed: { x: number; y: number; w: number; h: number }[] = []
+    const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
+      Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
+    let prevY = vh / 2
+    ids.forEach((id, i) => {
+      const cfg = PHOTO_CFG[id]; const { w, h } = getDims(id)
+      const x = -avgW * 0.5 + i * step + jit(i + 9) * 12
+      const span = Math.max(0, vh - h - inset * 2)
+      let bestY = inset + span / 2, bestScore = Infinity
+      for (let k = 0; k <= 20; k++) {
+        const y = inset + span * k / 20
+        let score = 0
+        for (const o of placed) score += rectOverlap(x - 8, y - 8, w + 16, h + 16, o.x, o.y, o.w, o.h)
+        score += 4 * rectOverlap(x, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
+        // gentle pull away from the previous photo's height so neighbours alternate
+        score += Math.max(0, h * 0.6 - Math.abs(y - prevY)) * 40
+        if (score < bestScore) { bestScore = score; bestY = y }
+      }
+      prevY = bestY
+      placed.push({ x, y: bestY, w, h })
+      STRIP_HOME_Y[id] = bestY
+      s[id] = { x, y: bestY, rot: cfg.rot, vx: 0, vy: 0, vrot: 0, baseVx: -speed, baseVy: 0, baseVrot: 0 }
+    })
+    return s
   }
   let photoCount = 0
   CANVAS_ITEMS.forEach(({ id }) => {
@@ -626,8 +702,9 @@ export default function HomePage() {
   // flips it on small screens. Kept in sync with the physics-side window.innerWidth
   // checks in getDims / buildInitialState.
   const [isMobile, setIsMobile] = useState(false)
+  const [isTablet, setIsTablet] = useState(false)   // 768 to 1099px: strip shows fewer photos
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
+    const check = () => { setIsMobile(window.innerWidth < 768); setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1100) }
     const setVh = () => document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`)
     check()
     setVh()
@@ -1045,6 +1122,19 @@ export default function HomePage() {
         const [aw, ah] = aspect.split('/').map(Number)
         const { w, h } = getTileDims(tid, lastSrc2)
         const viewerW  = Math.min(vw - 48, vh * 0.8 * (aw / ah))
+        // Only when the tile is mostly off-screen (e.g. you flipped to a photo whose tile has
+        // drifted away): bring it back inside the screen, at the clearest spot, so the photo
+        // lands in view. A tile that is mostly visible lands exactly where it is.
+        {
+          const m = 14
+          const rw = vw < 768 ? w * 0.65 : w, rh = vw < 768 ? h * 0.65 : h
+          const visW = Math.max(0, Math.min(pos.x + rw, vw) - Math.max(pos.x, 0))
+          const visH = Math.max(0, Math.min(pos.y + rh, vh) - Math.max(pos.y, 0))
+          if ((visW * visH) / (rw * rh) < 0.55) {
+            pos.x = Math.max(m, Math.min(pos.x, vw - rw - m))
+            pos.y = pickClearY(posRef.current, tid, rw, rh, pos.x, vh)
+          }
+        }
         // Freeze the tile at this exact position so it can't drift while the
         // viewer photo is in flight — they'll land at exactly the same spot
         frozenPhotoRef.current = { id: tid, x: pos.x, y: pos.y, rot: pos.rot }
@@ -1107,6 +1197,8 @@ export default function HomePage() {
   // The Work sheet fully covers the canvas, so stop moving the tiles while it is open.
   // Saves a lot of work during the slide-in and while reading the list.
   const pausePhysicsRef = useRef(false)
+  const layoutRef = useRef<CanvasLayout>('strip')
+  useEffect(() => { layoutRef.current = getLayout() }, [])
   useEffect(() => { pausePhysicsRef.current = workMounted }, [workMounted])
 
   // EFFECT 2 — physics loop
@@ -1151,10 +1243,15 @@ export default function HomePage() {
         if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
         if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
-        if (pos.x >  vw + 60) pos.x = -w
-        if (pos.x < -w)       pos.x =  vw + 60
+        const scatterWrap = layoutRef.current === 'strip' && !!PHOTO_CFG[id]   // re-enter at the clearest height
+        if (pos.x > vw + 60) { pos.x = -w;      if (scatterWrap) pos.y = pickClearY(posRef.current, id, w, h, 0, vh) }
+        if (pos.x < -w)      { pos.x = vw + 60; if (scatterWrap) pos.y = pickClearY(posRef.current, id, w, h, vw - w, vh) }
         if (pos.y >  vh + 60) pos.y = -h
         if (pos.y < -h)       pos.y =  vh + 60
+        // Strip only: a photo thrown off the top or bottom eases back in to its resting height
+        if (layoutRef.current === 'strip' && STRIP_HOME_Y[id] !== undefined && (pos.y + h < 60 || pos.y > vh - 60)) {
+          pos.y += (STRIP_HOME_Y[id] - pos.y) * Math.min(1, dt * 1.5)
+        }
         const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
         const el = elRefs.current[id]; if (el) el.style.transform = t
         const vel = visualElRefs.current[id]; if (vel) vel.style.transform = t
@@ -1561,7 +1658,7 @@ export default function HomePage() {
           transition: 'transform 0.40s cubic-bezier(0.16,1,0.3,1)',
           willChange: 'transform',
         }}>
-          {CANVAS_ITEMS.filter((_, i) => !isMobile || i < 6).map(proj => {
+          {CANVAS_ITEMS.filter((_, i) => getLayout() === 'strip' ? i < (isMobile || isTablet ? stripLimit(window.innerWidth, window.innerHeight) : 99) : (!isMobile || i < 6)).map(proj => {
             const cfg = PHOTO_CFG[proj.id]; if (!cfg) return null
             // Both width AND height follow the current image's orientation, keeping the long dim
             // constant so landscape tiles aren't smaller than portrait ones from the same project.
