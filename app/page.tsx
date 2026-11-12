@@ -662,40 +662,50 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     const avgW = dimsAll.reduce((sum, d) => sum + d.w, 0) / n
     const avgH = dimsAll.reduce((sum, d) => sum + d.h, 0) / n
     const inset = isMobile ? 8 : Math.min(36, vh * 0.04)
-    const lanes = Math.max(2, Math.round((vh - inset * 2) / (avgH * 0.95)))
+    const lanes = Math.max(2, Math.round((vh - inset * 2) / (avgH * 1.0)))
     const laneH = (vh - inset * 2) / lanes
     const jit = (i: number) => Math.sin(i * 78.233)
     const speed = isMobile ? 7 : 11
     const lg = s['logo']
     const keepOut = { x0: lg.x - 24, x1: lg.x + logoSz + 24, y0: lg.y, y1: lg.y + logoSz + 24 }
+    const navOut = { x0: vw - (isMobile ? 150 : 220), x1: vw, y0: 0, y1: isMobile ? 70 : 80 }   // work / about links
     const startX = -avgW * 0.5
     const laneRight: number[] = new Array(lanes).fill(startX)
-    // Row order that spreads neighbours apart: 0, 2, 4, ..., 1, 3, 5, ...
-    const laneOrder: number[] = []
-    for (let l = 0; l < lanes; l += 2) laneOrder.push(l)
-    for (let l = 1; l < lanes; l += 2) laneOrder.push(l)
-    const hitsLogo = (x: number, y: number, w: number, h: number) =>
-      x < keepOut.x1 && x + w > keepOut.x0 && y < keepOut.y1 && y + h > keepOut.y0
+    const placed: { x: number; y: number; w: number; h: number }[] = []
+    const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
+      Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
+    const gap = isMobile ? 12 : 18   // breathing room between neighbours
     ids.forEach((id, i) => {
       const cfg = PHOTO_CFG[id]; const { w, h } = dimsAll[i]
-      // emptiest row (ties broken by the spread-out order)
-      let lane = laneOrder[0], bestR = Infinity
-      for (const l of laneOrder) { if (laneRight[l] < bestR - 1) { bestR = laneRight[l]; lane = l } }
-      const y0 = Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5,
-        inset + lane * laneH + (laneH - h) / 2 + jit(i + 3) * laneH * 0.12))
-      let y = y0
-      let x = laneRight[lane] - w * (0.06 + 0.06 * (jit(i + 9) + 1) / 2)   // slight overlap, like a scrapbook
-      if (hitsLogo(x, y, w, h)) {
-        // keep the logo clear at the start: slip just below it if there's room, else start right of it
-        const below = keepOut.y1 + 2
-        if (below - y0 <= laneH * 0.6 && below + h <= vh - inset * 0.5) y = below
-        else x = Math.max(x, keepOut.x1)
+      // Try every row, nudged right in small steps, and keep the spot with the least overlap
+      // (and, among equals, the one furthest left so the rows fill evenly). Floaty: each photo
+      // also sits a little above or below its row's centre.
+      let bx = 0, by = 0, bestScore = Infinity
+      for (let l = 0; l < lanes; l++) {
+        const yBase = inset + l * laneH + (laneH - h) / 2 + jit(i * 3 + l) * laneH * 0.28
+        const y = Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5, yBase))
+        for (let k = 0; k < 6; k++) {
+          let x = laneRight[l] + gap * 0.5 + k * 22 + (jit(i + 9) + 1) * 8
+          // a row that would run into the logo starts just to the right of it instead
+          if (rectOverlap(x, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0) x = keepOut.x1 + 6 + k * 22
+          let ov = 0
+          for (const o of placed) ov += rectOverlap(x - gap, y - gap, w + gap * 2, h + gap * 2, o.x, o.y, o.w, o.h)
+          // keep the logo clear at the start
+          ov += 6 * rectOverlap(x, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
+          // ...and the work / about links in the top right
+          ov += 10 * rectOverlap(x, y, w, h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0)
+          const score = ov * 4 + (x - startX)
+          if (score < bestScore) { bestScore = score; bx = x; by = y }
+        }
       }
-      laneRight[lane] = x + w
-      STRIP_HOME_Y[id] = y
-      s[id] = { x, y, rot: cfg.rot, vx: 0, vy: 0, vrot: 0, baseVx: -speed, baseVy: 0, baseVrot: 0 }
+      let lane = 0, bestD = Infinity
+      for (let l = 0; l < lanes; l++) { const d = Math.abs(by + h / 2 - (inset + (l + 0.5) * laneH)); if (d < bestD) { bestD = d; lane = l } }
+      laneRight[lane] = Math.max(laneRight[lane], bx + w)
+      placed.push({ x: bx, y: by, w, h })
+      STRIP_HOME_Y[id] = by
+      s[id] = { x: bx, y: by, rot: cfg.rot, vx: 0, vy: 0, vrot: 0, baseVx: -speed, baseVy: 0, baseVrot: 0 }
     })
-    STRIP_LEN = Math.max(...laneRight) - startX
+    STRIP_LEN = Math.max(...laneRight) - startX + gap * 2
     return s
   }
   let photoCount = 0
