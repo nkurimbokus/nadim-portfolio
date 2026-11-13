@@ -42,3 +42,6 @@ next-env.d.ts
 
 # local archive of replaced originals
 /_archive/
+
+# local Claude Code settings
+/.claude/settings.local.json
