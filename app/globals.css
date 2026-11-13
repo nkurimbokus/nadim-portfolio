@@ -169,6 +169,12 @@ h1, h2, h3, h4, h5, h6, p, a, button, span, li {
   background: rgba(255, 255, 255, 0.22);
 }
 
+/* Phone keeps the original plain arrows: no box, original padding. */
 @media (max-width: 767px) {
-  .lb-arrow-btn { display: none; }
+  .lb-arrow-btn {
+    border-color: transparent;
+    border-radius: 0;
+    padding: 8px !important;
+  }
+  .lb-arrow-btn:hover { background: transparent; }
 }
