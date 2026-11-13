@@ -1974,7 +1974,7 @@ export default function HomePage() {
         <div
           className="cpicker-dot"
           aria-hidden
-          style={{ background: dotColour }}
+          style={{ background: dotColour, boxShadow: `0 0 0 2px ${bgColour}` }}   // ring in the page colour so the dot still shows over dark or light photos
         />
       </div>
 
