@@ -262,11 +262,8 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/cultural/lion-dance-chinese-new-year/cultural_2025_lion-dance-chinese-new-year_007_standard.jpg': '1600/1067',
   '/images/portfolio/candidate_2024_dafly-hooligan_001_standard.jpg': '1067/1600',
   '/images/portfolio/candidate_2024_notting-hill-carnival_001_standard.jpg': '1600/1067',
-  '/images/portfolio/candidate_2024_notting-hill-carnival_002_standard.jpg': '1076/1600',
   '/images/portfolio/candidate_2025_dj-koco_001_standard.jpg': '1600/1067',
   '/images/portfolio/candidate_2025_evidence_001_standard.jpg': '1067/1600',
-  '/images/portfolio/candidate_2025_france_001_standard.jpg': '1600/1067',
-  '/images/portfolio/candidate_2025_france_002_standard.jpg': '1600/1067',
   '/images/portfolio/candidate_2025_mauritius_001_standard.jpg': '1067/1600',
   '/images/portfolio/candidate_2025_mauritius_002_standard.jpg': '1067/1600',
   '/images/portfolio/candidate_2025_pharcyde_001_standard.jpg': '1600/1058',
@@ -569,10 +566,6 @@ function parseAspect(a: string): number {
 // is unchanged — only the tile dimensions are scaled.
 const TILE_SIZE_SCALE = 1
 
-// Testimonials removed from the About panel (Nov 2026). Kept as an empty list so the
-// render and physics loops below stay valid; re-add entries here to bring them back.
-const TESTIMONIALS: { id: string; quote: string; attribution: string }[] = []
-
 // Shrinks the About portrait + logo on short screens so they fit above the text when About opens.
 // Set by the About open effect; 1 = full size.
 let ABOUT_SCALE = 1
@@ -603,13 +596,6 @@ function hexToRgb(hex: string): string {
   return `rgb(${r}, ${g}, ${b})`
 }
 
-// Canvas layout: the film strip is the default. Add ?layout=float for the original floating pile.
-type CanvasLayout = 'float' | 'strip'
-function getLayout(): CanvasLayout {
-  if (typeof window === 'undefined') return 'float'
-  const q = new URLSearchParams(window.location.search).get('layout')
-  return q === 'float' ? 'float' : 'strip'   // strip is the default; ?layout=float is the original pile
-}
 const STRIP_HOME_Y: Record<string, number> = {}   // strip: each photo's resting height
 let STRIP_LEN = 0                                  // strip: length of the whole carousel loop (all photos)
 // How many photos the strip shows on screen at once (the rest queue off the right edge), by screen width (fewer on small screens = more room)
@@ -661,182 +647,163 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     baseVy: LOGO_INIT.baseVy * vScale,
     baseVrot: LOGO_INIT.baseVrot * vScale,
   }
-  const layout = getLayout()
-  if (layout === 'strip') {
-    // Film strip: a constant flow that fills the whole screen. Photos sit in rows that run the
-    // full height; each photo, in reel order, joins the emptiest row, so every row is evenly
-    // filled and the whole thing drifts left at one speed. Rows are set by the screen height,
-    // so phones and desktops both fill up. The logo's patch is kept clear at the start only.
-    const ids = CANVAS_ITEMS.map(i => i.id).filter(id => PHOTO_CFG[id])   // every photo is in the carousel
-    const n = ids.length
-    const dimsAll = ids.map(id => getDims(id))
-    const avgW = dimsAll.reduce((sum, d) => sum + d.w, 0) / n
-    const avgH = dimsAll.reduce((sum, d) => sum + d.h, 0) / n
-    const inset = isMobile ? 8 : Math.min(36, vh * 0.04)
-    const lanes = Math.max(2, Math.round((vh - inset * 2) / (avgH * 1.0)))
-    const laneH = (vh - inset * 2) / lanes
-    const jit = (i: number) => Math.sin(i * 78.233)
-    const speed = isMobile ? 7 : 11
-    const lg = s['logo']
-    STRIP_HOME_Y['logo'] = lg.y
-    const keepOut = { x0: lg.x - 24, x1: lg.x + logoSz + 24, y0: lg.y, y1: lg.y + logoSz * 0.68 + 12 }
-    const navOut = { x0: vw - (isMobile ? 150 : 220), x1: vw, y0: 0, y1: isMobile ? 70 : 80 }   // work / about links
-    const startX = -avgW * 0.5
-    const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
-      Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
-    const gap = isMobile ? 12 : 34   // breathing room between neighbours
-    // Wide screens: photos are dealt to the rows in turn and every row is spread to the same length,
-    // each row starting a little further in than the last, so the density is even all over (steady flow).
-    const needLen = vw + avgW * 1.0
-    const rowCount: number[] = new Array(lanes).fill(0), rowW: number[] = new Array(lanes).fill(0)
-    ids.forEach((_, i) => { rowCount[i % lanes]++; rowW[i % lanes] += dimsAll[i].w })
-    const stagger = (l: number) => (l / lanes) * (needLen / Math.max(1, rowCount[0]))
-    const rowExtra = (l: number) => Math.max(0, (needLen - stagger(l) - rowW[l]) / Math.max(1, rowCount[l]) - gap * 0.5)
-    const layoutStrip = (xExtra: number) => {
-    const laneRight: number[] = new Array(lanes).fill(startX).map((v, l) => isMobile ? v : v + stagger(l))
-    const placed: { x: number; y: number; w: number; h: number }[] = []
-    const laneOf: number[] = []
-    ids.forEach((id, i) => {
-      const cfg = PHOTO_CFG[id]; const { w, h } = dimsAll[i]
-      // Try every row, nudged right in small steps, and keep the spot with the least overlap
-      // (and, among equals, the one furthest left so the rows fill evenly). Floaty: each photo
-      // also sits a little above or below its row's centre.
-      let bx = 0, by = 0, bestScore = Infinity
-      for (let l = isMobile ? 0 : i % lanes; l < (isMobile ? lanes : (i % lanes) + 1); l++) {
-        const yBase = inset + l * laneH + (laneH - h) / 2 + jit(i * 3 + l) * laneH * 0.28
-        const y = Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5, yBase))
-        for (let k = 0; k < 6; k++) {
-          const x0 = laneRight[l] + gap * 0.5 + (isMobile ? xExtra : rowExtra(l)) + k * 22 + (jit(i + 9) + 1) * 8
-          // a spot that would run into the logo is tried two ways: tucked just below it, or just to its right
-          const hitLogo = rectOverlap(x0, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0
-          const cands: { x: number; y: number }[] = hitLogo
-            ? [{ x: keepOut.x1 + 6 + k * 22, y }, ...(keepOut.y1 + 4 + h <= vh - inset * 0.5 ? [{ x: x0, y: keepOut.y1 + 4 }] : [])]
-            : (isMobile ? [{ x: x0, y }] : [0, -60, 60, -120, 120].map(dy => ({ x: x0, y: Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5, y + dy)) })))
-          for (const c of cands) {
-            let ov = 0
-            for (const o of placed) ov += rectOverlap(c.x - gap, c.y - gap, w + gap * 2, h + gap * 2, o.x, o.y, o.w, o.h)
-            // keep the logo clear at the start
-            ov += 6 * rectOverlap(c.x, c.y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
-            // ...and the work / about links in the top right
-            ov += 10 * rectOverlap(c.x, c.y, w, h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0)
-            const score = ov * 4 + (c.x - startX) + Math.max(0, c.y - (keepOut.y1 + 4)) * 0.15   // a slight pull up, so the top fills
-            if (score < bestScore) { bestScore = score; bx = c.x; by = c.y }
-          }
+  // Film strip: a constant flow that fills the whole screen. Photos sit in rows that run the
+  // full height; each photo, in reel order, joins the emptiest row, so every row is evenly
+  // filled and the whole thing drifts left at one speed. Rows are set by the screen height,
+  // so phones and desktops both fill up. The logo's patch is kept clear at the start only.
+  const ids = CANVAS_ITEMS.map(i => i.id).filter(id => PHOTO_CFG[id])   // every photo is in the carousel
+  const n = ids.length
+  const dimsAll = ids.map(id => getDims(id))
+  const avgW = dimsAll.reduce((sum, d) => sum + d.w, 0) / n
+  const avgH = dimsAll.reduce((sum, d) => sum + d.h, 0) / n
+  const inset = isMobile ? 8 : Math.min(36, vh * 0.04)
+  const lanes = Math.max(2, Math.round((vh - inset * 2) / (avgH * 1.0)))
+  const laneH = (vh - inset * 2) / lanes
+  const jit = (i: number) => Math.sin(i * 78.233)
+  const speed = isMobile ? 7 : 11
+  const lg = s['logo']
+  const keepOut = { x0: lg.x - 24, x1: lg.x + logoSz + 24, y0: lg.y, y1: lg.y + logoSz * 0.68 + 12 }
+  const navOut = { x0: vw - (isMobile ? 150 : 220), x1: vw, y0: 0, y1: isMobile ? 70 : 80 }   // work / about links
+  const startX = -avgW * 0.5
+  const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
+    Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
+  const gap = isMobile ? 12 : 34   // breathing room between neighbours
+  // Wide screens: photos are dealt to the rows in turn and every row is spread to the same length,
+  // each row starting a little further in than the last, so the density is even all over (steady flow).
+  const needLen = vw + avgW * 1.0
+  const rowCount: number[] = new Array(lanes).fill(0), rowW: number[] = new Array(lanes).fill(0)
+  ids.forEach((_, i) => { rowCount[i % lanes]++; rowW[i % lanes] += dimsAll[i].w })
+  const stagger = (l: number) => (l / lanes) * (needLen / Math.max(1, rowCount[0]))
+  const rowExtra = (l: number) => Math.max(0, (needLen - stagger(l) - rowW[l]) / Math.max(1, rowCount[l]) - gap * 0.5)
+  const layoutStrip = (xExtra: number) => {
+  const laneRight: number[] = new Array(lanes).fill(startX).map((v, l) => isMobile ? v : v + stagger(l))
+  const placed: { x: number; y: number; w: number; h: number }[] = []
+  const laneOf: number[] = []
+  ids.forEach((id, i) => {
+    const cfg = PHOTO_CFG[id]; const { w, h } = dimsAll[i]
+    // Try every row, nudged right in small steps, and keep the spot with the least overlap
+    // (and, among equals, the one furthest left so the rows fill evenly). Floaty: each photo
+    // also sits a little above or below its row's centre.
+    let bx = 0, by = 0, bestScore = Infinity
+    for (let l = isMobile ? 0 : i % lanes; l < (isMobile ? lanes : (i % lanes) + 1); l++) {
+      const yBase = inset + l * laneH + (laneH - h) / 2 + jit(i * 3 + l) * laneH * 0.28
+      const y = Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5, yBase))
+      for (let k = 0; k < 6; k++) {
+        const x0 = laneRight[l] + gap * 0.5 + (isMobile ? xExtra : rowExtra(l)) + k * 22 + (jit(i + 9) + 1) * 8
+        // a spot that would run into the logo is tried two ways: tucked just below it, or just to its right
+        const hitLogo = rectOverlap(x0, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0
+        const cands: { x: number; y: number }[] = hitLogo
+          ? [{ x: keepOut.x1 + 6 + k * 22, y }, ...(keepOut.y1 + 4 + h <= vh - inset * 0.5 ? [{ x: x0, y: keepOut.y1 + 4 }] : [])]
+          : (isMobile ? [{ x: x0, y }] : [0, -60, 60, -120, 120].map(dy => ({ x: x0, y: Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5, y + dy)) })))
+        for (const c of cands) {
+          let ov = 0
+          for (const o of placed) ov += rectOverlap(c.x - gap, c.y - gap, w + gap * 2, h + gap * 2, o.x, o.y, o.w, o.h)
+          // keep the logo clear at the start
+          ov += 6 * rectOverlap(c.x, c.y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
+          // ...and the work / about links in the top right
+          ov += 10 * rectOverlap(c.x, c.y, w, h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0)
+          const score = ov * 4 + (c.x - startX) + Math.max(0, c.y - (keepOut.y1 + 4)) * 0.15   // a slight pull up, so the top fills
+          if (score < bestScore) { bestScore = score; bx = c.x; by = c.y }
         }
       }
-      let lane = 0, bestD = Infinity
-      for (let l = 0; l < lanes; l++) { const d = Math.abs(by + h / 2 - (inset + (l + 0.5) * laneH)); if (d < bestD) { bestD = d; lane = l } }
-      laneOf[i] = lane
-      laneRight[lane] = Math.max(laneRight[lane], bx + w)
-      placed.push({ x: bx, y: by, w, h })
-      STRIP_HOME_Y[id] = by
-      s[id] = { x: bx, y: by, rot: cfg.rot, vx: 0, vy: 0, vrot: 0, baseVx: -speed, baseVy: 0, baseVrot: 0 }
-    })
-    // Wide screens: a few rounds of nudging so photos that still touch their neighbours drift apart.
-    if (!isMobile) {
-      const clash = (a: { w: number; h: number }, ax: number, ay: number) => {
-        let t = 0
-        for (const o of placed) { if (o === a) continue; t += rectOverlap(ax - gap, ay - gap, a.w + gap * 2, a.h + gap * 2, o.x, o.y, o.w, o.h) }
-        t += 6 * rectOverlap(ax, ay, a.w, a.h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
-        t += 10 * rectOverlap(ax, ay, a.w, a.h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0)
-        return t
-      }
-      for (let it = 0; it < 40; it++) {
-        let moved = false
-        for (const me of placed) {
-          const cur = clash(me, me.x, me.y); if (cur === 0) continue
-          let bx = me.x, by = me.y, bv = cur
-          for (const dx of [-160, -80, -40, 0, 40, 80, 160, 240]) for (const dy of [-135, -90, -45, 0, 45, 90, 135]) {
-            const nx = me.x + dx, ny = me.y + dy
-            if (ny < inset * 0.5 || ny + me.h > vh - inset * 0.5) continue
-            const v = clash(me, nx, ny) + (Math.abs(dx) + Math.abs(dy)) * 0.05
-            if (v < bv) { bv = v; bx = nx; by = ny }
-          }
-          if (bx !== me.x || by !== me.y) { me.x = bx; me.y = by; moved = true }
-        }
-        if (!moved) break
-      }
-      // Last resort: any two photos still overlapping at all, the one further right slides along
-      // its row until it is clear (the loop is lengthened to fit). So no pair starts on top of each other.
-      const bump = (a: { x: number; y: number; w: number; h: number }) => {
-        for (const o of placed) {
-          if (o === a) continue
-          if (rectOverlap(a.x - gap * 0.6, a.y - gap * 0.6, a.w + gap * 1.2, a.h + gap * 1.2, o.x, o.y, o.w, o.h) > 0) return o
-        }
-        return null
-      }
-      for (const me of placed.slice().sort((a, b) => a.x - b.x)) {
-        let o = bump(me), guard = 0
-        while (o && guard++ < 90) { if (o.x <= me.x) { me.x += 20 } else { o.x += 20 } ; o = bump(me) }
-      }
-      ids.forEach((id, i) => {
-        s[id].x = placed[i].x; s[id].y = placed[i].y; STRIP_HOME_Y[id] = placed[i].y
-        laneRight[laneOf[i]] = Math.max(laneRight[laneOf[i]], placed[i].x + placed[i].w)
-      })
     }
-    // Close the empty space at the top: photos in the upper half slide up (never far) until they
-    // touch their neighbour, the logo or the work / about links, so the first screen reads as full.
-    const idList = ids.slice().sort((a, b) => s[a].x - s[b].x)
-    for (const id of idList) {
-      const me = placed[ids.indexOf(id)]
-      if (!isMobile || me.y > vh * 0.5) continue
-      const startY = me.y
-      while (me.y - 4 >= inset * 0.5 && startY - (me.y - 4) <= 110) {
-        const ny = me.y - 4
-        let hit = false
-        for (const o of placed) {
-          if (o === me) continue
-          if (rectOverlap(me.x - gap, ny - gap, me.w + gap * 2, me.h + gap * 2, o.x, o.y, o.w, o.h) > 0) { hit = true; break }
-        }
-        if (!hit && rectOverlap(me.x, ny, me.w, me.h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0) hit = true
-        if (!hit && rectOverlap(me.x, ny, me.w, me.h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0) > 0) hit = true
-        if (hit) break
-        me.y = ny
-      }
-      s[id].y = me.y
-      STRIP_HOME_Y[id] = me.y
-    }
-    return { len: Math.max(...laneRight) - startX + gap * 2, laneRight, laneOf, placed }
-    }
-    // On wide screens the loop would be shorter than the screen and leave the right side empty:
-    // spread the photos along their rows until the loop is longer than the screen.
-    const r = layoutStrip(0)
-    let len = r.len
-    const need = vw + avgW * 1.0
-    if (len < need) {
-      // stretch every row to the same length (rows with fewer photos get wider gaps), so the whole
-      // screen fills evenly. A photo that would then touch the logo, the links or a neighbour stays put.
-      const f = r.laneRight.map(lr => Math.min(1.9, Math.max(1, (need - gap * 2) / Math.max(1, lr - startX))))
-      ids.slice().sort((a, b) => s[b].x - s[a].x).forEach(id => {
-        const i = ids.indexOf(id); const me = r.placed[i]
-        const nx = startX + (me.x - startX) * f[r.laneOf[i]]
-        let hit = rectOverlap(nx, me.y, me.w, me.h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0
-          || rectOverlap(nx, me.y, me.w, me.h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0) > 0
-        if (!hit) for (const o of r.placed) {
-          if (o === me) continue
-          if (rectOverlap(nx - gap, me.y - gap, me.w + gap * 2, me.h + gap * 2, o.x, o.y, o.w, o.h) > 0) { hit = true; break }
-        }
-        if (!hit) { me.x = nx; s[id].x = nx }
-      })
-      len = need
-    }
-    STRIP_LEN = len
-    return s
-  }
-  let photoCount = 0
-  CANVAS_ITEMS.forEach(({ id }) => {
-    const cfg = PHOTO_CFG[id]; if (!cfg) return
-    if (isMobile && photoCount >= 6) return
-    photoCount++
-    const { w, h } = getDims(id)
-    s[id] = {
-      x: cfg.xPct*(vw-w), y: cfg.yPct*(vh-h), rot: cfg.rot,
-      vx: 0, vy: 0, vrot: 0,
-      baseVx: cfg.baseVx * vScale,
-      baseVy: cfg.baseVy * vScale,
-      baseVrot: cfg.baseVrot * vScale,
-    }
+    let lane = 0, bestD = Infinity
+    for (let l = 0; l < lanes; l++) { const d = Math.abs(by + h / 2 - (inset + (l + 0.5) * laneH)); if (d < bestD) { bestD = d; lane = l } }
+    laneOf[i] = lane
+    laneRight[lane] = Math.max(laneRight[lane], bx + w)
+    placed.push({ x: bx, y: by, w, h })
+    STRIP_HOME_Y[id] = by
+    s[id] = { x: bx, y: by, rot: cfg.rot, vx: 0, vy: 0, vrot: 0, baseVx: -speed, baseVy: 0, baseVrot: 0 }
   })
+  // Wide screens: a few rounds of nudging so photos that still touch their neighbours drift apart.
+  if (!isMobile) {
+    const clash = (a: { w: number; h: number }, ax: number, ay: number) => {
+      let t = 0
+      for (const o of placed) { if (o === a) continue; t += rectOverlap(ax - gap, ay - gap, a.w + gap * 2, a.h + gap * 2, o.x, o.y, o.w, o.h) }
+      t += 6 * rectOverlap(ax, ay, a.w, a.h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
+      t += 10 * rectOverlap(ax, ay, a.w, a.h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0)
+      return t
+    }
+    for (let it = 0; it < 40; it++) {
+      let moved = false
+      for (const me of placed) {
+        const cur = clash(me, me.x, me.y); if (cur === 0) continue
+        let bx = me.x, by = me.y, bv = cur
+        for (const dx of [-160, -80, -40, 0, 40, 80, 160, 240]) for (const dy of [-135, -90, -45, 0, 45, 90, 135]) {
+          const nx = me.x + dx, ny = me.y + dy
+          if (ny < inset * 0.5 || ny + me.h > vh - inset * 0.5) continue
+          const v = clash(me, nx, ny) + (Math.abs(dx) + Math.abs(dy)) * 0.05
+          if (v < bv) { bv = v; bx = nx; by = ny }
+        }
+        if (bx !== me.x || by !== me.y) { me.x = bx; me.y = by; moved = true }
+      }
+      if (!moved) break
+    }
+    // Last resort: any two photos still overlapping at all, the one further right slides along
+    // its row until it is clear (the loop is lengthened to fit). So no pair starts on top of each other.
+    const bump = (a: { x: number; y: number; w: number; h: number }) => {
+      for (const o of placed) {
+        if (o === a) continue
+        if (rectOverlap(a.x - gap * 0.6, a.y - gap * 0.6, a.w + gap * 1.2, a.h + gap * 1.2, o.x, o.y, o.w, o.h) > 0) return o
+      }
+      return null
+    }
+    for (const me of placed.slice().sort((a, b) => a.x - b.x)) {
+      let o = bump(me), guard = 0
+      while (o && guard++ < 90) { if (o.x <= me.x) { me.x += 20 } else { o.x += 20 } ; o = bump(me) }
+    }
+    ids.forEach((id, i) => {
+      s[id].x = placed[i].x; s[id].y = placed[i].y; STRIP_HOME_Y[id] = placed[i].y
+      laneRight[laneOf[i]] = Math.max(laneRight[laneOf[i]], placed[i].x + placed[i].w)
+    })
+  }
+  // Close the empty space at the top: photos in the upper half slide up (never far) until they
+  // touch their neighbour, the logo or the work / about links, so the first screen reads as full.
+  const idList = ids.slice().sort((a, b) => s[a].x - s[b].x)
+  for (const id of idList) {
+    const me = placed[ids.indexOf(id)]
+    if (!isMobile || me.y > vh * 0.5) continue
+    const startY = me.y
+    while (me.y - 4 >= inset * 0.5 && startY - (me.y - 4) <= 110) {
+      const ny = me.y - 4
+      let hit = false
+      for (const o of placed) {
+        if (o === me) continue
+        if (rectOverlap(me.x - gap, ny - gap, me.w + gap * 2, me.h + gap * 2, o.x, o.y, o.w, o.h) > 0) { hit = true; break }
+      }
+      if (!hit && rectOverlap(me.x, ny, me.w, me.h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0) hit = true
+      if (!hit && rectOverlap(me.x, ny, me.w, me.h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0) > 0) hit = true
+      if (hit) break
+      me.y = ny
+    }
+    s[id].y = me.y
+    STRIP_HOME_Y[id] = me.y
+  }
+  return { len: Math.max(...laneRight) - startX + gap * 2, laneRight, laneOf, placed }
+  }
+  // On wide screens the loop would be shorter than the screen and leave the right side empty:
+  // spread the photos along their rows until the loop is longer than the screen.
+  const r = layoutStrip(0)
+  let len = r.len
+  const need = vw + avgW * 1.0
+  if (len < need) {
+    // stretch every row to the same length (rows with fewer photos get wider gaps), so the whole
+    // screen fills evenly. A photo that would then touch the logo, the links or a neighbour stays put.
+    const f = r.laneRight.map(lr => Math.min(1.9, Math.max(1, (need - gap * 2) / Math.max(1, lr - startX))))
+    ids.slice().sort((a, b) => s[b].x - s[a].x).forEach(id => {
+      const i = ids.indexOf(id); const me = r.placed[i]
+      const nx = startX + (me.x - startX) * f[r.laneOf[i]]
+      let hit = rectOverlap(nx, me.y, me.w, me.h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0
+        || rectOverlap(nx, me.y, me.w, me.h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0) > 0
+      if (!hit) for (const o of r.placed) {
+        if (o === me) continue
+        if (rectOverlap(nx - gap, me.y - gap, me.w + gap * 2, me.h + gap * 2, o.x, o.y, o.w, o.h) > 0) { hit = true; break }
+      }
+      if (!hit) { me.x = nx; s[id].x = nx }
+    })
+    len = need
+  }
+  STRIP_LEN = len
   return s
 }
 
@@ -1133,7 +1100,6 @@ export default function HomePage() {
       ABOUT_SCALE = 1
       delete posRef.current['aboutPortrait']
       delete posRef.current['aboutLogo']
-      TESTIMONIALS.forEach(({ id }) => { delete posRef.current[id] })
       return
     }
     const vw = window.innerWidth, vh = window.innerHeight
@@ -1397,8 +1363,6 @@ export default function HomePage() {
   // The Work sheet fully covers the canvas, so stop moving the tiles while it is open.
   // Saves a lot of work during the slide-in and while reading the list.
   const pausePhysicsRef = useRef(false)
-  const layoutRef = useRef<CanvasLayout>('strip')
-  useEffect(() => { layoutRef.current = getLayout() }, [])
   useEffect(() => { pausePhysicsRef.current = workMounted }, [workMounted])
 
   // EFFECT 2 — physics loop
@@ -1443,7 +1407,6 @@ export default function HomePage() {
         if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
         if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
-        const strip = layoutRef.current === 'strip'
         // What you can actually see. The logo's box is bigger than the box physics uses for it, and
         // its letters sit in the middle 40% of that box, so it gets its own numbers. That makes it
         // leave and re-enter the screen by exactly the same rules as the photos.
@@ -1452,7 +1415,7 @@ export default function HomePage() {
         const bw = isLogo ? LV : w
         const bh = isLogo ? LV * 0.4 : h
         const oy = isLogo ? LV * 0.3 : 0
-        if (strip && STRIP_LEN > 0 && PHOTO_CFG[id]) {
+        if (STRIP_LEN > 0 && PHOTO_CFG[id]) {
           // Carousel: wrap round the whole loop. A photo leaving the left joins the back of the
           // queue off the right edge, at the clearest height, and slides in again later.
           const lo = -w - 60
@@ -1466,20 +1429,15 @@ export default function HomePage() {
           if (pos.x > vw + 60) pos.x = -w
           if (pos.x < -w)      pos.x = vw + 60
         }
-        if (strip || isLogo) {
-          // Top and bottom: no looping round. Past the edge of the screen there is friction-free
-          // space (so nothing slows or hangs half in view), and a hard invisible wall a little way
-          // beyond the screen that sends it straight back at the same speed.
-          const top = pos.y + oy, bot = top + bh
-          if (top < 0 || bot > vh) {
-            pos.vy = pos.baseVy + (pos.vy - pos.baseVy) / 0.985          // cancel this frame's friction
-            if (Math.abs(pos.vy) < 60) pos.vy = (pos.vy !== 0 ? Math.sign(pos.vy) : (top < 0 ? -1 : 1)) * 60   // never creeps
-            if (bot < -60 && pos.vy < 0) pos.vy = -pos.vy                // wall above the screen
-            else if (top > vh + 60 && pos.vy > 0) pos.vy = -pos.vy       // wall below the screen
-          }
-        } else {
-          if (pos.y >  vh + 60) pos.y = -h
-          if (pos.y < -h)       pos.y =  vh + 60
+        // Top and bottom: no looping round. Past the edge of the screen there is friction-free
+        // space (so nothing slows or hangs half in view), and a hard invisible wall a little way
+        // beyond the screen that sends it straight back at the same speed.
+        const top = pos.y + oy, bot = top + bh
+        if (top < 0 || bot > vh) {
+          pos.vy = pos.baseVy + (pos.vy - pos.baseVy) / 0.985          // cancel this frame's friction
+          if (Math.abs(pos.vy) < 60) pos.vy = (pos.vy !== 0 ? Math.sign(pos.vy) : (top < 0 ? -1 : 1)) * 60   // never creeps
+          if (bot < -60 && pos.vy < 0) pos.vy = -pos.vy                // wall above the screen
+          else if (top > vh + 60 && pos.vy > 0) pos.vy = -pos.vy       // wall below the screen
         }
         const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
         const el = elRefs.current[id]; if (el) el.style.transform = t
@@ -1900,7 +1858,7 @@ export default function HomePage() {
           transition: 'transform 0.40s cubic-bezier(0.16,1,0.3,1)',
           willChange: 'transform',
         }}>
-          {CANVAS_ITEMS.filter((_, i) => getLayout() === 'strip' || !isMobile || i < 6).map(proj => {
+          {CANVAS_ITEMS.map(proj => {
             const cfg = PHOTO_CFG[proj.id]; if (!cfg) return null
             // Both width AND height follow the current image's orientation, keeping the long dim
             // constant so landscape tiles aren't smaller than portrait ones from the same project.
@@ -2315,74 +2273,6 @@ export default function HomePage() {
               unoptimized
             />
           </div>
-        </div>
-
-        {/* ── Quote card visuals — z:58, renders content, no pointer events ── */}
-        <div
-          className="fixed inset-0 z-[58]"
-          style={{
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
-            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
-            willChange: 'transform',
-            pointerEvents: 'none',
-          }}
-          aria-hidden="true"
-        >
-          {TESTIMONIALS.map(({ id, quote, attribution }) => (
-            <div
-              key={id}
-              ref={el => { visualElRefs.current[id] = el as HTMLElement | null }}
-              className="absolute top-0 left-0 touch-none"
-              style={{
-                width: isMobile ? 180 : 220,
-                willChange: 'transform',
-                pointerEvents: 'none',
-                background: '#ffffff',
-                borderRadius: 2,
-                padding: isMobile ? '10px 12px' : '14px 16px',
-                boxShadow: '0 2px 16px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04)',
-                userSelect: 'none',
-              }}
-            >
-              <p style={{ fontSize: isMobile ? 10 : 11, lineHeight: 1.55, margin: 0, color: '#1a1a1a', mixBlendMode: 'normal' }}>
-                &ldquo;{quote}&rdquo;
-              </p>
-              <p style={{ fontSize: isMobile ? 9 : 10, margin: '8px 0 0', color: '#888', mixBlendMode: 'normal' }}>
-                — {attribution}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Quote card hitboxes — z:63, invisible, handles drag ──────────── */}
-        <div
-          className="fixed inset-0 z-[66]"
-          style={{
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
-            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
-            willChange: 'transform',
-            pointerEvents: 'none',
-          }}
-          aria-hidden="true"
-        >
-          {TESTIMONIALS.map(({ id }) => (
-            <div
-              key={id}
-              ref={el => { elRefs.current[id] = el as HTMLElement | null }}
-              className="absolute top-0 left-0 touch-none"
-              style={{
-                width:         isMobile ? 180 : 220,
-                height:        isMobile ? 110 : 140,
-                willChange:    'transform',
-                cursor:        'none',
-                pointerEvents: 'auto',
-              }}
-              onPointerDown={e => onPointerDown(e, id)}
-              onPointerUp={onPointerUp}
-              onPointerMove={aboutSettled ? onPointerMove : undefined}
-              onContextMenu={e => e.preventDefault()}
-            />
-          ))}
         </div>
 
         {/* ── About PORTRAIT hitbox — z:64, invisible, handles drag ─────────── */}
