@@ -28,26 +28,30 @@ export const viewport: Viewport = {
 // ─── Site-wide metadata ───────────────────────────────────────────────────────
 // Per-page overrides: export a `metadata` const from each route file.
 
+const SITE_URL = 'https://nadimkurimbokus.com'
+const TITLE = 'Nadim Kurimbokus · Event & Music Photographer, London'
+const DESCRIPTION =
+  'London photographer for live events, music, tours and press. Work for Roundhouse, Jazz Cafe and Westside Gunn. Available across the UK and Europe.'
+
 export const metadata: Metadata = {
   title: {
-    default: 'Nadim Kurimbokus · Music & Event Photographer, London',
+    default: TITLE,
     template: '%s · Nadim Kurimbokus',
   },
-  description:
-    'London-based music and event photographer Nadim Kurimbokus. Live music, festivals, portraits and cultural commissions for the BBC, Jazz Cafe and more.',
-  metadataBase: new URL('https://nadimkurimbokus.com'),
+  description: DESCRIPTION,
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: '/' },
   openGraph: {
-    title: 'Nadim Kurimbokus · Music & Event Photographer, London',
-    description:
-      'London-based music and event photographer Nadim Kurimbokus. Live music, festivals, portraits and cultural commissions for the BBC, Jazz Cafe and more.',
-    url: 'https://nadimkurimbokus.com',
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
     siteName: 'Nadim Kurimbokus',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Nadim Kurimbokus · Music & Event Photographer',
+        alt: 'Nadim Kurimbokus · Event & Music Photographer',
       },
     ],
     locale: 'en_GB',
@@ -55,15 +59,43 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Nadim Kurimbokus · Music & Event Photographer, London',
-    description:
-      'London-based music and event photographer Nadim Kurimbokus. Live music, festivals, portraits and cultural commissions for the BBC, Jazz Cafe and more.',
+    title: TITLE,
+    description: DESCRIPTION,
     images: ['/og-image.jpg'],
   },
   robots: {
     index: true,
     follow: true,
   },
+}
+
+// ─── Structured data (JSON-LD) ────────────────────────────────────────────────
+// Tells search engines who the site is about. Facts here mirror the About text.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: 'Nadim Kurimbokus',
+      inLanguage: 'en-GB',
+      publisher: { '@id': `${SITE_URL}/#person` },
+    },
+    {
+      '@type': 'Person',
+      '@id': `${SITE_URL}/#person`,
+      name: 'Nadim Kurimbokus',
+      jobTitle: 'Photographer',
+      description: DESCRIPTION,
+      url: SITE_URL,
+      image: `${SITE_URL}/og-image.jpg`,
+      email: 'mailto:nkurimbokus@gmail.com',
+      homeLocation: { '@type': 'Place', name: 'London, United Kingdom' },
+      knowsAbout: ['Event photography', 'Live music photography', 'Festival photography', 'Artist portraits', 'Brand campaign photography'],
+      sameAs: ['https://www.instagram.com/nadim_kurimbokus/'],
+    },
+  ],
 }
 
 // ─── Root layout ──────────────────────────────────────────────────────────────
@@ -92,6 +124,10 @@ export default function RootLayout({
 ` }} />
       </head>
       <body className="bg-bg-default text-fg-default antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+        />
         <CursorDot />
         {children}
       </body>
