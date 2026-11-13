@@ -155,3 +155,26 @@ h1, h2, h3, h4, h5, h6, p, a, button, span, li {
   to   { transform: translateY(0); }
 }
 .contact-slide-in { animation: contact-slide-in 0.32s cubic-bezier(0.32, 0.72, 0, 1); }
+
+/* Lightbox arrows: small rounded outline box, same colour inversion as the page text. */
+.lb-arrow-btn {
+  background: transparent;
+  border: 1.5px solid #fff;
+  border-radius: 10px;
+  line-height: 0;
+  mix-blend-mode: normal;
+  transition: background-color 0.15s ease;
+}
+.lb-arrow-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Phone keeps the original plain arrows: no box, original padding. */
+@media (max-width: 767px) {
+  .lb-arrow-btn {
+    border-color: transparent;
+    border-radius: 0;
+    padding: 8px !important;
+  }
+  .lb-arrow-btn:hover { background: transparent; }
+}

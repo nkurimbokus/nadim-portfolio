@@ -225,7 +225,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_010_standard.jpg': '1077/1600',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_011_standard.jpg': '1600/1077',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_012_standard.jpg': '1600/1075',
-  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_013_standard.png': '1600/1525',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_013_standard.webp': '1600/1525',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.webp': '1600/1067',
   '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_001_standard.jpg': '1600/1067',
   '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_002_standard.jpg': '1600/1067',
@@ -904,6 +904,8 @@ export default function HomePage() {
 
   // About panel — same FLIP pick-up/put-down system as photo viewer
   const [aboutOpen,    setAboutOpen]    = useState(false)   // mounted
+  const [aboutImgReady, setAboutImgReady] = useState(false)   // About portrait is fetched after first paint, not during it
+  useEffect(() => { const t = setTimeout(() => setAboutImgReady(true), 2500); return () => clearTimeout(t) }, [])
   const [aboutVisible, setAboutVisible] = useState(false)   // animation state
   // `aboutSettled` is true only AFTER the slide-open animation completes.
   // Used to gate the portrait + logo onPointerMove handlers so they don't
@@ -1060,6 +1062,7 @@ export default function HomePage() {
   }, [activePhoto, galleryIndex])
 
   const openAbout = useCallback(() => {
+    setAboutImgReady(true)
     setCanvasScaled(true)
     setAboutOpen(true)
   }, [])
@@ -1923,6 +1926,7 @@ export default function HomePage() {
               width:  isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE,
               height: isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE,
               willChange: 'transform', zIndex: 5,
+              pointerEvents: 'none',   // empty square must not block photos underneath; only the hit pad below is grabbable
               opacity: aboutOpen ? (aboutVisible ? 0 : 1) : 1,
               transition: aboutOpen
                 ? (aboutVisible ? 'opacity 0s ease 0.32s' : 'opacity 0s ease 0.22s')
@@ -1936,7 +1940,7 @@ export default function HomePage() {
               style={{
                 top: '50%', width: '100%', height: '40%',
                 transform: 'translateY(-50%)',
-                cursor: 'none',
+                cursor: 'none', pointerEvents: 'auto',
               }}
               onPointerDown={e => onPointerDown(e, 'logo')}
               onPointerUp={onPointerUp}
@@ -2242,15 +2246,17 @@ export default function HomePage() {
             }}
             aria-hidden="true"
           >
-            <Image
-              src="/images/portrait-1080.jpg"
-              width={1080}
-              height={1440}
-              priority
-              alt="Nadim Kurimbokus"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
-              unoptimized
-            />
+            {aboutImgReady && (
+              <Image
+                src="/images/portrait-1080.jpg"
+                width={1080}
+                height={1440}
+                loading="eager"
+                alt="Nadim Kurimbokus"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+                unoptimized
+              />
+            )}
           </div>
         </div>
 
@@ -2713,26 +2719,42 @@ export default function HomePage() {
 
           {/* Gallery nav arrows — fixed viewport, outside all stacking contexts */}
           {activePhoto.gallery.length > 1 && lbZoom === 1 && (
-            <>
+            <div
+              className="fixed inset-0"
+              style={{
+                zIndex: lbFromWork ? 72 : 10,
+                pointerEvents: 'none',
+                mixBlendMode: 'difference',
+                // Same slide up / down as the caption, so the arrows arrive and leave with the photo
+                transform: lbVisible ? 'translateY(0)' : 'translateY(100%)',
+                transition: lbFromWork
+                  ? 'transform 0.34s cubic-bezier(0.32, 0.72, 0, 1)'
+                  : lbVisible
+                    ? 'transform 0.36s cubic-bezier(0.16, 1, 0.3, 1)'
+                    : 'transform 0.26s cubic-bezier(0.55, 0, 1, 0.45)',
+              }}
+            >
               <button
-                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: lbFromWork ? 72 : 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'none' }}
+                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', padding: '4px', pointerEvents: 'auto', cursor: 'none' }}
+                className="lb-arrow-btn"
                 onClick={e => { e.stopPropagation(); navigate(-1) }}
                 aria-label="Previous image"
               >
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ mixBlendMode: 'difference' }}>
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="18 6 10 14 18 22" />
                 </svg>
               </button>
               <button
-                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: lbFromWork ? 72 : 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'none' }}
+                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', padding: '4px', pointerEvents: 'auto', cursor: 'none' }}
+                className="lb-arrow-btn"
                 onClick={e => { e.stopPropagation(); navigate(1) }}
                 aria-label="Next image"
               >
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ mixBlendMode: 'difference' }}>
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="10 6 18 14 10 22" />
                 </svg>
               </button>
-            </>
+            </div>
           )}
 
           {/* ── Lightbox CAPTION layer — z:10, SEPARATE container ──────────
