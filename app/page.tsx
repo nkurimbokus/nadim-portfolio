@@ -27,7 +27,6 @@ interface PhysicsState {
   x: number; y: number; rot: number
   vx: number; vy: number; vrot: number
   baseVx: number; baseVy: number; baseVrot: number
-  homing?: boolean   // strip: gliding back to its resting height after leaving the top or bottom
 }
 interface DragState {
   id: string; ox: number; oy: number
@@ -678,7 +677,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     const startX = -avgW * 0.5
     const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
       Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
-    const gap = isMobile ? 12 : 18   // breathing room between neighbours
+    const gap = isMobile ? 12 : 34   // breathing room between neighbours
     // Wide screens: photos are dealt to the rows in turn and every row is spread to the same length,
     // each row starting a little further in than the last, so the density is even all over (steady flow).
     const needLen = vw + avgW * 1.0
@@ -755,13 +754,13 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
       const bump = (a: { x: number; y: number; w: number; h: number }) => {
         for (const o of placed) {
           if (o === a) continue
-          if (rectOverlap(a.x, a.y, a.w, a.h, o.x, o.y, o.w, o.h) > 0) return o
+          if (rectOverlap(a.x - gap * 0.6, a.y - gap * 0.6, a.w + gap * 1.2, a.h + gap * 1.2, o.x, o.y, o.w, o.h) > 0) return o
         }
         return null
       }
       for (const me of placed.slice().sort((a, b) => a.x - b.x)) {
         let o = bump(me), guard = 0
-        while (o && guard++ < 60) { if (o.x <= me.x) { me.x += 20 } else { o.x += 20 } ; o = bump(me) }
+        while (o && guard++ < 90) { if (o.x <= me.x) { me.x += 20 } else { o.x += 20 } ; o = bump(me) }
       }
       ids.forEach((id, i) => {
         s[id].x = placed[i].x; s[id].y = placed[i].y; STRIP_HOME_Y[id] = placed[i].y
@@ -1405,7 +1404,7 @@ export default function HomePage() {
           // queue off the right edge, at the clearest height, and slides in again later.
           const lo = -w - 60
           const nx = lo + (((pos.x - lo) % STRIP_LEN) + STRIP_LEN) % STRIP_LEN
-          if (Math.abs(nx - pos.x) > 1) { pos.x = nx; pos.y = pickClearY(posRef.current, id, w, h, pos.x, vh); STRIP_HOME_Y[id] = pos.y; pos.homing = false }
+          if (Math.abs(nx - pos.x) > 1) { pos.x = nx; pos.y = pickClearY(posRef.current, id, w, h, pos.x, vh); STRIP_HOME_Y[id] = pos.y }
         } else if (isLogo) {
           // Fully off one side: pop in fully off the other, then drift in. Never half-visible.
           if (pos.x > vw + 60)       pos.x = -bw - 30
@@ -1414,29 +1413,18 @@ export default function HomePage() {
           if (pos.x > vw + 60) pos.x = -w
           if (pos.x < -w)      pos.x = vw + 60
         }
-        if (strip && STRIP_HOME_Y[id] !== undefined) {
-          // Top and bottom, strip only. Gone off the top: pop in just under the bottom and glide up
-          // to its resting height (and the other way round). Slow and mostly off one side: glide
-          // back in from where it is, so nothing hangs at the edge and shakes.
+        if (strip || isLogo) {
+          // Top and bottom: a soft bounce, like a ball off a wall. Hits the edge and comes back
+          // with a little less speed. If something is already past the edge (dragged there, say),
+          // it is eased back in at a gentle, steady pace, so nothing ever hangs at the edge.
           const top = pos.y + oy, bot = top + bh
-          if (!pos.homing) {
-            const seen = Math.max(0, Math.min(bot, vh) - Math.max(top, 0)) / bh
-            if (bot < -40)          { pos.y = vh + 40 - oy;       pos.homing = true }
-            else if (top > vh + 40) { pos.y = -40 - bh - oy;      pos.homing = true }
-            else if (seen < 0.5 && Math.abs(pos.vy) < 25) pos.homing = true
-            if (pos.homing) pos.vy = 0
+          if (top < 0) {
+            if (pos.vy < 0) pos.vy = -pos.vy * 0.7 + 14
+            else if (pos.vy < 45) pos.vy = Math.min(45, pos.vy + 140 * dt)
+          } else if (bot > vh) {
+            if (pos.vy > 0) pos.vy = -pos.vy * 0.7 - 14
+            else if (pos.vy > -45) pos.vy = Math.max(-45, pos.vy - 140 * dt)
           }
-          if (pos.homing) {
-            const home = STRIP_HOME_Y[id]
-            const d = home - pos.y
-            const sp = Math.max(70, Math.min(260, Math.abs(d) * 1.4))   // px per second, gentle either end
-            pos.y += Math.sign(d) * Math.min(Math.abs(d), sp * dt)
-            pos.vy = 0
-            if (Math.abs(home - pos.y) < 0.5) { pos.y = home; pos.homing = false }
-          }
-        } else if (isLogo) {
-          if (pos.y + oy > vh + 60)        pos.y = -bh - oy - 30
-          else if (pos.y + oy + bh < -60)  pos.y = vh + 30 - oy
         } else {
           if (pos.y >  vh + 60) pos.y = -h
           if (pos.y < -h)       pos.y =  vh + 60
@@ -1501,7 +1489,6 @@ export default function HomePage() {
     e.stopPropagation()
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
     const pos = posRef.current[id]; if (!pos) return
-    pos.homing = false
     didDragRef.current = false
     const pr = ALL_ITEMS.find(p => p.id === id)
     if (pr) { preloadImage(tileSrcRef.current[id] ?? pr.src); pr.gallery.slice(0, 2).forEach(preloadImage) }
