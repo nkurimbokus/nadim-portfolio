@@ -1414,16 +1414,27 @@ export default function HomePage() {
           if (pos.x < -w)      pos.x = vw + 60
         }
         if (strip || isLogo) {
-          // Top and bottom: a soft bounce, like a ball off a wall. Hits the edge and comes back
-          // with a little less speed. If something is already past the edge (dragged there, say),
-          // it is eased back in at a gentle, steady pace, so nothing ever hangs at the edge.
-          const top = pos.y + oy, bot = top + bh
-          if (top < 0) {
-            if (pos.vy < 0) pos.vy = -pos.vy * 0.7 + 14
-            else if (pos.vy < 45) pos.vy = Math.min(45, pos.vy + 140 * dt)
-          } else if (bot > vh) {
-            if (pos.vy > 0) pos.vy = -pos.vy * 0.7 - 14
-            else if (pos.vy > -45) pos.vy = Math.max(-45, pos.vy - 140 * dt)
+          // Top and bottom: nothing bounces where you can see it. A photo heading off an edge speeds
+          // up a touch so it really leaves, turns round while it is out of sight, and drifts back in.
+          // One that has stalled half way is nudged the way its middle already leans, so none hangs
+          // at the edge.
+          const top = pos.y + oy, bot = top + bh, mid = top + bh / 2
+          if (bot < -30) {                                   // fully out of the top: turn round, a little quicker
+            if (pos.vy < 0) pos.vy = -pos.vy * 0.8 + 120
+            else if (pos.vy < 150) pos.vy = Math.min(150, pos.vy + 200 * dt)
+          } else if (top > vh + 30) {                        // fully out of the bottom
+            if (pos.vy > 0) pos.vy = -pos.vy * 0.8 - 120
+            else if (pos.vy > -150) pos.vy = Math.max(-150, pos.vy - 200 * dt)
+          } else if (top < 0) {                              // part way off the top
+            if (mid < 0) {                                  // more than half out
+              if (pos.vy < 0) pos.vy = Math.max(-140, pos.vy - 220 * dt)             // heading out: carry on out
+              else if (pos.vy < 70) pos.vy = Math.min(70, pos.vy + 140 * dt)         // coming back in: keep it coming
+            } else if (Math.abs(pos.vy) < 10) pos.vy += 60 * dt                      // less than half out and still: drift back
+          } else if (bot > vh) {                             // part way off the bottom
+            if (mid > vh) {
+              if (pos.vy > 0) pos.vy = Math.min(140, pos.vy + 220 * dt)
+              else if (pos.vy > -70) pos.vy = Math.max(-70, pos.vy - 140 * dt)
+            } else if (Math.abs(pos.vy) < 10) pos.vy -= 60 * dt
           }
         } else {
           if (pos.y >  vh + 60) pos.y = -h
