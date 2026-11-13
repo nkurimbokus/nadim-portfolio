@@ -27,6 +27,7 @@ interface PhysicsState {
   x: number; y: number; rot: number
   vx: number; vy: number; vrot: number
   baseVx: number; baseVy: number; baseVrot: number
+  homing?: boolean   // strip: gliding back to its resting height after leaving the top or bottom
 }
 interface DragState {
   id: string; ox: number; oy: number
@@ -671,6 +672,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     const jit = (i: number) => Math.sin(i * 78.233)
     const speed = isMobile ? 7 : 11
     const lg = s['logo']
+    STRIP_HOME_Y['logo'] = lg.y
     const keepOut = { x0: lg.x - 24, x1: lg.x + logoSz + 24, y0: lg.y, y1: lg.y + logoSz * 0.68 + 12 }
     const navOut = { x0: vw - (isMobile ? 150 : 220), x1: vw, y0: 0, y1: isMobile ? 70 : 80 }   // work / about links
     const startX = -avgW * 0.5
@@ -738,7 +740,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
         for (const me of placed) {
           const cur = clash(me, me.x, me.y); if (cur === 0) continue
           let bx = me.x, by = me.y, bv = cur
-          for (const dx of [-80, -40, 0, 40, 80]) for (const dy of [-90, -45, 0, 45, 90]) {
+          for (const dx of [-160, -80, -40, 0, 40, 80, 160, 240]) for (const dy of [-135, -90, -45, 0, 45, 90, 135]) {
             const nx = me.x + dx, ny = me.y + dy
             if (ny < inset * 0.5 || ny + me.h > vh - inset * 0.5) continue
             const v = clash(me, nx, ny) + (Math.abs(dx) + Math.abs(dy)) * 0.05
@@ -748,7 +750,23 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
         }
         if (!moved) break
       }
-      ids.forEach((id, i) => { s[id].x = placed[i].x; s[id].y = placed[i].y; STRIP_HOME_Y[id] = placed[i].y })
+      // Last resort: any two photos still overlapping at all, the one further right slides along
+      // its row until it is clear (the loop is lengthened to fit). So no pair starts on top of each other.
+      const bump = (a: { x: number; y: number; w: number; h: number }) => {
+        for (const o of placed) {
+          if (o === a) continue
+          if (rectOverlap(a.x, a.y, a.w, a.h, o.x, o.y, o.w, o.h) > 0) return o
+        }
+        return null
+      }
+      for (const me of placed.slice().sort((a, b) => a.x - b.x)) {
+        let o = bump(me), guard = 0
+        while (o && guard++ < 60) { if (o.x <= me.x) { me.x += 20 } else { o.x += 20 } ; o = bump(me) }
+      }
+      ids.forEach((id, i) => {
+        s[id].x = placed[i].x; s[id].y = placed[i].y; STRIP_HOME_Y[id] = placed[i].y
+        laneRight[laneOf[i]] = Math.max(laneRight[laneOf[i]], placed[i].x + placed[i].w)
+      })
     }
     // Close the empty space at the top: photos in the upper half slide up (never far) until they
     // touch their neighbour, the logo or the work / about links, so the first screen reads as full.
@@ -1373,21 +1391,55 @@ export default function HomePage() {
         if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
         if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
-        if (layoutRef.current === 'strip' && STRIP_LEN > 0 && PHOTO_CFG[id]) {
+        const strip = layoutRef.current === 'strip'
+        // What you can actually see. The logo's box is bigger than the box physics uses for it, and
+        // its letters sit in the middle 40% of that box, so it gets its own numbers. That makes it
+        // leave and re-enter the screen by exactly the same rules as the photos.
+        const isLogo = id === 'logo'
+        const LV = vw < 768 ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE
+        const bw = isLogo ? LV : w
+        const bh = isLogo ? LV * 0.4 : h
+        const oy = isLogo ? LV * 0.3 : 0
+        if (strip && STRIP_LEN > 0 && PHOTO_CFG[id]) {
           // Carousel: wrap round the whole loop. A photo leaving the left joins the back of the
           // queue off the right edge, at the clearest height, and slides in again later.
           const lo = -w - 60
           const nx = lo + (((pos.x - lo) % STRIP_LEN) + STRIP_LEN) % STRIP_LEN
-          if (Math.abs(nx - pos.x) > 1) { pos.x = nx; pos.y = pickClearY(posRef.current, id, w, h, pos.x, vh) }
+          if (Math.abs(nx - pos.x) > 1) { pos.x = nx; pos.y = pickClearY(posRef.current, id, w, h, pos.x, vh); STRIP_HOME_Y[id] = pos.y; pos.homing = false }
+        } else if (isLogo) {
+          // Fully off one side: pop in fully off the other, then drift in. Never half-visible.
+          if (pos.x > vw + 60)       pos.x = -bw - 30
+          else if (pos.x < -bw - 60) pos.x = vw + 30
         } else {
           if (pos.x > vw + 60) pos.x = -w
           if (pos.x < -w)      pos.x = vw + 60
         }
-        if (pos.y >  vh + 60) pos.y = -h
-        if (pos.y < -h)       pos.y =  vh + 60
-        // Strip only: a photo thrown off the top or bottom eases back in to its resting height
-        if (layoutRef.current === 'strip' && STRIP_HOME_Y[id] !== undefined && (pos.y + h < 60 || pos.y > vh - 60)) {
-          pos.y += (STRIP_HOME_Y[id] - pos.y) * Math.min(1, dt * 1.5)
+        if (strip && STRIP_HOME_Y[id] !== undefined) {
+          // Top and bottom, strip only. Gone off the top: pop in just under the bottom and glide up
+          // to its resting height (and the other way round). Slow and mostly off one side: glide
+          // back in from where it is, so nothing hangs at the edge and shakes.
+          const top = pos.y + oy, bot = top + bh
+          if (!pos.homing) {
+            const seen = Math.max(0, Math.min(bot, vh) - Math.max(top, 0)) / bh
+            if (bot < -40)          { pos.y = vh + 40 - oy;       pos.homing = true }
+            else if (top > vh + 40) { pos.y = -40 - bh - oy;      pos.homing = true }
+            else if (seen < 0.5 && Math.abs(pos.vy) < 25) pos.homing = true
+            if (pos.homing) pos.vy = 0
+          }
+          if (pos.homing) {
+            const home = STRIP_HOME_Y[id]
+            const d = home - pos.y
+            const sp = Math.max(70, Math.min(260, Math.abs(d) * 1.4))   // px per second, gentle either end
+            pos.y += Math.sign(d) * Math.min(Math.abs(d), sp * dt)
+            pos.vy = 0
+            if (Math.abs(home - pos.y) < 0.5) { pos.y = home; pos.homing = false }
+          }
+        } else if (isLogo) {
+          if (pos.y + oy > vh + 60)        pos.y = -bh - oy - 30
+          else if (pos.y + oy + bh < -60)  pos.y = vh + 30 - oy
+        } else {
+          if (pos.y >  vh + 60) pos.y = -h
+          if (pos.y < -h)       pos.y =  vh + 60
         }
         const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
         const el = elRefs.current[id]; if (el) el.style.transform = t
@@ -1449,6 +1501,7 @@ export default function HomePage() {
     e.stopPropagation()
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
     const pos = posRef.current[id]; if (!pos) return
+    pos.homing = false
     didDragRef.current = false
     const pr = ALL_ITEMS.find(p => p.id === id)
     if (pr) { preloadImage(tileSrcRef.current[id] ?? pr.src); pr.gallery.slice(0, 2).forEach(preloadImage) }
