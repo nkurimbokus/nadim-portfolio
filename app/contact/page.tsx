@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
-import Link from 'next/link'
 import ContactForm from '../../components/ContactForm'
-import ContactNav from '../../components/ContactNav'
+import ContactHeader from '../../components/ContactHeader'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -13,24 +11,17 @@ export const metadata: Metadata = {
 
 // ─── Copy ─────────────────────────────────────────────────────────────────────
 // Kept at the top so it is easy to swap.
-const INTRO =
-  'Booking a shoot, or got a question? Tell me what it is, when and where, and I will reply by email.'
+const INTRO = 'Got a question? Let me know below.'
 
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-bg-default text-fg-default">
 
-      {/* Header: logo left, nav right, same lowercase tracked style as the home page. */}
-      <header className="flex items-center justify-between px-6 md:px-10 h-16">
-        <Link href="/" aria-label="Nadim Kurimbokus, back to home" className="no-blend block focus:outline-none focus-visible:opacity-70">
-          <Image src="/logo.webp" alt="Nadim Kurimbokus" width={1200} height={476} unoptimized priority className="h-9 md:h-10 w-auto" />
-        </Link>
-        <ContactNav />
-      </header>
+      <ContactHeader />
 
       <main className="mx-auto w-full max-w-xl px-6 md:px-0 pt-10 md:pt-16 pb-24">
-        <h1 className="text-3xl md:text-5xl tracking-widest lowercase">Contact</h1>
-        <p className="mt-6 mb-10 text-sm md:text-base tracking-wide leading-relaxed">{INTRO}</p>
+        <h1 className="sr-only">Contact</h1>
+        <p className="mb-10 text-sm md:text-base tracking-wide leading-relaxed">{INTRO}</p>
 
         <ContactForm />
 

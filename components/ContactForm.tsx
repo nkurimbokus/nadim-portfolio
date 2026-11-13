@@ -81,11 +81,6 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="cf-location" className={labelClass}>Location</label>
-        <input id="cf-location" name="location" type="text" placeholder="Venue or city" className={fieldClass} />
-      </div>
-
-      <div>
         <label htmlFor="cf-message" className={labelClass}>Message</label>
         <textarea id="cf-message" name="message" required rows={6} className={fieldClass + ' resize-y'} />
       </div>
