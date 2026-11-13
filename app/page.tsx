@@ -710,6 +710,28 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
       STRIP_HOME_Y[id] = by
       s[id] = { x: bx, y: by, rot: cfg.rot, vx: 0, vy: 0, vrot: 0, baseVx: -speed, baseVy: 0, baseVrot: 0 }
     })
+    // Close the empty space at the top: photos in the upper half slide up (never far) until they
+    // touch their neighbour, the logo or the work / about links, so the first screen reads as full.
+    const idList = ids.slice().sort((a, b) => s[a].x - s[b].x)
+    for (const id of idList) {
+      const me = placed[ids.indexOf(id)]
+      if (me.y > vh * 0.5) continue
+      const startY = me.y
+      while (me.y - 4 >= inset * 0.5 && startY - (me.y - 4) <= 110) {
+        const ny = me.y - 4
+        let hit = false
+        for (const o of placed) {
+          if (o === me) continue
+          if (rectOverlap(me.x - gap, ny - gap, me.w + gap * 2, me.h + gap * 2, o.x, o.y, o.w, o.h) > 0) { hit = true; break }
+        }
+        if (!hit && rectOverlap(me.x, ny, me.w, me.h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0) hit = true
+        if (!hit && rectOverlap(me.x, ny, me.w, me.h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0) > 0) hit = true
+        if (hit) break
+        me.y = ny
+      }
+      s[id].y = me.y
+      STRIP_HOME_Y[id] = me.y
+    }
     STRIP_LEN = Math.max(...laneRight) - startX + gap * 2
     return s
   }
