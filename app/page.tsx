@@ -904,6 +904,8 @@ export default function HomePage() {
 
   // About panel — same FLIP pick-up/put-down system as photo viewer
   const [aboutOpen,    setAboutOpen]    = useState(false)   // mounted
+  const [aboutImgReady, setAboutImgReady] = useState(false)   // About portrait is fetched after first paint, not during it
+  useEffect(() => { const t = setTimeout(() => setAboutImgReady(true), 2500); return () => clearTimeout(t) }, [])
   const [aboutVisible, setAboutVisible] = useState(false)   // animation state
   // `aboutSettled` is true only AFTER the slide-open animation completes.
   // Used to gate the portrait + logo onPointerMove handlers so they don't
@@ -1060,6 +1062,7 @@ export default function HomePage() {
   }, [activePhoto, galleryIndex])
 
   const openAbout = useCallback(() => {
+    setAboutImgReady(true)
     setCanvasScaled(true)
     setAboutOpen(true)
   }, [])
@@ -2243,15 +2246,17 @@ export default function HomePage() {
             }}
             aria-hidden="true"
           >
-            <Image
-              src="/images/portrait-1080.jpg"
-              width={1080}
-              height={1440}
-              priority
-              alt="Nadim Kurimbokus"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
-              unoptimized
-            />
+            {aboutImgReady && (
+              <Image
+                src="/images/portrait-1080.jpg"
+                width={1080}
+                height={1440}
+                loading="eager"
+                alt="Nadim Kurimbokus"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+                unoptimized
+              />
+            )}
           </div>
         </div>
 
