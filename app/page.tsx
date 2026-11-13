@@ -2716,20 +2716,22 @@ export default function HomePage() {
           {activePhoto.gallery.length > 1 && lbZoom === 1 && (
             <>
               <button
-                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: lbFromWork ? 72 : 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'none' }}
+                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: lbFromWork ? 72 : 10, padding: '4px', pointerEvents: 'auto', cursor: 'none' }}
+                className="lb-arrow-btn"
                 onClick={e => { e.stopPropagation(); navigate(-1) }}
                 aria-label="Previous image"
               >
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ mixBlendMode: 'difference' }}>
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="18 6 10 14 18 22" />
                 </svg>
               </button>
               <button
-                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: lbFromWork ? 72 : 10, background: 'none', border: 'none', padding: '8px', pointerEvents: 'auto', cursor: 'none' }}
+                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: lbFromWork ? 72 : 10, padding: '4px', pointerEvents: 'auto', cursor: 'none' }}
+                className="lb-arrow-btn"
                 onClick={e => { e.stopPropagation(); navigate(1) }}
                 aria-label="Next image"
               >
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ mixBlendMode: 'difference' }}>
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="10 6 18 14 10 22" />
                 </svg>
               </button>
