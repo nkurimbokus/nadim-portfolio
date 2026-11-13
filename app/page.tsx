@@ -1931,20 +1931,25 @@ export default function HomePage() {
                   <li key={p.id}>
                     <button
                       onClick={() => openFromWork(p)}
-                      className="blend-text group w-full flex items-baseline gap-4 md:gap-8 py-1 md:py-1.5 text-left focus:outline-none pointer-events-auto"
+                      className="blend-text group w-full flex items-baseline gap-4 md:gap-8 py-4 md:py-1.5 text-left focus:outline-none pointer-events-auto"
                     >
                       {/* Number — fixed-width left column so all titles line up */}
-                      <span className="text-xl md:text-3xl tabular-nums w-9 md:w-16 shrink-0">
+                      <span className="text-sm md:text-3xl tabular-nums w-7 md:w-16 shrink-0">
                         {String(i + 1).padStart(2, '0')}
                       </span>
-                      {/* Title — Geist 400, inherits --color-text-inverted from <main> */}
-                      <span
-                        className="tracking-tight leading-none text-4xl md:text-6xl lg:text-7xl flex-1 transition-opacity duration-200"
-                      >
-                        {p.title}
+                      {/* Title (and, on phones, the year underneath so the title gets the full width) */}
+                      <span className="flex-1 min-w-0">
+                        <span
+                          className="block tracking-tight leading-[1.08] md:leading-none text-[26px] md:text-6xl lg:text-7xl transition-opacity duration-200"
+                        >
+                          {p.title}
+                        </span>
+                        <span className="md:hidden block mt-1.5 text-[10px] tracking-widest uppercase opacity-70">
+                          {p.yearLabel ?? p.year}
+                        </span>
                       </span>
-                      {/* Year — far right, always visible */}
-                      <span className="text-xs tracking-widest uppercase shrink-0 self-center">
+                      {/* Year — far right on desktop */}
+                      <span className="hidden md:inline text-xs tracking-widest uppercase shrink-0 self-center">
                         {p.yearLabel ?? p.year}
                       </span>
                     </button>
