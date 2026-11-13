@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react
 import Image from 'next/image'
 import ContactBody from '../components/ContactBody'
 import ContactHeader from '../components/ContactHeader'
+import { ZOOM_LARGE } from './zoomLarge'
 
 /**
  * BLEND MODE SURFACES (mix-blend-mode: difference)
@@ -2705,6 +2706,17 @@ export default function HomePage() {
                                   sizes="(max-width: 768px) 100vw, 1600px"
                                   priority unoptimized
                                 />
+                                {/* Zoomed in: lay the 2400px original over the standard so detail holds up on big screens.
+                                    Only requested once the person actually zooms. */}
+                                {lbZoom > 1 && ZOOM_LARGE[activePhoto.gallery[galleryIndex]] && (
+                                  <Image
+                                    src={ZOOM_LARGE[activePhoto.gallery[galleryIndex]]}
+                                    fill alt="" aria-hidden="true"
+                                    className="object-contain" draggable={false}
+                                    sizes="2400px"
+                                    unoptimized
+                                  />
+                                )}
                               </>
                             : <div className="w-full h-full" style={{ backgroundColor: activePhoto.color }} />}
                         </div>
@@ -2735,7 +2747,7 @@ export default function HomePage() {
               }}
             >
               <button
-                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', padding: '4px', pointerEvents: 'auto', cursor: 'none' }}
+                style={{ position: 'fixed', left: `max(0px, calc(50% - min(calc(50vw - 24px), calc(40vh * ${lbRatio.toFixed(6)})) - 51px))`, top: '50%', transform: 'translateY(-50%)', padding: '4px', pointerEvents: 'auto', cursor: 'none', transition: 'left 0.34s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease' }}
                 className="lb-arrow-btn"
                 onClick={e => { e.stopPropagation(); navigate(-1) }}
                 aria-label="Previous image"
@@ -2745,7 +2757,7 @@ export default function HomePage() {
                 </svg>
               </button>
               <button
-                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', padding: '4px', pointerEvents: 'auto', cursor: 'none' }}
+                style={{ position: 'fixed', right: `max(0px, calc(50% - min(calc(50vw - 24px), calc(40vh * ${lbRatio.toFixed(6)})) - 51px))`, top: '50%', transform: 'translateY(-50%)', padding: '4px', pointerEvents: 'auto', cursor: 'none', transition: 'right 0.34s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease' }}
                 className="lb-arrow-btn"
                 onClick={e => { e.stopPropagation(); navigate(1) }}
                 aria-label="Next image"
