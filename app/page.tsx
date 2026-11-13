@@ -629,7 +629,11 @@ function pickClearY(all: Record<string, PhysicsState>, selfId: string, w: number
       const o = all[oid]; const d = getDims(oid)
       const ox = Math.max(0, Math.min(edgeX + w + pad, o.x + d.w) - Math.max(edgeX - pad, o.x))
       const oy = Math.max(0, Math.min(y + h + pad, o.y + d.h) - Math.max(y - pad, o.y))
-      score += ox * oy
+      score += ox * oy * 20
+      // a wider, softer zone as well: among heights that don't overlap anything, take the emptiest
+      const wx = Math.max(0, Math.min(edgeX + w + 260, o.x + d.w) - Math.max(edgeX - 260, o.x))
+      const wy = Math.max(0, Math.min(y + h + 140, o.y + d.h) - Math.max(y - 140, o.y))
+      score += wx * wy
     }
     if (score < bestScore) { bestScore = score; best = y }
   }
