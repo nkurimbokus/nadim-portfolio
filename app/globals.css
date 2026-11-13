@@ -148,3 +148,10 @@ h1, h2, h3, h4, h5, h6, p, a, button, span, li {
 }
 
 
+
+/* ─── Contact page: slide up on arrival, same easing as the Work and About panels ─── */
+@keyframes contact-slide-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.contact-slide-in { animation: contact-slide-in 0.32s cubic-bezier(0.32, 0.72, 0, 1); }
