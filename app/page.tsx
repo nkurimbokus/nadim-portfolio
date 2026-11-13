@@ -2,7 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import ContactBody from '../components/ContactBody'
+import ContactHeader from '../components/ContactHeader'
 
 /**
  * BLEND MODE SURFACES (mix-blend-mode: difference)
@@ -910,6 +911,8 @@ export default function HomePage() {
   // pointermove adds main-thread work that compounds with the panel's
   // mix-blend-mode repaints, causing jitter).
   const [aboutSettled, setAboutSettled] = useState(false)
+  const [contactOpen,    setContactOpen]    = useState(false)   // mounted
+  const [contactVisible, setContactVisible] = useState(false)   // slid in
   const [aboutScale,   setAboutScale]   = useState(1)   // portrait + logo size factor so they clear the text on open
   const [logoSource,   setLogoSource]   = useState({ x: 0, y: 0, scale: 1, rot: 0 })
   const [activePhoto,  setActivePhoto]  = useState<Project | null>(null)
@@ -1065,6 +1068,18 @@ export default function HomePage() {
     setCanvasScaled(false)
     setAboutVisible(false)
     setTimeout(() => setAboutOpen(false), 340)
+  }, [])
+
+  const openContact = useCallback(() => {
+    setCanvasScaled(true)
+    setContactOpen(true)
+    requestAnimationFrame(() => requestAnimationFrame(() => setContactVisible(true)))
+  }, [])
+
+  const closeContact = useCallback(() => {
+    setCanvasScaled(false)
+    setContactVisible(false)
+    setTimeout(() => setContactOpen(false), 340)
   }, [])
 
   const openMenu  = useCallback(() => {
@@ -1336,8 +1351,9 @@ export default function HomePage() {
   // Keyboard: arrow keys to navigate gallery, Escape to close any open overlay
   // Placed after the close handlers so they're all in scope
   useEffect(() => {
-    if (!activePhoto && !aboutOpen && !workMounted) return
+    if (!activePhoto && !aboutOpen && !workMounted && !contactOpen) return
     const onKey = (e: KeyboardEvent) => {
+      if (contactOpen) { if (e.key === 'Escape') closeContact(); return }
       if (workMounted && !activePhoto) { if (e.key === 'Escape') closeWork(); return }
       if (aboutOpen)   { if (e.key === 'Escape') closeAbout(); return }
       if (e.key === 'ArrowRight') navigate(1)
@@ -1346,7 +1362,7 @@ export default function HomePage() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [activePhoto, aboutOpen, workMounted, navigate, closeLightbox, closeAbout, closeWork])
+  }, [activePhoto, aboutOpen, workMounted, contactOpen, navigate, closeLightbox, closeAbout, closeWork, closeContact])
 
 
   // EFFECT 1 — write initial transforms synchronously before first paint
@@ -1788,7 +1804,7 @@ export default function HomePage() {
       >
         {/* Nav fades out when any overlay (work / about / photo viewer / mobile menu) is open. */}
         {(() => {
-          const navDisabled = workMounted || aboutOpen || !!activePhoto || menuOpen
+          const navDisabled = workMounted || aboutOpen || contactOpen || !!activePhoto || menuOpen
           const btnPE: 'auto' | 'none' = navDisabled ? 'none' : 'auto'
           return (
         <nav
@@ -1811,11 +1827,11 @@ export default function HomePage() {
             className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: btnPE }}
           >About</button>
-          <Link
-            href="/contact"
+          <button
+            onClick={openContact}
             className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: btnPE }}
-          >Contact</Link>
+          >Contact</button>
 
           {/* Mobile: hamburger */}
           <button
@@ -2018,11 +2034,10 @@ export default function HomePage() {
               onClick={() => { closeMenu(); setTimeout(openAbout, 60) }}
               className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
             >About</button>
-            <Link
-              href="/contact"
-              onClick={closeMenu}
+            <button
+              onClick={() => { closeMenu(); setTimeout(openContact, 60) }}
               className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
-            >Contact</Link>
+            >Contact</button>
             <button
               onClick={closeMenu}
               className="mt-6 text-sm tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[44px] flex items-center"
@@ -2117,6 +2132,30 @@ export default function HomePage() {
         </>
       )}
 
+      {/* ─── Contact panel — slides up like the Work and About panels ──────────
+          Mounted only while open. Opaque sheet in the chosen background colour; the
+          work-sheet class gives every child readable text on that colour. */}
+      {contactOpen && (
+        <div
+          className="work-sheet fixed inset-0 z-[72] overflow-y-auto"
+          style={{
+            ['--work-text' as string]: textColour,
+            transform: contactVisible ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
+            backgroundColor: bgColour,
+            color: '#1a1a1a',
+            overscrollBehavior: 'contain',
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Contact"
+        >
+          <ContactHeader onClose={closeContact} />
+          <ContactBody />
+        </div>
+      )}
+
       {/* ─── About panel — always in DOM, fades in/out via opacity ─────── */}
       {/* Never conditionally removed: opacity needs the element mounted through
           both the fade-in and fade-out so the transition can complete. */}
@@ -2127,7 +2166,7 @@ export default function HomePage() {
           style={{
             cursor: 'none',
             backgroundColor: bgColour,
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
             pointerEvents: aboutVisible ? 'auto' : 'none',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             willChange: 'transform',
@@ -2142,7 +2181,7 @@ export default function HomePage() {
         <div
           className="fixed inset-0 z-[60] pointer-events-none"
           style={{
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             opacity: 1,
             willChange: 'transform',
@@ -2183,7 +2222,7 @@ export default function HomePage() {
         <div
           className="fixed inset-0 z-[56]"
           style={{
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             willChange: 'transform',
             pointerEvents: 'none',
@@ -2219,7 +2258,7 @@ export default function HomePage() {
         <div
           className="fixed inset-0 z-[57]"
           style={{
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             willChange: 'transform',
             pointerEvents: 'none',
@@ -2251,7 +2290,7 @@ export default function HomePage() {
         <div
           className="fixed inset-0 z-[58]"
           style={{
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             willChange: 'transform',
             pointerEvents: 'none',
@@ -2288,7 +2327,7 @@ export default function HomePage() {
         <div
           className="fixed inset-0 z-[66]"
           style={{
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             willChange: 'transform',
             pointerEvents: 'none',
@@ -2319,7 +2358,7 @@ export default function HomePage() {
         <div
           className="fixed inset-0 z-[64]"
           style={{
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             willChange: 'transform',
             pointerEvents: 'none',
@@ -2349,7 +2388,7 @@ export default function HomePage() {
         <div
           className="fixed inset-0 z-[65]"
           style={{
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             willChange: 'transform',
             pointerEvents: 'none',
@@ -2385,7 +2424,7 @@ export default function HomePage() {
         <div
           className="fixed inset-0 z-[61]"
           style={{
-            transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+            transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
             transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
             opacity: 1,
             pointerEvents: 'none',
@@ -2429,7 +2468,7 @@ export default function HomePage() {
           <div
             className="fixed inset-0 z-[68]"
             style={{
-              transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+              transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
               transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
               pointerEvents: 'none',
               mixBlendMode: 'difference',
@@ -2473,7 +2512,7 @@ export default function HomePage() {
           <div
             className="fixed inset-0 z-[62]"
             style={{
-              transform: aboutVisible ? 'translateY(0)' : 'translateY(100%)',
+              transform: aboutVisible ? 'translateY(0)' : 'translateY(calc(100% + 240px))',
               transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
               overflowY: 'scroll',
               background: 'transparent',
