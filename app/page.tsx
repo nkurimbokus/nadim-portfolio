@@ -677,8 +677,15 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
       Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
     const gap = isMobile ? 12 : 18   // breathing room between neighbours
+    // Wide screens: photos are dealt to the rows in turn and every row is spread to the same length,
+    // each row starting a little further in than the last, so the density is even all over (steady flow).
+    const needLen = vw + avgW * 1.6
+    const rowCount: number[] = new Array(lanes).fill(0), rowW: number[] = new Array(lanes).fill(0)
+    ids.forEach((_, i) => { rowCount[i % lanes]++; rowW[i % lanes] += dimsAll[i].w })
+    const stagger = (l: number) => (l / lanes) * (needLen / Math.max(1, rowCount[0]))
+    const rowExtra = (l: number) => Math.max(0, (needLen - stagger(l) - rowW[l]) / Math.max(1, rowCount[l]) - gap * 0.5)
     const layoutStrip = (xExtra: number) => {
-    const laneRight: number[] = new Array(lanes).fill(startX)
+    const laneRight: number[] = new Array(lanes).fill(startX).map((v, l) => isMobile ? v : v + stagger(l))
     const placed: { x: number; y: number; w: number; h: number }[] = []
     const laneOf: number[] = []
     ids.forEach((id, i) => {
@@ -687,16 +694,16 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
       // (and, among equals, the one furthest left so the rows fill evenly). Floaty: each photo
       // also sits a little above or below its row's centre.
       let bx = 0, by = 0, bestScore = Infinity
-      for (let l = 0; l < lanes; l++) {
+      for (let l = isMobile ? 0 : i % lanes; l < (isMobile ? lanes : (i % lanes) + 1); l++) {
         const yBase = inset + l * laneH + (laneH - h) / 2 + jit(i * 3 + l) * laneH * 0.28
         const y = Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5, yBase))
         for (let k = 0; k < 6; k++) {
-          const x0 = laneRight[l] + gap * 0.5 + xExtra + k * 22 + (jit(i + 9) + 1) * 8
+          const x0 = laneRight[l] + gap * 0.5 + (isMobile ? xExtra : rowExtra(l)) + k * 22 + (jit(i + 9) + 1) * 8
           // a spot that would run into the logo is tried two ways: tucked just below it, or just to its right
           const hitLogo = rectOverlap(x0, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0
           const cands: { x: number; y: number }[] = hitLogo
             ? [{ x: keepOut.x1 + 6 + k * 22, y }, ...(keepOut.y1 + 4 + h <= vh - inset * 0.5 ? [{ x: x0, y: keepOut.y1 + 4 }] : [])]
-            : [{ x: x0, y }]
+            : (isMobile ? [{ x: x0, y }] : [0, -60, 60, -120, 120].map(dy => ({ x: x0, y: Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5, y + dy)) })))
           for (const c of cands) {
             let ov = 0
             for (const o of placed) ov += rectOverlap(c.x - gap, c.y - gap, w + gap * 2, h + gap * 2, o.x, o.y, o.w, o.h)
@@ -717,12 +724,38 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
       STRIP_HOME_Y[id] = by
       s[id] = { x: bx, y: by, rot: cfg.rot, vx: 0, vy: 0, vrot: 0, baseVx: -speed, baseVy: 0, baseVrot: 0 }
     })
+    // Wide screens: a few rounds of nudging so photos that still touch their neighbours drift apart.
+    if (!isMobile) {
+      const clash = (a: { w: number; h: number }, ax: number, ay: number) => {
+        let t = 0
+        for (const o of placed) { if (o === a) continue; t += rectOverlap(ax - gap, ay - gap, a.w + gap * 2, a.h + gap * 2, o.x, o.y, o.w, o.h) }
+        t += 6 * rectOverlap(ax, ay, a.w, a.h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
+        t += 10 * rectOverlap(ax, ay, a.w, a.h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0)
+        return t
+      }
+      for (let it = 0; it < 40; it++) {
+        let moved = false
+        for (const me of placed) {
+          const cur = clash(me, me.x, me.y); if (cur === 0) continue
+          let bx = me.x, by = me.y, bv = cur
+          for (const dx of [-80, -40, 0, 40, 80]) for (const dy of [-90, -45, 0, 45, 90]) {
+            const nx = me.x + dx, ny = me.y + dy
+            if (ny < inset * 0.5 || ny + me.h > vh - inset * 0.5) continue
+            const v = clash(me, nx, ny) + (Math.abs(dx) + Math.abs(dy)) * 0.05
+            if (v < bv) { bv = v; bx = nx; by = ny }
+          }
+          if (bx !== me.x || by !== me.y) { me.x = bx; me.y = by; moved = true }
+        }
+        if (!moved) break
+      }
+      ids.forEach((id, i) => { s[id].x = placed[i].x; s[id].y = placed[i].y; STRIP_HOME_Y[id] = placed[i].y })
+    }
     // Close the empty space at the top: photos in the upper half slide up (never far) until they
     // touch their neighbour, the logo or the work / about links, so the first screen reads as full.
     const idList = ids.slice().sort((a, b) => s[a].x - s[b].x)
     for (const id of idList) {
       const me = placed[ids.indexOf(id)]
-      if (me.y > vh * 0.5) continue
+      if (!isMobile || me.y > vh * 0.5) continue
       const startY = me.y
       while (me.y - 4 >= inset * 0.5 && startY - (me.y - 4) <= 110) {
         const ny = me.y - 4
