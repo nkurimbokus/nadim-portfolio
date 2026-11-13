@@ -2202,15 +2202,20 @@ export default function HomePage() {
               width:      isMobile ? 155 : 280,
               height:     isMobile ? 155 : 280,
               willChange: 'transform',
-              cursor:     'none',
-              pointerEvents: 'auto',
+              pointerEvents: 'none',
             }}
-            onPointerDown={e => onPointerDown(e, 'aboutLogo')}
-            onPointerUp={onPointerUp}
-            onPointerMove={aboutSettled ? onPointerMove : undefined}
-            onContextMenu={e => e.preventDefault()}
             aria-hidden="true"
-          />
+          >
+            {/* Hit pad: only the visible logo strip is grabbable, not the empty square around it */}
+            <div
+              className="absolute left-0 touch-none"
+              style={{ top: '50%', width: '100%', height: '40%', transform: 'translateY(-50%)', cursor: 'none', pointerEvents: 'auto' }}
+              onPointerDown={e => onPointerDown(e, 'aboutLogo')}
+              onPointerUp={onPointerUp}
+              onPointerMove={aboutSettled ? onPointerMove : undefined}
+              onContextMenu={e => e.preventDefault()}
+            />
+          </div>
         </div>
 
         {/* ── About TEXT layer — z:61, SEPARATE container ──────────────────
