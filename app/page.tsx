@@ -670,11 +670,12 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     const keepOut = { x0: lg.x - 24, x1: lg.x + logoSz + 24, y0: lg.y, y1: lg.y + logoSz * 0.68 + 12 }
     const navOut = { x0: vw - (isMobile ? 150 : 220), x1: vw, y0: 0, y1: isMobile ? 70 : 80 }   // work / about links
     const startX = -avgW * 0.5
-    const laneRight: number[] = new Array(lanes).fill(startX)
-    const placed: { x: number; y: number; w: number; h: number }[] = []
     const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
       Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
     const gap = isMobile ? 12 : 18   // breathing room between neighbours
+    const layoutStrip = (xExtra: number): number => {
+    const laneRight: number[] = new Array(lanes).fill(startX)
+    const placed: { x: number; y: number; w: number; h: number }[] = []
     ids.forEach((id, i) => {
       const cfg = PHOTO_CFG[id]; const { w, h } = dimsAll[i]
       // Try every row, nudged right in small steps, and keep the spot with the least overlap
@@ -685,7 +686,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
         const yBase = inset + l * laneH + (laneH - h) / 2 + jit(i * 3 + l) * laneH * 0.28
         const y = Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5, yBase))
         for (let k = 0; k < 6; k++) {
-          const x0 = laneRight[l] + gap * 0.5 + k * 22 + (jit(i + 9) + 1) * 8
+          const x0 = laneRight[l] + gap * 0.5 + xExtra + k * 22 + (jit(i + 9) + 1) * 8
           // a spot that would run into the logo is tried two ways: tucked just below it, or just to its right
           const hitLogo = rectOverlap(x0, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0
           const cands: { x: number; y: number }[] = hitLogo
@@ -732,7 +733,14 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
       s[id].y = me.y
       STRIP_HOME_Y[id] = me.y
     }
-    STRIP_LEN = Math.max(...laneRight) - startX + gap * 2
+    return Math.max(...laneRight) - startX + gap * 2
+    }
+    // On wide screens the loop would be shorter than the screen and leave the right side empty:
+    // spread the photos along their rows until the loop is longer than the screen.
+    let len = layoutStrip(0)
+    const need = vw + avgW * 1.6
+    if (len < need) len = layoutStrip(Math.min(260, (need - len) / Math.max(1, n / lanes)))
+    STRIP_LEN = len
     return s
   }
   let photoCount = 0
@@ -2268,7 +2276,7 @@ export default function HomePage() {
           {!isMobile && (
           <div
             className="about-text-block"
-            style={{ position: 'absolute', top: '35%', bottom: '120px', left: 0, right: 0, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.375rem' }}
+            style={{ position: 'absolute', top: '35%', bottom: '120px', left: 0, right: 0, margin: '0 auto', maxWidth: 1000, padding: '0 48px', zIndex: 61, pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.375rem' }}
           >
             {/* Row A — centred */}
             <p className="about-bio text-base md:text-xl leading-loose" style={{ textAlign: 'center' }}>
