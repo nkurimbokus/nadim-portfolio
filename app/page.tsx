@@ -225,7 +225,7 @@ const IMAGE_ASPECTS: Record<string, string> = {
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_010_standard.jpg': '1077/1600',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_011_standard.jpg': '1600/1077',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_012_standard.jpg': '1600/1075',
-  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_013_standard.png': '1600/1525',
+  '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_013_standard.webp': '1600/1525',
   '/images/live/freddie-gibbs-o2-brixton/live_2026_freddie-gibbs-o2-brixton_014_standard.webp': '1600/1067',
   '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_001_standard.jpg': '1600/1067',
   '/images/brand/tamila-roti-wrap-pop-up/brand_2026_tamila-roti-wrap-pop-up_002_standard.jpg': '1600/1067',
@@ -1923,6 +1923,7 @@ export default function HomePage() {
               width:  isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE,
               height: isMobile ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE,
               willChange: 'transform', zIndex: 5,
+              pointerEvents: 'none',   // empty square must not block photos underneath; only the hit pad below is grabbable
               opacity: aboutOpen ? (aboutVisible ? 0 : 1) : 1,
               transition: aboutOpen
                 ? (aboutVisible ? 'opacity 0s ease 0.32s' : 'opacity 0s ease 0.22s')
@@ -1936,7 +1937,7 @@ export default function HomePage() {
               style={{
                 top: '50%', width: '100%', height: '40%',
                 transform: 'translateY(-50%)',
-                cursor: 'none',
+                cursor: 'none', pointerEvents: 'auto',
               }}
               onPointerDown={e => onPointerDown(e, 'logo')}
               onPointerUp={onPointerUp}
