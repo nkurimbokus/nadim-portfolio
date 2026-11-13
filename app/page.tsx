@@ -667,7 +667,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     const jit = (i: number) => Math.sin(i * 78.233)
     const speed = isMobile ? 7 : 11
     const lg = s['logo']
-    const keepOut = { x0: lg.x - 24, x1: lg.x + logoSz + 24, y0: lg.y, y1: lg.y + logoSz + 24 }
+    const keepOut = { x0: lg.x - 24, x1: lg.x + logoSz + 24, y0: lg.y, y1: lg.y + logoSz * 0.68 + 12 }
     const navOut = { x0: vw - (isMobile ? 150 : 220), x1: vw, y0: 0, y1: isMobile ? 70 : 80 }   // work / about links
     const startX = -avgW * 0.5
     const laneRight: number[] = new Array(lanes).fill(startX)
@@ -685,17 +685,22 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
         const yBase = inset + l * laneH + (laneH - h) / 2 + jit(i * 3 + l) * laneH * 0.28
         const y = Math.max(inset * 0.5, Math.min(vh - h - inset * 0.5, yBase))
         for (let k = 0; k < 6; k++) {
-          let x = laneRight[l] + gap * 0.5 + k * 22 + (jit(i + 9) + 1) * 8
-          // a row that would run into the logo starts just to the right of it instead
-          if (rectOverlap(x, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0) x = keepOut.x1 + 6 + k * 22
-          let ov = 0
-          for (const o of placed) ov += rectOverlap(x - gap, y - gap, w + gap * 2, h + gap * 2, o.x, o.y, o.w, o.h)
-          // keep the logo clear at the start
-          ov += 6 * rectOverlap(x, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
-          // ...and the work / about links in the top right
-          ov += 10 * rectOverlap(x, y, w, h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0)
-          const score = ov * 4 + (x - startX)
-          if (score < bestScore) { bestScore = score; bx = x; by = y }
+          const x0 = laneRight[l] + gap * 0.5 + k * 22 + (jit(i + 9) + 1) * 8
+          // a spot that would run into the logo is tried two ways: tucked just below it, or just to its right
+          const hitLogo = rectOverlap(x0, y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0
+          const cands: { x: number; y: number }[] = hitLogo
+            ? [{ x: keepOut.x1 + 6 + k * 22, y }, ...(keepOut.y1 + 4 + h <= vh - inset * 0.5 ? [{ x: x0, y: keepOut.y1 + 4 }] : [])]
+            : [{ x: x0, y }]
+          for (const c of cands) {
+            let ov = 0
+            for (const o of placed) ov += rectOverlap(c.x - gap, c.y - gap, w + gap * 2, h + gap * 2, o.x, o.y, o.w, o.h)
+            // keep the logo clear at the start
+            ov += 6 * rectOverlap(c.x, c.y, w, h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0)
+            // ...and the work / about links in the top right
+            ov += 10 * rectOverlap(c.x, c.y, w, h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0)
+            const score = ov * 4 + (c.x - startX) + Math.max(0, c.y - (keepOut.y1 + 4)) * 0.15   // a slight pull up, so the top fills
+            if (score < bestScore) { bestScore = score; bx = c.x; by = c.y }
+          }
         }
       }
       let lane = 0, bestD = Infinity
