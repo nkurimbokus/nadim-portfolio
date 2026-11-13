@@ -572,7 +572,7 @@ const TESTIMONIALS: { id: string; quote: string; attribution: string }[] = []
 
 function getDims(id: string): { w: number; h: number } {
   const mobile = typeof window !== 'undefined' && window.innerWidth < 768
-  const s = mobile ? 0.65 : 1
+  const s = mobile ? 0.65 : (typeof window !== 'undefined' && window.innerWidth >= 1700 ? 1.12 : 1)   // a little bigger on very wide screens
   if (id === 'logo') { const sz = mobile ? LOGO_SIZE_MOBILE : LOGO_SIZE; return { w: sz, h: sz } }
   // About portrait/logo get their own mobile targets (not shared `s`) so we can
   // tune them independently of the general 0.65 photo scale.
@@ -679,7 +679,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     const gap = isMobile ? 12 : 18   // breathing room between neighbours
     // Wide screens: photos are dealt to the rows in turn and every row is spread to the same length,
     // each row starting a little further in than the last, so the density is even all over (steady flow).
-    const needLen = vw + avgW * 1.6
+    const needLen = vw + avgW * 1.0
     const rowCount: number[] = new Array(lanes).fill(0), rowW: number[] = new Array(lanes).fill(0)
     ids.forEach((_, i) => { rowCount[i % lanes]++; rowW[i % lanes] += dimsAll[i].w })
     const stagger = (l: number) => (l / lanes) * (needLen / Math.max(1, rowCount[0]))
@@ -778,7 +778,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     // spread the photos along their rows until the loop is longer than the screen.
     const r = layoutStrip(0)
     let len = r.len
-    const need = vw + avgW * 1.6
+    const need = vw + avgW * 1.0
     if (len < need) {
       // stretch every row to the same length (rows with fewer photos get wider gaps), so the whole
       // screen fills evenly. A photo that would then touch the logo, the links or a neighbour stays put.
