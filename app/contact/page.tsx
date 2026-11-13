@@ -20,8 +20,7 @@ export default function ContactPage() {
       <ContactHeader />
 
       <main className="mx-auto w-full max-w-xl px-6 md:px-0 pt-10 md:pt-16 pb-24">
-        <h1 className="sr-only">Contact</h1>
-        <p className="mb-10 text-sm md:text-base tracking-wide leading-relaxed">{INTRO}</p>
+        <h1 className="mb-10 text-xl md:text-3xl tracking-wide leading-snug">{INTRO}</h1>
 
         <ContactForm />
 
