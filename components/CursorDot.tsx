@@ -17,7 +17,10 @@ export default function CursorDot() {
   useEffect(() => {
     if (!ready) return
     const c = ref.current; if (!c) return
-    const onMove = (e: MouseEvent) => {
+    // Follow a real mouse only. A finger or pen on a touchscreen laptop also fires mouse events,
+    // which would leave the dot sitting where you tapped.
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') { c.style.opacity = '0'; return }
       c.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`
       c.style.opacity = '1'
       const isInteractive = !!(e.target as HTMLElement).closest('button, a, [role="button"]')
@@ -25,12 +28,15 @@ export default function CursorDot() {
       c.style.height = isInteractive ? '25px' : '18px'
     }
     const onLeave = () => { c.style.opacity = '0' }
-    const onEnter = () => { c.style.opacity = '1' }
-    window.addEventListener('mousemove', onMove)
+    const onEnter = () => {}   // the dot reappears on the next real mouse move
+    const onDown = (e: PointerEvent) => { if (e.pointerType !== 'mouse') c.style.opacity = '0' }
+    window.addEventListener('pointermove', onMove, true)
+    window.addEventListener('pointerdown', onDown, true)
     document.documentElement.addEventListener('mouseleave', onLeave)
     document.documentElement.addEventListener('mouseenter', onEnter)
     return () => {
-      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('pointermove', onMove, true)
+      window.removeEventListener('pointerdown', onDown, true)
       document.documentElement.removeEventListener('mouseleave', onLeave)
       document.documentElement.removeEventListener('mouseenter', onEnter)
     }

@@ -671,12 +671,13 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     const jit = (i: number) => Math.sin(i * 78.233)
     const speed = isMobile ? 7 : 11
     const lg = s['logo']
+    STRIP_HOME_Y['logo'] = lg.y
     const keepOut = { x0: lg.x - 24, x1: lg.x + logoSz + 24, y0: lg.y, y1: lg.y + logoSz * 0.68 + 12 }
     const navOut = { x0: vw - (isMobile ? 150 : 220), x1: vw, y0: 0, y1: isMobile ? 70 : 80 }   // work / about links
     const startX = -avgW * 0.5
     const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
       Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
-    const gap = isMobile ? 12 : 18   // breathing room between neighbours
+    const gap = isMobile ? 12 : 34   // breathing room between neighbours
     // Wide screens: photos are dealt to the rows in turn and every row is spread to the same length,
     // each row starting a little further in than the last, so the density is even all over (steady flow).
     const needLen = vw + avgW * 1.0
@@ -738,7 +739,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
         for (const me of placed) {
           const cur = clash(me, me.x, me.y); if (cur === 0) continue
           let bx = me.x, by = me.y, bv = cur
-          for (const dx of [-80, -40, 0, 40, 80]) for (const dy of [-90, -45, 0, 45, 90]) {
+          for (const dx of [-160, -80, -40, 0, 40, 80, 160, 240]) for (const dy of [-135, -90, -45, 0, 45, 90, 135]) {
             const nx = me.x + dx, ny = me.y + dy
             if (ny < inset * 0.5 || ny + me.h > vh - inset * 0.5) continue
             const v = clash(me, nx, ny) + (Math.abs(dx) + Math.abs(dy)) * 0.05
@@ -748,7 +749,23 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
         }
         if (!moved) break
       }
-      ids.forEach((id, i) => { s[id].x = placed[i].x; s[id].y = placed[i].y; STRIP_HOME_Y[id] = placed[i].y })
+      // Last resort: any two photos still overlapping at all, the one further right slides along
+      // its row until it is clear (the loop is lengthened to fit). So no pair starts on top of each other.
+      const bump = (a: { x: number; y: number; w: number; h: number }) => {
+        for (const o of placed) {
+          if (o === a) continue
+          if (rectOverlap(a.x - gap * 0.6, a.y - gap * 0.6, a.w + gap * 1.2, a.h + gap * 1.2, o.x, o.y, o.w, o.h) > 0) return o
+        }
+        return null
+      }
+      for (const me of placed.slice().sort((a, b) => a.x - b.x)) {
+        let o = bump(me), guard = 0
+        while (o && guard++ < 90) { if (o.x <= me.x) { me.x += 20 } else { o.x += 20 } ; o = bump(me) }
+      }
+      ids.forEach((id, i) => {
+        s[id].x = placed[i].x; s[id].y = placed[i].y; STRIP_HOME_Y[id] = placed[i].y
+        laneRight[laneOf[i]] = Math.max(laneRight[laneOf[i]], placed[i].x + placed[i].w)
+      })
     }
     // Close the empty space at the top: photos in the upper half slide up (never far) until they
     // touch their neighbour, the logo or the work / about links, so the first screen reads as full.
@@ -1373,21 +1390,43 @@ export default function HomePage() {
         if (pos.rot >  15) { pos.rot =  15; pos.vrot = Math.min(pos.vrot, 0); pos.baseVrot = -Math.abs(pos.baseVrot) }
         if (pos.rot < -15) { pos.rot = -15; pos.vrot = Math.max(pos.vrot, 0); pos.baseVrot =  Math.abs(pos.baseVrot) }
         const { w, h } = getDims(id)
-        if (layoutRef.current === 'strip' && STRIP_LEN > 0 && PHOTO_CFG[id]) {
+        const strip = layoutRef.current === 'strip'
+        // What you can actually see. The logo's box is bigger than the box physics uses for it, and
+        // its letters sit in the middle 40% of that box, so it gets its own numbers. That makes it
+        // leave and re-enter the screen by exactly the same rules as the photos.
+        const isLogo = id === 'logo'
+        const LV = vw < 768 ? LOGO_VISUAL_SIZE_MOBILE : LOGO_VISUAL_SIZE
+        const bw = isLogo ? LV : w
+        const bh = isLogo ? LV * 0.4 : h
+        const oy = isLogo ? LV * 0.3 : 0
+        if (strip && STRIP_LEN > 0 && PHOTO_CFG[id]) {
           // Carousel: wrap round the whole loop. A photo leaving the left joins the back of the
           // queue off the right edge, at the clearest height, and slides in again later.
           const lo = -w - 60
           const nx = lo + (((pos.x - lo) % STRIP_LEN) + STRIP_LEN) % STRIP_LEN
-          if (Math.abs(nx - pos.x) > 1) { pos.x = nx; pos.y = pickClearY(posRef.current, id, w, h, pos.x, vh) }
+          if (Math.abs(nx - pos.x) > 1) { pos.x = nx; pos.y = pickClearY(posRef.current, id, w, h, pos.x, vh); STRIP_HOME_Y[id] = pos.y }
+        } else if (isLogo) {
+          // Fully off one side: pop in fully off the other, then drift in. Never half-visible.
+          if (pos.x > vw + 60)       pos.x = -bw - 30
+          else if (pos.x < -bw - 60) pos.x = vw + 30
         } else {
           if (pos.x > vw + 60) pos.x = -w
           if (pos.x < -w)      pos.x = vw + 60
         }
-        if (pos.y >  vh + 60) pos.y = -h
-        if (pos.y < -h)       pos.y =  vh + 60
-        // Strip only: a photo thrown off the top or bottom eases back in to its resting height
-        if (layoutRef.current === 'strip' && STRIP_HOME_Y[id] !== undefined && (pos.y + h < 60 || pos.y > vh - 60)) {
-          pos.y += (STRIP_HOME_Y[id] - pos.y) * Math.min(1, dt * 1.5)
+        if (strip || isLogo) {
+          // Top and bottom: no looping round. Past the edge of the screen there is friction-free
+          // space (so nothing slows or hangs half in view), and a hard invisible wall a little way
+          // beyond the screen that sends it straight back at the same speed.
+          const top = pos.y + oy, bot = top + bh
+          if (top < 0 || bot > vh) {
+            pos.vy = pos.baseVy + (pos.vy - pos.baseVy) / 0.985          // cancel this frame's friction
+            if (Math.abs(pos.vy) < 60) pos.vy = (pos.vy !== 0 ? Math.sign(pos.vy) : (top < 0 ? -1 : 1)) * 60   // never creeps
+            if (bot < -60 && pos.vy < 0) pos.vy = -pos.vy                // wall above the screen
+            else if (top > vh + 60 && pos.vy > 0) pos.vy = -pos.vy       // wall below the screen
+          }
+        } else {
+          if (pos.y >  vh + 60) pos.y = -h
+          if (pos.y < -h)       pos.y =  vh + 60
         }
         const t = `translate3d(${pos.x}px,${pos.y}px,0) rotate(${pos.rot}deg)`
         const el = elRefs.current[id]; if (el) el.style.transform = t
