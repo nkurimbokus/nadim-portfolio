@@ -677,9 +677,10 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
     const rectOverlap = (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number) =>
       Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by))
     const gap = isMobile ? 12 : 18   // breathing room between neighbours
-    const layoutStrip = (xExtra: number): number => {
+    const layoutStrip = (xExtra: number) => {
     const laneRight: number[] = new Array(lanes).fill(startX)
     const placed: { x: number; y: number; w: number; h: number }[] = []
+    const laneOf: number[] = []
     ids.forEach((id, i) => {
       const cfg = PHOTO_CFG[id]; const { w, h } = dimsAll[i]
       // Try every row, nudged right in small steps, and keep the spot with the least overlap
@@ -710,6 +711,7 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
       }
       let lane = 0, bestD = Infinity
       for (let l = 0; l < lanes; l++) { const d = Math.abs(by + h / 2 - (inset + (l + 0.5) * laneH)); if (d < bestD) { bestD = d; lane = l } }
+      laneOf[i] = lane
       laneRight[lane] = Math.max(laneRight[lane], bx + w)
       placed.push({ x: bx, y: by, w, h })
       STRIP_HOME_Y[id] = by
@@ -737,13 +739,30 @@ function buildInitialState(vw: number, vh: number): Record<string, PhysicsState>
       s[id].y = me.y
       STRIP_HOME_Y[id] = me.y
     }
-    return Math.max(...laneRight) - startX + gap * 2
+    return { len: Math.max(...laneRight) - startX + gap * 2, laneRight, laneOf, placed }
     }
     // On wide screens the loop would be shorter than the screen and leave the right side empty:
     // spread the photos along their rows until the loop is longer than the screen.
-    let len = layoutStrip(0)
+    const r = layoutStrip(0)
+    let len = r.len
     const need = vw + avgW * 1.6
-    if (len < need) len = layoutStrip(Math.min(260, (need - len) / Math.max(1, n / lanes)))
+    if (len < need) {
+      // stretch every row to the same length (rows with fewer photos get wider gaps), so the whole
+      // screen fills evenly. A photo that would then touch the logo, the links or a neighbour stays put.
+      const f = r.laneRight.map(lr => Math.min(1.9, Math.max(1, (need - gap * 2) / Math.max(1, lr - startX))))
+      ids.slice().sort((a, b) => s[b].x - s[a].x).forEach(id => {
+        const i = ids.indexOf(id); const me = r.placed[i]
+        const nx = startX + (me.x - startX) * f[r.laneOf[i]]
+        let hit = rectOverlap(nx, me.y, me.w, me.h, keepOut.x0, keepOut.y0, keepOut.x1 - keepOut.x0, keepOut.y1 - keepOut.y0) > 0
+          || rectOverlap(nx, me.y, me.w, me.h, navOut.x0, navOut.y0, navOut.x1 - navOut.x0, navOut.y1 - navOut.y0) > 0
+        if (!hit) for (const o of r.placed) {
+          if (o === me) continue
+          if (rectOverlap(nx - gap, me.y - gap, me.w + gap * 2, me.h + gap * 2, o.x, o.y, o.w, o.h) > 0) { hit = true; break }
+        }
+        if (!hit) { me.x = nx; s[id].x = nx }
+      })
+      len = need
+    }
     STRIP_LEN = len
     return s
   }
