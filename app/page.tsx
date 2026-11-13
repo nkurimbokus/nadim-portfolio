@@ -1062,6 +1062,18 @@ export default function HomePage() {
     ;[1, 2, -1].forEach(d => preloadImage(at(d)))
   }, [activePhoto, galleryIndex])
 
+  // Zoom sharpness: once a photo has sat open for a second on a device with a mouse, fetch its
+  // 2400px original quietly so zooming is instant. Skipped on touch devices and with Save-Data on.
+  useEffect(() => {
+    if (!activePhoto || !isPointerFine) return
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
+    if (conn?.saveData) return
+    const large = ZOOM_LARGE[activePhoto.gallery[galleryIndex]]
+    if (!large) return
+    const t = setTimeout(() => preloadImage(large), 1000)
+    return () => clearTimeout(t)
+  }, [activePhoto, galleryIndex, isPointerFine])
+
   const openAbout = useCallback(() => {
     setAboutImgReady(true)
     setCanvasScaled(true)
