@@ -169,12 +169,13 @@ h1, h2, h3, h4, h5, h6, p, a, button, span, li {
   background: rgba(255, 255, 255, 0.22);
 }
 
-/* Phone keeps the original plain arrows: no box, original padding. */
+/* Phone keeps the original plain arrows: no box. No side padding, so the arrow sits in the
+   24px margin beside the photo instead of over it; extra top and bottom padding keeps a big tap area. */
 @media (max-width: 767px) {
   .lb-arrow-btn {
     border-color: transparent;
     border-radius: 0;
-    padding: 8px !important;
+    padding: 16px 0 !important;
   }
   .lb-arrow-btn:hover { background: transparent; }
 }
