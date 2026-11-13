@@ -1946,7 +1946,7 @@ export default function HomePage() {
           position: 'fixed',
           bottom: 24,
           left: 24,
-          zIndex: 30,
+          zIndex: menuOpen ? 75 : 30,   // stays above the phone menu (z 68 and 69) so the colour dot is never covered
           opacity: (workMounted || aboutOpen || !!activePhoto) ? 0 : 1,
           pointerEvents: (workMounted || aboutOpen || !!activePhoto) ? 'none' : 'auto',
           transition: 'opacity 0.2s ease',
@@ -1974,7 +1974,7 @@ export default function HomePage() {
         <div
           className="cpicker-dot"
           aria-hidden
-          style={{ background: dotColour }}
+          style={{ background: dotColour, boxShadow: `0 0 0 2px ${bgColour}` }}   // ring in the page colour so the dot still shows over dark or light photos
         />
       </div>
 
@@ -1987,7 +1987,7 @@ export default function HomePage() {
           <div
             className="fixed inset-0 z-[68] md:hidden"
             style={{
-              background: '#ffffff',
+              background: bgColour,   // follows the colour picker, like the Work, About and Contact panels
               transform: menuVisible ? 'translateY(0)' : 'translateY(100%)',
               transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
               willChange: 'transform',
