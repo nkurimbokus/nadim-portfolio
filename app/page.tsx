@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 /**
  * BLEND MODE SURFACES (mix-blend-mode: difference)
@@ -570,14 +571,18 @@ const TILE_SIZE_SCALE = 1
 // render and physics loops below stay valid; re-add entries here to bring them back.
 const TESTIMONIALS: { id: string; quote: string; attribution: string }[] = []
 
+// Shrinks the About portrait + logo on short screens so they fit above the text when About opens.
+// Set by the About open effect; 1 = full size.
+let ABOUT_SCALE = 1
+
 function getDims(id: string): { w: number; h: number } {
   const mobile = typeof window !== 'undefined' && window.innerWidth < 768
   const s = mobile ? 0.65 : (typeof window !== 'undefined' && window.innerWidth >= 1700 ? 1.12 : 1)   // a little bigger on very wide screens
   if (id === 'logo') { const sz = mobile ? LOGO_SIZE_MOBILE : LOGO_SIZE; return { w: sz, h: sz } }
   // About portrait/logo get their own mobile targets (not shared `s`) so we can
   // tune them independently of the general 0.65 photo scale.
-  if (id === 'aboutPortrait') { const w = mobile ? 200 : 340; return { w, h: Math.round(w * 4 / 3) } }
-  if (id === 'aboutLogo')     { return mobile ? { w: 155, h: 155 } : { w: 280, h: 280 } }
+  if (id === 'aboutPortrait') { const w = Math.round((mobile ? 200 : 340) * ABOUT_SCALE); return { w, h: Math.round(w * 4 / 3) } }
+  if (id === 'aboutLogo')     { const z = Math.round((mobile ? 155 : 280) * ABOUT_SCALE); return { w: z, h: z } }
   const cfg = PHOTO_CFG[id]
   if (!cfg) return { w: Math.round(200 * s), h: Math.round(200 * s) }
   const w = cfg.w * TILE_SIZE_SCALE * s
@@ -905,6 +910,7 @@ export default function HomePage() {
   // pointermove adds main-thread work that compounds with the panel's
   // mix-blend-mode repaints, causing jitter).
   const [aboutSettled, setAboutSettled] = useState(false)
+  const [aboutScale,   setAboutScale]   = useState(1)   // portrait + logo size factor so they clear the text on open
   const [logoSource,   setLogoSource]   = useState({ x: 0, y: 0, scale: 1, rot: 0 })
   const [activePhoto,  setActivePhoto]  = useState<Project | null>(null)
   // Which canvas tile the lightbox is currently showing (differs from activePhoto.id for single reels)
@@ -1093,6 +1099,7 @@ export default function HomePage() {
   // drift apart very slowly so the layout feels settled, not chaotic.
   useEffect(() => {
     if (!aboutOpen) {
+      ABOUT_SCALE = 1
       delete posRef.current['aboutPortrait']
       delete posRef.current['aboutLogo']
       TESTIMONIALS.forEach(({ id }) => { delete posRef.current[id] })
@@ -1101,19 +1108,33 @@ export default function HomePage() {
     const vw = window.innerWidth, vh = window.innerHeight
     const isMob = vw < 768
     const vScale = isMob ? VELOCITY_SCALE * 0.5 : VELOCITY_SCALE
+
+    // Clean first view: the portrait + logo start entirely in the free space above the text.
+    // Find where the first line of text sits (desktop: measured; mobile: the 52vh spacer),
+    // then shrink the pair on short screens so they fit. They can still drift under the text later.
+    let textTop = vh * 0.52
+    if (!isMob) {
+      const blk   = document.querySelector('.about-text-block') as HTMLElement | null
+      const first = blk?.firstElementChild as HTMLElement | null
+      textTop = blk && first ? blk.offsetTop + first.offsetTop : vh * 0.55
+    }
+    const topLimit = 72                                   // clear of the nav bar
+    const avail    = Math.max(120, textTop - 24 - topLimit)
+    const fullH    = Math.round((isMob ? 200 : 340) * 4 / 3)
+    const s        = Math.min(1, Math.max(0.5, avail / fullH))
+    ABOUT_SCALE = s
+    setAboutScale(s)
+
     const { w: pW, h: pH } = getDims('aboutPortrait')
     const { w: lW, h: lH } = getDims('aboutLogo')
 
-    // Portrait: horizontally centred, upper-middle of the about panel.
-    const pX = Math.round(isMob ? vw * 0.5 - 100 : vw * 0.5 - 130)
-    const pY = Math.round(isMob ? vh * 0.20 : vh * 0.17)
+    // Portrait: slightly left of centre, vertically centred in the free space above the text.
+    const pX = Math.round(vw * 0.5 - (isMob ? 100 : 130) * s)
+    const pY = Math.round(topLimit + Math.max(0, (avail - pH) / 2))
 
-    // Logo: centred horizontally over portrait, one-third down — uses rendered size if available.
-    const portraitRect = elRefs.current['aboutPortrait']?.getBoundingClientRect()
-    const portraitW = portraitRect ? portraitRect.width  : 260
-    const portraitH = portraitRect ? portraitRect.height : 340
-    const lX = Math.round(pX + portraitW / 2 - lW / 2)
-    const lY = Math.round(pY + portraitH / 3)
+    // Logo: centred horizontally over the portrait, one-third down.
+    const lX = Math.round(pX + pW / 2 - lW / 2)
+    const lY = Math.round(pY + pH / 3)
 
     posRef.current['aboutPortrait'] = {
       x: pX, y: pY, rot: -1.5,
@@ -1782,19 +1803,24 @@ export default function HomePage() {
           {/* Desktop: text buttons */}
           <button
             onClick={openWork}
-            className="blend-text flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
+            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: btnPE }}
           >Work</button>
           <button
             onClick={openAbout}
-            className="blend-text flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
+            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: btnPE }}
           >About</button>
+          <Link
+            href="/contact"
+            className="blend-text hidden md:flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
+            style={{ pointerEvents: btnPE }}
+          >Contact</Link>
 
           {/* Mobile: hamburger */}
           <button
             onClick={openMenu}
-            className="hidden items-center justify-center min-h-[44px] min-w-[44px] bg-transparent text-white/60 hover:text-white transition-colors focus:outline-none"
+            className="flex md:hidden items-center justify-center min-h-[44px] min-w-[44px] bg-transparent text-white/60 hover:text-white transition-colors focus:outline-none"
             style={{ pointerEvents: btnPE }}
             aria-label="Open menu"
           >
@@ -1992,6 +2018,11 @@ export default function HomePage() {
               onClick={() => { closeMenu(); setTimeout(openAbout, 60) }}
               className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
             >About</button>
+            <Link
+              href="/contact"
+              onClick={closeMenu}
+              className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
+            >Contact</Link>
             <button
               onClick={closeMenu}
               className="mt-6 text-sm tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[44px] flex items-center"
@@ -2163,8 +2194,8 @@ export default function HomePage() {
             ref={el => { visualElRefs.current['aboutPortrait'] = el }}
             className="absolute top-0 left-0 touch-none"
             style={{
-              width:        isMobile ? 200 : 340,
-              height:       isMobile ? Math.round(200 * 4 / 3) : Math.round(340 * 4 / 3),
+              width:        Math.round((isMobile ? 200 : 340) * aboutScale),
+              height:       Math.round(Math.round((isMobile ? 200 : 340) * aboutScale) * 4 / 3),
               willChange:   'transform',
               borderRadius: 2,
               overflow:     'hidden',
@@ -2199,8 +2230,8 @@ export default function HomePage() {
             ref={el => { visualElRefs.current['aboutLogo'] = el }}
             className="absolute top-0 left-0 touch-none"
             style={{
-              width:      isMobile ? 155 : 280,
-              height:     isMobile ? 155 : 280,
+              width:      Math.round((isMobile ? 155 : 280) * aboutScale),
+              height:     Math.round((isMobile ? 155 : 280) * aboutScale),
               willChange: 'transform',
               pointerEvents: 'none',
             }}
@@ -2299,8 +2330,8 @@ export default function HomePage() {
             ref={el => { elRefs.current['aboutPortrait'] = el }}
             className="absolute top-0 left-0 touch-none"
             style={{
-              width:        isMobile ? 200 : 340,
-              height:       isMobile ? Math.round(200 * 4 / 3) : Math.round(340 * 4 / 3),
+              width:        Math.round((isMobile ? 200 : 340) * aboutScale),
+              height:       Math.round(Math.round((isMobile ? 200 : 340) * aboutScale) * 4 / 3),
               willChange:   'transform',
               cursor:       'none',
               pointerEvents: 'auto',
@@ -2329,8 +2360,8 @@ export default function HomePage() {
             ref={el => { elRefs.current['aboutLogo'] = el }}
             className="absolute top-0 left-0 touch-none"
             style={{
-              width:      isMobile ? 155 : 280,
-              height:     isMobile ? 155 : 280,
+              width:      Math.round((isMobile ? 155 : 280) * aboutScale),
+              height:     Math.round((isMobile ? 155 : 280) * aboutScale),
               willChange: 'transform',
               pointerEvents: 'none',
             }}
