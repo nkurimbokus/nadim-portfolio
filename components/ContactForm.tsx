@@ -45,7 +45,7 @@ export default function ContactForm() {
       <div role="status" className="py-10 text-center">
         <p className="text-2xl md:text-3xl tracking-widest lowercase">Sent</p>
         <p className="mt-4 text-sm md:text-base tracking-wide leading-relaxed">
-          Thanks. I&apos;ll reply by email.
+          Thank you. I&apos;ll get back to you.
         </p>
         <button
           type="button"
