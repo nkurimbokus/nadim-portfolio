@@ -25,10 +25,10 @@ export default function ContactPage() {
 
         <ContactForm />
 
-        <div className="mt-16 flex flex-wrap items-center gap-4">
+        <div className="mt-16 flex flex-nowrap sm:flex-wrap items-center gap-2 sm:gap-4">
           <a
             href="mailto:nkurimbokus@gmail.com"
-            className="px-5 py-3 border border-current rounded-sm text-sm md:text-base tracking-widest lowercase transition-colors hover:text-accent-blue focus:outline-none focus-visible:underline"
+            className="whitespace-nowrap px-3 sm:px-5 py-3 border border-current rounded-sm text-[clamp(9px,2.9vw,14px)] sm:text-sm md:text-base tracking-wide sm:tracking-widest lowercase transition-colors hover:text-accent-blue focus:outline-none focus-visible:underline"
           >
             nkurimbokus@gmail.com
           </a>
@@ -36,7 +36,7 @@ export default function ContactPage() {
             href="https://www.instagram.com/nadim_kurimbokus/"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-5 py-3 border border-current rounded-sm text-sm md:text-base tracking-widest lowercase transition-colors hover:text-accent-blue focus:outline-none focus-visible:underline"
+            className="whitespace-nowrap px-3 sm:px-5 py-3 border border-current rounded-sm text-[clamp(9px,2.9vw,14px)] sm:text-sm md:text-base tracking-wide sm:tracking-widest lowercase transition-colors hover:text-accent-blue focus:outline-none focus-visible:underline"
           >
             Instagram
             <span className="sr-only"> (opens in a new tab)</span>
