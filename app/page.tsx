@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 /**
  * BLEND MODE SURFACES (mix-blend-mode: difference)
@@ -1790,6 +1791,11 @@ export default function HomePage() {
             className="blend-text flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
             style={{ pointerEvents: btnPE }}
           >About</button>
+          <Link
+            href="/contact"
+            className="blend-text flex text-sm md:text-base tracking-widest lowercase text-white md:text-white/60 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:underline min-h-[44px] items-center"
+            style={{ pointerEvents: btnPE }}
+          >Contact</Link>
 
           {/* Mobile: hamburger */}
           <button
@@ -1992,6 +1998,11 @@ export default function HomePage() {
               onClick={() => { closeMenu(); setTimeout(openAbout, 60) }}
               className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
             >About</button>
+            <Link
+              href="/contact"
+              onClick={closeMenu}
+              className="text-4xl tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[56px] flex items-center"
+            >Contact</Link>
             <button
               onClick={closeMenu}
               className="mt-6 text-sm tracking-widest lowercase focus:outline-none focus-visible:underline min-h-[44px] flex items-center"
