@@ -5,14 +5,6 @@ import { useState } from 'react'
 // Formspree endpoint for the "Website contact" form.
 const FORM_URL = 'https://formspree.io/f/mgakvdva'
 
-const ENQUIRY_TYPES = [
-  'Live music or event coverage',
-  'Brand campaign or activation',
-  'Press or editorial',
-  'Cultural commission',
-  'Something else',
-] as const
-
 type Status = 'idle' | 'sending' | 'sent' | 'error'
 
 // Shared look: thin outlined fields, lowercase tracked labels, same as the
@@ -89,24 +81,8 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="cf-type" className={labelClass}>What is it for</label>
-        <select id="cf-type" name="enquiry_type" required defaultValue="" className={fieldClass}>
-          <option value="" disabled>Choose one</option>
-          {ENQUIRY_TYPES.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <label htmlFor="cf-date" className={labelClass}>Date</label>
-          <input id="cf-date" name="date" type="text" placeholder="Or rough timing" className={fieldClass} />
-        </div>
-        <div>
-          <label htmlFor="cf-location" className={labelClass}>Location</label>
-          <input id="cf-location" name="location" type="text" placeholder="Venue or city" className={fieldClass} />
-        </div>
+        <label htmlFor="cf-location" className={labelClass}>Location</label>
+        <input id="cf-location" name="location" type="text" placeholder="Venue or city" className={fieldClass} />
       </div>
 
       <div>
@@ -123,7 +99,7 @@ export default function ContactForm() {
           {status === 'sending' ? 'Sending' : 'Send'}
         </button>
         {status === 'error' && (
-          <p role="alert" className="text-sm tracking-wide leading-relaxed" style={{ color: '#C8432A' }}>
+          <p role="alert" className="no-blend text-sm tracking-wide leading-relaxed" style={{ color: '#C8432A' }}>
             That did not send. Try again, or email{' '}
             <a href="mailto:nkurimbokus@gmail.com" className="underline">nkurimbokus@gmail.com</a>.
           </p>

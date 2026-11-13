@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import ContactForm from '../../components/ContactForm'
+import ContactNav from '../../components/ContactNav'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -21,23 +22,10 @@ export default function ContactPage() {
 
       {/* Header: logo left, nav right, same lowercase tracked style as the home page. */}
       <header className="flex items-center justify-between px-6 md:px-10 h-16">
-        <Link href="/" aria-label="Nadim Kurimbokus, back to home" className="block focus:outline-none focus-visible:opacity-70">
+        <Link href="/" aria-label="Nadim Kurimbokus, back to home" className="no-blend block focus:outline-none focus-visible:opacity-70">
           <Image src="/logo.webp" alt="Nadim Kurimbokus" width={1200} height={476} unoptimized priority className="h-9 md:h-10 w-auto" />
         </Link>
-        <nav aria-label="Primary navigation" className="flex gap-4 md:gap-6">
-          <Link
-            href="/"
-            className="flex items-center min-h-[44px] text-sm md:text-base tracking-widest lowercase text-fg-muted hover:text-fg-default transition-colors duration-200 focus:outline-none focus-visible:underline"
-          >
-            Work
-          </Link>
-          <span
-            aria-current="page"
-            className="flex items-center min-h-[44px] text-sm md:text-base tracking-widest lowercase"
-          >
-            Contact
-          </span>
-        </nav>
+        <ContactNav />
       </header>
 
       <main className="mx-auto w-full max-w-xl px-6 md:px-0 pt-10 md:pt-16 pb-24">
