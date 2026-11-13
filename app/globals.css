@@ -162,9 +162,13 @@ h1, h2, h3, h4, h5, h6, p, a, button, span, li {
   border: 1.5px solid #fff;
   border-radius: 10px;
   line-height: 0;
-  mix-blend-mode: difference;
+  mix-blend-mode: normal;
   transition: background-color 0.15s ease;
 }
 .lb-arrow-btn:hover {
   background: rgba(255, 255, 255, 0.22);
+}
+
+@media (max-width: 767px) {
+  .lb-arrow-btn { display: none; }
 }

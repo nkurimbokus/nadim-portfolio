@@ -2714,9 +2714,23 @@ export default function HomePage() {
 
           {/* Gallery nav arrows — fixed viewport, outside all stacking contexts */}
           {activePhoto.gallery.length > 1 && lbZoom === 1 && (
-            <>
+            <div
+              className="fixed inset-0"
+              style={{
+                zIndex: lbFromWork ? 72 : 10,
+                pointerEvents: 'none',
+                mixBlendMode: 'difference',
+                // Same slide up / down as the caption, so the arrows arrive and leave with the photo
+                transform: lbVisible ? 'translateY(0)' : 'translateY(100%)',
+                transition: lbFromWork
+                  ? 'transform 0.34s cubic-bezier(0.32, 0.72, 0, 1)'
+                  : lbVisible
+                    ? 'transform 0.36s cubic-bezier(0.16, 1, 0.3, 1)'
+                    : 'transform 0.26s cubic-bezier(0.55, 0, 1, 0.45)',
+              }}
+            >
               <button
-                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: lbFromWork ? 72 : 10, padding: '4px', pointerEvents: 'auto', cursor: 'none' }}
+                style={{ position: 'fixed', left: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', padding: '4px', pointerEvents: 'auto', cursor: 'none' }}
                 className="lb-arrow-btn"
                 onClick={e => { e.stopPropagation(); navigate(-1) }}
                 aria-label="Previous image"
@@ -2726,7 +2740,7 @@ export default function HomePage() {
                 </svg>
               </button>
               <button
-                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', zIndex: lbFromWork ? 72 : 10, padding: '4px', pointerEvents: 'auto', cursor: 'none' }}
+                style={{ position: 'fixed', right: 'calc(50% - min(50vw, 50vh * 1.5) - 8px)', top: '50%', transform: 'translateY(-50%)', padding: '4px', pointerEvents: 'auto', cursor: 'none' }}
                 className="lb-arrow-btn"
                 onClick={e => { e.stopPropagation(); navigate(1) }}
                 aria-label="Next image"
@@ -2735,7 +2749,7 @@ export default function HomePage() {
                   <polyline points="10 6 18 14 10 22" />
                 </svg>
               </button>
-            </>
+            </div>
           )}
 
           {/* ── Lightbox CAPTION layer — z:10, SEPARATE container ──────────
