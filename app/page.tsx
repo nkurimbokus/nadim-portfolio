@@ -1814,6 +1814,18 @@ export default function HomePage() {
         Skip to content
       </a>
 
+      {/* Text for search engines and screen readers. The canvas is drawn client-side,
+          so this mirrors the visible content: who, where, and the jobs in the Work index. */}
+      <div className="sr-only">
+        <h1>Nadim Kurimbokus · Event &amp; Music Photographer, London</h1>
+        <h2>Work</h2>
+        <ul>
+          {PROJECTS.map(p => (
+            <li key={p.id}>{p.title} · {p.category} · {p.year}</li>
+          ))}
+        </ul>
+      </div>
+
       <header
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-end px-6 md:px-10 h-16 pointer-events-none"
         style={{ mixBlendMode: 'difference', color: '#ffffff', opacity: 1 }}
@@ -2468,7 +2480,7 @@ export default function HomePage() {
             </p>
             {/* Row B — centred */}
             <p className="text-base md:text-xl leading-loose" style={{ textAlign: 'center', marginTop: '2rem' }}>
-              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>BBC · Roundhouse · Jazz Cafe · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home</span>
+              <span style={{ fontSize: 'clamp(11px, 1.6vw, 15px)' }}>Roundhouse · Jazz Cafe · Westside Gunn · Ezra Collective · Teg Live Europe · Lomography</span>
             </p>
             {/* Row C — centred */}
             <p className="text-base md:text-xl" style={{ textAlign: 'center' }}>
@@ -2553,7 +2565,7 @@ export default function HomePage() {
 
             {/* Client list */}
             <p style={{ pointerEvents: 'auto', textAlign: 'center', padding: '0 24px', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: '1.75', marginBottom: '0.5rem' }}>
-              BBC · Roundhouse · Jazz Cafe · Westside Gunn · Teg Live Europe · Lomography · Museum of the Home
+              Roundhouse · Jazz Cafe · Westside Gunn · Ezra Collective · Teg Live Europe · Lomography
             </p>
 
             {/* Availability */}
